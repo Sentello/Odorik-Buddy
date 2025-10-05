@@ -1,0 +1,37 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.hprof
+*.pyc
+*~
+keystore.properties
+
+# Python virtual environments
+.venv/
+venv/
+__pycache__/
+
+# Log files
+*.log
+
+# Environment variables
+.env
+
+# Sensitive files
+heslo.txt
+odorikbuddy.jks
+debug.keystore
+
+# Build artifacts
+*.apk
+*.aab
+*.aar
+
+# Local History
+/.history
