@@ -14,7 +14,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 1
-        versionName = "1.1.20250917"
+        versionName = "1.0.20250912"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -24,16 +24,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreProperties = java.util.Properties()
-            val keystoreFile = rootProject.file("keystore.properties")
-            if (keystoreFile.exists()) {
-                keystoreProperties.load(java.io.FileInputStream(keystoreFile))
-            }
-
-            storeFile = file(keystoreProperties.getProperty("storeFile"))
-            storePassword = keystoreProperties.getProperty("storePassword"))
-            keyAlias = keystoreProperties.getProperty("keyAlias"))
-            keyPassword = keystoreProperties.getProperty("keyPassword"))
+            storeFile = file("/xxxx/") // Replace with your keystore path
+            storePassword = "xxxx" // Use secure storage in production (e.g., env vars)
+            keyAlias = "xxxx"
+            keyPassword = "xxxxx"
         }
     }
 
@@ -64,7 +58,7 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -77,12 +71,12 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended-android:1.6.1")
+    implementation("androidx.compose.material:material-icons-extended-android")
     implementation("com.google.errorprone:error_prone_annotations:2.29.0")
 
     // Hilt
