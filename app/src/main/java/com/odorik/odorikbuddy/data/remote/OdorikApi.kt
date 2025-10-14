@@ -14,7 +14,7 @@ interface OdorikApi {
     suspend fun getAllowedSenders(
         @Query("user") user: String,
         @Query("password") password: String
-    ): Response<String>  // Comma-separated string
+    ): Response<String>  
 
     @FormUrlEncoded
     @POST("sms")
@@ -25,7 +25,7 @@ interface OdorikApi {
         @Field("message") message: String,
         @Field("sender") sender: String? = null,
         @Field("delayed") delayed: String? = null
-    ): Response<String>  // Plain text response
+    ): Response<String>  
 
     @FormUrlEncoded
     @POST("callback")

@@ -14,8 +14,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.odorik.odorikbuddy.R
 
 @Composable
 fun DashboardScreen(
@@ -37,9 +39,9 @@ fun DashboardScreen(
     ) {
         Card(modifier = Modifier.padding(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "Balance", style = MaterialTheme.typography.titleLarge)
+                Text(text = stringResource(R.string.balance), style = MaterialTheme.typography.titleLarge)
                 Text(
-                    text = credit.value?.let { "%.2f CZK".format(it) } ?: "Loading...",
+                    text = credit.value?.let { "%.2f CZK".format(it) } ?: stringResource(R.string.loading),
                     style = MaterialTheme.typography.headlineMedium
                 )
             }
@@ -48,10 +50,10 @@ fun DashboardScreen(
         userInfo.value?.let {
             Card(modifier = Modifier.padding(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "User Info", style = MaterialTheme.typography.titleLarge)
-                    Text(text = "Name: ${it.name}")
-                    Text(text = "Email: ${it.email}")
-                    Text(text = "Phone: ${it.phoneNumber}")
+                    Text(text = stringResource(R.string.user_info), style = MaterialTheme.typography.titleLarge)
+                    Text(text = "${stringResource(R.string.name_label)} ${it.name}")
+                    Text(text = "${stringResource(R.string.email_label)} ${it.email}")
+                    Text(text = "${stringResource(R.string.phone_label)} ${it.phoneNumber}")
                 }
             }
         }

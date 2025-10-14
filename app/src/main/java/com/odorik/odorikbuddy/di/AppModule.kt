@@ -1,7 +1,7 @@
 package com.odorik.odorikbuddy.di
 
 import android.app.Application
-import com.odorik.odorikbuddy.BuildConfig  // Add this import for BuildConfig
+import com.odorik.odorikbuddy.BuildConfig  
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import dagger.Module
@@ -13,11 +13,14 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
-import com.odorik.odorikbuddy.data.local.SecureStorage // Added import for SecureStorage
-import com.odorik.odorikbuddy.data.local.ThemeManager // Added import for ThemeManager
+import com.odorik.odorikbuddy.data.local.SecureStorage 
+import com.odorik.odorikbuddy.data.local.ThemeManager 
 import com.odorik.odorikbuddy.data.local.SecurePreferences
+import com.odorik.odorikbuddy.data.local.LocaleManager
 import okhttp3.Credentials
 import retrofit2.converter.gson.GsonConverterFactory
+
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -45,10 +48,10 @@ object AppModule {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://www.odorik.cz/api/v1/") // Changed base URL
+            .baseUrl("https://www.odorik.cz/api/v1/") 
             .client(httpClient)
-            .addConverterFactory(ScalarsConverterFactory.create()) // Added for plain text
-            .addConverterFactory(GsonConverterFactory.create()) // For JSON conversion
+            .addConverterFactory(ScalarsConverterFactory.create()) 
+            .addConverterFactory(GsonConverterFactory.create()) 
             .build()
             .create(OdorikApi::class.java)
     }
@@ -69,6 +72,12 @@ object AppModule {
     @Singleton
     fun provideThemeManager(application: Application): ThemeManager {
         return ThemeManager(application)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocaleManager(application: Application): LocaleManager {
+        return LocaleManager(application)
     }
 
     @Provides

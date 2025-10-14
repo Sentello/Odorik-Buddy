@@ -7,11 +7,13 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.odorik.odorikbuddy.data.local.LocaleManager;
 import com.odorik.odorikbuddy.data.local.SecurePreferences;
 import com.odorik.odorikbuddy.data.local.SecureStorage;
 import com.odorik.odorikbuddy.data.local.ThemeManager;
 import com.odorik.odorikbuddy.data.remote.OdorikApi;
 import com.odorik.odorikbuddy.data.repository.UserRepository;
+import com.odorik.odorikbuddy.di.AppModule_ProvideLocaleManagerFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideOdorikApiFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideSecurePreferencesFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideSecureStorageFactory;
@@ -416,6 +418,7 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
     @CanIgnoreReturnValue
     private MainActivity injectMainActivity2(MainActivity instance) {
       MainActivity_MembersInjector.injectThemeManager(instance, singletonCImpl.provideThemeManagerProvider.get());
+      MainActivity_MembersInjector.injectLocaleManager(instance, singletonCImpl.provideLocaleManagerProvider.get());
       return instance;
     }
   }
@@ -534,7 +537,7 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
           return (T) new NavigationViewModel(singletonCImpl.provideUserRepositoryProvider.get());
 
           case 5: // com.odorik.odorikbuddy.ui.settings.SettingsViewModel 
-          return (T) new SettingsViewModel(viewModelCImpl.getLinesUseCase(), viewModelCImpl.getLineInfoUseCase(), singletonCImpl.provideUserRepositoryProvider.get(), singletonCImpl.provideThemeManagerProvider.get());
+          return (T) new SettingsViewModel(viewModelCImpl.getLinesUseCase(), viewModelCImpl.getLineInfoUseCase(), singletonCImpl.provideUserRepositoryProvider.get(), singletonCImpl.provideThemeManagerProvider.get(), singletonCImpl.provideLocaleManagerProvider.get());
 
           case 6: // com.odorik.odorikbuddy.ui.sms.SmsViewModel 
           return (T) new SmsViewModel(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideSecurePreferencesProvider.get());
@@ -621,6 +624,8 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
 
     private Provider<ThemeManager> provideThemeManagerProvider;
 
+    private Provider<LocaleManager> provideLocaleManagerProvider;
+
     private Provider<SecurePreferences> provideSecurePreferencesProvider;
 
     private Provider<OdorikApi> provideOdorikApiProvider;
@@ -638,10 +643,11 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
     @SuppressWarnings("unchecked")
     private void initialize(final ApplicationContextModule applicationContextModuleParam) {
       this.provideThemeManagerProvider = DoubleCheck.provider(new SwitchingProvider<ThemeManager>(singletonCImpl, 0));
-      this.provideSecurePreferencesProvider = DoubleCheck.provider(new SwitchingProvider<SecurePreferences>(singletonCImpl, 2));
-      this.provideOdorikApiProvider = DoubleCheck.provider(new SwitchingProvider<OdorikApi>(singletonCImpl, 1));
-      this.provideSecureStorageProvider = DoubleCheck.provider(new SwitchingProvider<SecureStorage>(singletonCImpl, 3));
-      this.provideUserRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UserRepository>(singletonCImpl, 4));
+      this.provideLocaleManagerProvider = DoubleCheck.provider(new SwitchingProvider<LocaleManager>(singletonCImpl, 1));
+      this.provideSecurePreferencesProvider = DoubleCheck.provider(new SwitchingProvider<SecurePreferences>(singletonCImpl, 3));
+      this.provideOdorikApiProvider = DoubleCheck.provider(new SwitchingProvider<OdorikApi>(singletonCImpl, 2));
+      this.provideSecureStorageProvider = DoubleCheck.provider(new SwitchingProvider<SecureStorage>(singletonCImpl, 4));
+      this.provideUserRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UserRepository>(singletonCImpl, 5));
     }
 
     @Override
@@ -680,16 +686,19 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
           case 0: // com.odorik.odorikbuddy.data.local.ThemeManager 
           return (T) AppModule_ProvideThemeManagerFactory.provideThemeManager(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
 
-          case 1: // com.odorik.odorikbuddy.data.remote.OdorikApi 
+          case 1: // com.odorik.odorikbuddy.data.local.LocaleManager 
+          return (T) AppModule_ProvideLocaleManagerFactory.provideLocaleManager(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
+
+          case 2: // com.odorik.odorikbuddy.data.remote.OdorikApi 
           return (T) AppModule_ProvideOdorikApiFactory.provideOdorikApi(singletonCImpl.provideSecurePreferencesProvider.get());
 
-          case 2: // com.odorik.odorikbuddy.data.local.SecurePreferences 
+          case 3: // com.odorik.odorikbuddy.data.local.SecurePreferences 
           return (T) AppModule_ProvideSecurePreferencesFactory.provideSecurePreferences(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
 
-          case 3: // com.odorik.odorikbuddy.data.local.SecureStorage 
+          case 4: // com.odorik.odorikbuddy.data.local.SecureStorage 
           return (T) AppModule_ProvideSecureStorageFactory.provideSecureStorage(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
 
-          case 4: // com.odorik.odorikbuddy.data.repository.UserRepository 
+          case 5: // com.odorik.odorikbuddy.data.repository.UserRepository 
           return (T) AppModule_ProvideUserRepositoryFactory.provideUserRepository(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule), singletonCImpl.provideSecurePreferencesProvider.get());
 
           default: throw new AssertionError(id);

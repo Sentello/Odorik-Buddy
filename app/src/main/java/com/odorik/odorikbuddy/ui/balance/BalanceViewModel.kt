@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.odorik.odorikbuddy.data.local.SecureStorage // Assuming this path
+import com.odorik.odorikbuddy.data.local.SecureStorage 
 
 @HiltViewModel
 class BalanceViewModel @Inject constructor(
     private val odorikApi: OdorikApi,
-    private val secureStorage: SecureStorage // Inject SecureStorage
+    private val secureStorage: SecureStorage 
 ) : ViewModel() {
     private val _balance = MutableStateFlow<String?>(null)
     val balance: StateFlow<String?> = _balance

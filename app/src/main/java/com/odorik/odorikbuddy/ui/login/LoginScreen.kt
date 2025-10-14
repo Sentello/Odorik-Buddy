@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.odorik.odorikbuddy.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,7 @@ fun LoginScreen(
 
     val loginUiState by viewModel.loginUiState.collectAsState()
 
+    
     LaunchedEffect(loginUiState) {
         if (loginUiState is LoginUiState.Success) {
             onLoginSuccess()
@@ -45,7 +48,7 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Odorik Buddy",
+            text = stringResource(R.string.app_name),
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -53,14 +56,14 @@ fun LoginScreen(
         OutlinedTextField(
             value = userId,
             onValueChange = { userId = it },
-            label = { Text("User ID") },
+            label = { Text(stringResource(R.string.user_id)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.password)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
@@ -73,10 +76,11 @@ fun LoginScreen(
                 checked = rememberMe,
                 onCheckedChange = { rememberMe = it }
             )
-            Text("Remember me")
+            Text(stringResource(R.string.remember_me))
         }
         Spacer(modifier = Modifier.height(16.dp))
 
+        
         if (loginUiState is LoginUiState.Error) {
             Text(
                 text = (loginUiState as LoginUiState.Error).message,
@@ -89,10 +93,10 @@ fun LoginScreen(
             onClick = {
                 viewModel.onLoginClick(userId, password, rememberMe)
             },
-            enabled = loginUiState != LoginUiState.Loading,
+            enabled = loginUiState != LoginUiState.Loading, 
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (loginUiState is LoginUiState.Loading) "Logging in..." else "Login")
+            Text(if (loginUiState is LoginUiState.Loading) stringResource(R.string.logging_in) else stringResource(R.string.login))
         }
     }
 }

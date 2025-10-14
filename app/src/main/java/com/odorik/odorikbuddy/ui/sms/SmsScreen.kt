@@ -13,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.odorik.odorikbuddy.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +50,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             if (isGranted) {
                 launcher.launch(null)
             } else {
-                // Handle permission denial
+                
             }
         }
     )
@@ -65,7 +67,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         OutlinedTextField(
             value = recipient,
             onValueChange = { recipient = it },
-            label = { Text("Recipient") },
+            label = { Text(stringResource(R.string.recipient)) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = {
@@ -92,10 +94,10 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = selectedSender ?: "Select Sender",
+                value = selectedSender ?: stringResource(R.string.select_sender),
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Sender") },
+                label = { Text(stringResource(R.string.sender)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.menuAnchor().fillMaxWidth()
             )
@@ -115,7 +117,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         OutlinedTextField(
             value = message,
             onValueChange = { message = it },
-            label = { Text("Message (max 765 chars)") },
+            label = { Text(stringResource(R.string.message)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
@@ -124,15 +126,15 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         OutlinedTextField(
             value = delayed,
             onValueChange = { delayed = it },
-            label = { Text("Delayed (minutes or datetime)") },
+            label = { Text(stringResource(R.string.delayed)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = { viewModel.sendSms(recipient, message, selectedSender, delayed.takeIf { it.isNotBlank() }) },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Send SMS") }
-        if (error != null) Text("Error: $error", color = Color.Red)
-        if (sendResult != null) Text("Result: $sendResult", color = Color.Green)
+        ) { Text(stringResource(R.string.send_sms)) }
+        if (error != null) Text(stringResource(R.string.error, error!!), color = Color.Red)
+        if (sendResult != null) Text(stringResource(R.string.result, sendResult!!), color = Color.Green)
     }
 }

@@ -3,6 +3,7 @@ package com.odorik.odorikbuddy.ui.calls
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.ContactsContract
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.model.CallInfo
@@ -36,15 +37,19 @@ class CallViewModel @Inject constructor(
     val error: StateFlow<String?> = _error
 
     fun getCallList() {
-
+        
+        
     }
 
     fun getLines() {
+        Log.d("CallViewModel", "Fetching lines...")
         viewModelScope.launch {
             val result = getLinesUseCase.execute()
             result.onSuccess {
+                Log.d("CallViewModel", "Lines fetched successfully: $it")
                 _lines.value = it
             }.onFailure {
+                Log.e("CallViewModel", "Error fetching lines: ${it.message}")
                 _error.value = it.message
             }
         }
@@ -63,6 +68,7 @@ class CallViewModel @Inject constructor(
     }
 
     fun handleContactSelection(contentResolver: ContentResolver, contactUri: Uri, onPhoneNumberSelected: (String) -> Unit) {
+        
         val contactProjection = arrayOf(ContactsContract.Contacts._ID)
         contentResolver.query(contactUri, contactProjection, null, null, null)?.use { contactCursor ->
             if (contactCursor.moveToFirst()) {
@@ -70,6 +76,7 @@ class CallViewModel @Inject constructor(
                 if (contactIdIndex != -1) {
                     val contactId = contactCursor.getString(contactIdIndex)
 
+                    
                     val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
                     val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
                     val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
@@ -84,10 +91,12 @@ class CallViewModel @Inject constructor(
                             val numberIndex = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                             if (numberIndex != -1) {
                                 var number = phoneCursor.getString(numberIndex)
+                                
                                 number = number.replace(Regex("[^0-9+]"), "")
                                 onPhoneNumberSelected(number)
                             }
                         }
+                        
                     }
                 }
             }

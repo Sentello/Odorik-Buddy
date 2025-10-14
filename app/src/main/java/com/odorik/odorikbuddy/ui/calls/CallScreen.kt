@@ -16,8 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.odorik.odorikbuddy.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,9 +62,9 @@ fun CallScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                // we can now launch the contact picker
+                
             } else {
-                // Handle permission denial
+                
             }
         }
     )
@@ -89,7 +91,7 @@ fun CallScreen(
         OutlinedTextField(
             value = callerId,
             onValueChange = { callerId = it },
-            label = { Text("Caller ID") },
+            label = { Text(stringResource(R.string.caller_id)) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = {
@@ -113,7 +115,7 @@ fun CallScreen(
         OutlinedTextField(
             value = recipient,
             onValueChange = { recipient = it },
-            label = { Text("Recipient") },
+            label = { Text(stringResource(R.string.recipient)) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = {
@@ -140,10 +142,10 @@ fun CallScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = lines.find { it.id == selectedLine }?.caller_id ?: "Select Line",
+                value = lines.find { it.id == selectedLine }?.caller_id ?: stringResource(R.string.select_line),
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Line") },
+                label = { Text(stringResource(R.string.line)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.menuAnchor().fillMaxWidth()
             )
@@ -168,7 +170,7 @@ fun CallScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Call")
+            Text(stringResource(R.string.call))
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = callResult.value)
@@ -177,11 +179,11 @@ fun CallScreen(
             items(callList.value) { call ->
                 Card(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text(text = "From: ${call.callerId}")
-                        Text(text = "To: ${call.calledNumber}")
-                        Text(text = "Duration: ${call.duration}s")
-                        Text(text = "Cost: ${call.cost}")
-                        Text(text = "Time: ${call.startTime}")
+                        Text(text = "${stringResource(R.string.from_label)} ${call.callerId}")
+                        Text(text = "${stringResource(R.string.to_label)} ${call.calledNumber}")
+                        Text(text = "${stringResource(R.string.duration_label)} ${call.duration}s")
+                        Text(text = "${stringResource(R.string.cost_label)} ${call.cost}")
+                        Text(text = "${stringResource(R.string.time_label)} ${call.startTime}")
                     }
                 }
             }

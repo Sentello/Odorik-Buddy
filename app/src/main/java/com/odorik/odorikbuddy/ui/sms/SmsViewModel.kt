@@ -34,9 +34,11 @@ class SmsViewModel @Inject constructor(
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
                 _error.value = "Authentication credentials not set."
+                println("SmsViewModel: Authentication credentials are null or empty.") 
                 return@launch
             }
 
+            println("SmsViewModel: Fetching allowed senders with user: $user, password: ${password.take(3)}...") 
             val response = api.getAllowedSenders(user, password)
             if (response.isSuccessful) {
                 val body = response.body()
@@ -69,7 +71,7 @@ class SmsViewModel @Inject constructor(
                 if (body?.startsWith("error") == true) {
                     _error.value = body
                 } else {
-                    _sendResult.value = body
+                    _sendResult.value = body  
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"
@@ -80,6 +82,7 @@ class SmsViewModel @Inject constructor(
     }
 
     fun handleContactSelection(contentResolver: ContentResolver, contactUri: Uri, onPhoneNumberSelected: (String) -> Unit) {
+        
         val contactProjection = arrayOf(ContactsContract.Contacts._ID)
         contentResolver.query(contactUri, contactProjection, null, null, null)?.use { contactCursor ->
             if (contactCursor.moveToFirst()) {
@@ -87,6 +90,7 @@ class SmsViewModel @Inject constructor(
                 if (contactIdIndex != -1) {
                     val contactId = contactCursor.getString(contactIdIndex)
 
+                    
                     val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
                     val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
                     val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
@@ -101,10 +105,12 @@ class SmsViewModel @Inject constructor(
                             val numberIndex = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                             if (numberIndex != -1) {
                                 var number = phoneCursor.getString(numberIndex)
+                                
                                 number = number.replace(Regex("[^0-9+]"), "")
                                 onPhoneNumberSelected(number)
                             }
                         }
+                        
                     }
                 }
             }

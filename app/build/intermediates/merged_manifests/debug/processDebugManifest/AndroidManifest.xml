@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.odorik.odorikbuddy"
     android:versionCode="1"
-    android:versionName="1.0.20250910" >
+    android:versionName="1.0.20250912" >
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -43,10 +43,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="androidx.activity.ComponentActivity"
+            android:name="androidx.compose.ui.tooling.PreviewActivity"
             android:exported="true" />
         <activity
-            android:name="androidx.compose.ui.tooling.PreviewActivity"
+            android:name="androidx.activity.ComponentActivity"
             android:exported="true" />
 
         <provider

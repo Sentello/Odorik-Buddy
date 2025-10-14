@@ -10,23 +10,34 @@ import com.odorik.odorikbuddy.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.odorik.odorikbuddy.data.local.ThemeManager // Import ThemeManager
-import androidx.compose.runtime.State // Import State for isDarkMode
+import com.odorik.odorikbuddy.data.local.ThemeManager 
+import com.odorik.odorikbuddy.data.local.LocaleManager
+import androidx.compose.runtime.State 
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val getLinesUseCase: GetLinesUseCase,
     private val getLineInfoUseCase: GetLineInfoUseCase,
     private val userRepository: UserRepository,
-    private val themeManager: ThemeManager // Inject ThemeManager
+    private val themeManager: ThemeManager, 
+    private val localeManager: LocaleManager
 ) : ViewModel() {
 
-    val isDarkMode: State<Boolean> = themeManager.isDarkMode // Expose isDarkMode from ThemeManager
+    val isDarkMode: State<Boolean> = themeManager.isDarkMode 
 
     fun setDarkMode(enabled: Boolean) {
-        themeManager.setDarkMode(enabled) // Expose setDarkMode from ThemeManager
+        themeManager.setDarkMode(enabled) 
+    }
+
+    private val _language = MutableStateFlow("en")
+    val language: StateFlow<String> = _language.asStateFlow()
+
+    fun setLanguage(lang: String) {
+        localeManager.setPreferredLanguage(lang)
+        _language.value = lang
     }
 
     private val _lines = MutableStateFlow<List<Line>>(emptyList())

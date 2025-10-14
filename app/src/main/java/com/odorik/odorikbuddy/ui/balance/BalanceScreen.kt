@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.odorik.odorikbuddy.R
 
 @Composable
 fun BalanceScreen(viewModel: BalanceViewModel = viewModel()) {
@@ -15,13 +18,13 @@ fun BalanceScreen(viewModel: BalanceViewModel = viewModel()) {
     val error by viewModel.error.collectAsState()
 
     Column {
-        Button(onClick = { viewModel.fetchBalance() }) { Text("Refresh Balance") }
+        Button(onClick = { viewModel.fetchBalance() }) { Text(stringResource(R.string.refresh_balance)) }
         if (error != null) {
-            Text("Error: $error", color = Color.Red)
+            Text(stringResource(R.string.error, error!!), color = Color.Red)
         } else if (balance != null) {
-            Text("Current Balance: $balance Kč")
+            Text(stringResource(R.string.current_balance, balance!!))
         } else {
-            Text("Loading...")
+            Text(stringResource(R.string.loading))
         }
     }
 }
