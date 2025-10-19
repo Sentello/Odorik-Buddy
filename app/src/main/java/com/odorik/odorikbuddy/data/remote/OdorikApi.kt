@@ -2,6 +2,7 @@ package com.odorik.odorikbuddy.data.remote
 
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.model.LineInfo
+import com.odorik.odorikbuddy.model.HistoryItem
 import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -55,4 +56,20 @@ interface OdorikApi {
         @Query("password") password: String,
         @Query("line") line: String
     ): Response<LineInfo>
+
+    @GET("calls.json")
+    suspend fun getCallHistory(
+        @Query("user") user: String,
+        @Query("password") password: String,
+        @Query("from") from: String, 
+        @Query("to") to: String      
+    ): List<HistoryItem>
+
+    @GET("sms.json")
+    suspend fun getSmsHistory(
+        @Query("user") user: String,
+        @Query("password") password: String,
+        @Query("from") from: String, 
+        @Query("to") to: String      
+    ): List<HistoryItem>
 }

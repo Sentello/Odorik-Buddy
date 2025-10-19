@@ -10,8 +10,6 @@
     <string name="name_label">Jméno:</string>
     <string name="email_label">E-mail:</string>
     <string name="phone_label">Telefon:</string>
-    <string name="refresh_balance">Obnovit zůstatek</string>
-    <string name="current_balance">Aktuální zůstatek: %s Kč</string>
     <string name="loading">Načítání...</string>
     <string name="error">Chyba: %s</string>
     <string name="caller_id">Volající</string>
@@ -48,4 +46,8 @@
     <string name="line_id_label">ID Linky:</string>
     <string name="lang_english">English</string>
     <string name="lang_czech">Čeština</string>
+    <string name="history">Historie</string>
+    <string name="history_title">Historie volání a SMS</string>
+    <string name="callback_title">Zpětné volání</string>
+    <string name="sms_title">SMS</string>
 </resources>

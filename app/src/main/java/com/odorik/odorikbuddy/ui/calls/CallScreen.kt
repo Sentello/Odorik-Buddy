@@ -81,109 +81,118 @@ fun CallScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        OutlinedTextField(
-            value = callerId,
-            onValueChange = { callerId = it },
-            label = { Text(stringResource(R.string.caller_id)) },
-            modifier = Modifier.fillMaxWidth(),
-            trailingIcon = {
-                IconButton(onClick = {
-                    when (PackageManager.PERMISSION_GRANTED) {
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_CONTACTS
-                        ) -> {
-                            callerIdLauncher.launch(null)
-                        }
-                        else -> {
-                            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        }
-                    }
-                }) {
-                    Icon(Icons.Default.Contacts, contentDescription = "Pick Caller ID")
-                }
-            }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = recipient,
-            onValueChange = { recipient = it },
-            label = { Text(stringResource(R.string.recipient)) },
-            modifier = Modifier.fillMaxWidth(),
-            trailingIcon = {
-                IconButton(onClick = {
-                    when (PackageManager.PERMISSION_GRANTED) {
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_CONTACTS
-                        ) -> {
-                            recipientLauncher.launch(null)
-                        }
-                        else -> {
-                            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        }
-                    }
-                }) {
-                    Icon(Icons.Default.Contacts, contentDescription = "Pick Recipient")
-                }
-            }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.callback_title)) }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedTextField(
-                value = lines.find { it.id == selectedLine }?.caller_id ?: stringResource(R.string.select_line),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.line)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                value = callerId,
+                onValueChange = { callerId = it },
+                label = { Text(stringResource(R.string.caller_id)) },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        when (PackageManager.PERMISSION_GRANTED) {
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.READ_CONTACTS
+                            ) -> {
+                                callerIdLauncher.launch(null)
+                            }
+                            else -> {
+                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                            }
+                        }
+                    }) {
+                        Icon(Icons.Default.Contacts, contentDescription = "Pick Caller ID")
+                    }
+                }
             )
-            ExposedDropdownMenu(
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = recipient,
+                onValueChange = { recipient = it },
+                label = { Text(stringResource(R.string.recipient)) },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        when (PackageManager.PERMISSION_GRANTED) {
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.READ_CONTACTS
+                            ) -> {
+                                recipientLauncher.launch(null)
+                            }
+                            else -> {
+                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                            }
+                        }
+                    }) {
+                        Icon(Icons.Default.Contacts, contentDescription = "Pick Recipient")
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ExposedDropdownMenuBox(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onExpandedChange = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                lines.forEach { line ->
-                    DropdownMenuItem(text = { Text(line.caller_id) }, onClick = {
-                        selectedLine = line.id
-                        expanded = false
-                    })
+                OutlinedTextField(
+                    value = lines.find { it.id == selectedLine }?.caller_id ?: stringResource(R.string.select_line),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.line)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    lines.forEach { line ->
+                        DropdownMenuItem(text = { Text(line.caller_id) }, onClick = {
+                            selectedLine = line.id
+                            expanded = false
+                        })
+                    }
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { 
-                if (selectedLine != null) {
-                    viewModel.makeCall(callerId, recipient, selectedLine!!)
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.call))
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = callResult.value)
-        Spacer(modifier = Modifier.height(16.dp))
-        LazyColumn {
-            items(callList.value) { call ->
-                Card(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(text = "${stringResource(R.string.from_label)} ${call.callerId}")
-                        Text(text = "${stringResource(R.string.to_label)} ${call.calledNumber}")
-                        Text(text = "${stringResource(R.string.duration_label)} ${call.duration}s")
-                        Text(text = "${stringResource(R.string.cost_label)} ${call.cost}")
-                        Text(text = "${stringResource(R.string.time_label)} ${call.startTime}")
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    if (selectedLine != null) {
+                        viewModel.makeCall(callerId, recipient, selectedLine!!)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.call))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = callResult.value)
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyColumn {
+                items(callList.value) { call ->
+                    Card(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(text = "${stringResource(R.string.from_label)} ${call.callerId}")
+                            Text(text = "${stringResource(R.string.to_label)} ${call.calledNumber}")
+                            Text(text = "${stringResource(R.string.duration_label)} ${call.duration}s")
+                            Text(text = "${stringResource(R.string.cost_label)} ${call.cost}")
+                            Text(text = "${stringResource(R.string.time_label)} ${call.startTime}")
+                        }
                     }
                 }
             }

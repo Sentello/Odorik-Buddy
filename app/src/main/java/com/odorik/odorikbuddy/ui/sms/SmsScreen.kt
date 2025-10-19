@@ -57,84 +57,93 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
     LaunchedEffect(Unit) { viewModel.fetchAllowedSenders() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        OutlinedTextField(
-            value = recipient,
-            onValueChange = { recipient = it },
-            label = { Text(stringResource(R.string.recipient)) },
-            modifier = Modifier.fillMaxWidth(),
-            trailingIcon = {
-                IconButton(onClick = {
-                    when (PackageManager.PERMISSION_GRANTED) {
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_CONTACTS
-                        ) -> {
-                            launcher.launch(null)
-                        }
-                        else -> {
-                            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                        }
-                    }
-                }) {
-                    Icon(Icons.Default.Contacts, contentDescription = "Pick Contact")
-                }
-            }
-        )
-        Spacer(Modifier.height(8.dp))
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.sms_title)) }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedTextField(
-                value = selectedSender ?: stringResource(R.string.select_sender),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.sender)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                value = recipient,
+                onValueChange = { recipient = it },
+                label = { Text(stringResource(R.string.recipient)) },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        when (PackageManager.PERMISSION_GRANTED) {
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.READ_CONTACTS
+                            ) -> {
+                                launcher.launch(null)
+                            }
+                            else -> {
+                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                            }
+                        }
+                    }) {
+                        Icon(Icons.Default.Contacts, contentDescription = "Pick Contact")
+                    }
+                }
             )
-            ExposedDropdownMenu(
+            Spacer(Modifier.height(8.dp))
+            ExposedDropdownMenuBox(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onExpandedChange = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                allowedSenders.forEach { sender ->
-                    DropdownMenuItem(text = { Text(sender) }, onClick = {
-                        selectedSender = sender
-                        expanded = false
-                    })
+                OutlinedTextField(
+                    value = selectedSender ?: stringResource(R.string.select_sender),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.sender)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    allowedSenders.forEach { sender ->
+                        DropdownMenuItem(text = { Text(sender) }, onClick = {
+                            selectedSender = sender
+                            expanded = false
+                        })
+                    }
                 }
             }
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = message,
+                onValueChange = { message = it },
+                label = { Text(stringResource(R.string.message)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = delayed,
+                onValueChange = { delayed = it },
+                label = { Text(stringResource(R.string.delayed)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { viewModel.sendSms(recipient, message, selectedSender, delayed.takeIf { it.isNotBlank() }) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.send_sms)) }
+            if (error != null) Text(stringResource(R.string.error, error!!), color = Color.Red)
+            if (sendResult != null) Text(stringResource(R.string.result, sendResult!!), color = Color.Green)
         }
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = message,
-            onValueChange = { message = it },
-            label = { Text(stringResource(R.string.message)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = delayed,
-            onValueChange = { delayed = it },
-            label = { Text(stringResource(R.string.delayed)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = { viewModel.sendSms(recipient, message, selectedSender, delayed.takeIf { it.isNotBlank() }) },
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.send_sms)) }
-        if (error != null) Text(stringResource(R.string.error, error!!), color = Color.Red)
-        if (sendResult != null) Text(stringResource(R.string.result, sendResult!!), color = Color.Green)
     }
 }

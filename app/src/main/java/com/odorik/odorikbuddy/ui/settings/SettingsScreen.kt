@@ -41,136 +41,146 @@ fun SettingsScreen(
         viewModel.getLines()
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween 
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize() 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.settings)) }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            verticalArrangement = Arrangement.SpaceBetween 
         ) {
-            item {
-                
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.dark_mode))
-                    Switch(
-                        checked = isDarkMode,
-                        onCheckedChange = { viewModel.setDarkMode(it) }, 
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
-                            uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+            LazyColumn(
+                modifier = Modifier.fillMaxSize() 
+            ) {
+                item {
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(stringResource(R.string.dark_mode))
+                        Switch(
+                            checked = isDarkMode,
+                            onCheckedChange = { viewModel.setDarkMode(it) }, 
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                            )
                         )
-                    )
-                }
-            }
-            
-            item {
-                val context = LocalContext.current
-                var expanded by remember { mutableStateOf(false) }
-                val languages = listOf(
-                    stringResource(R.string.lang_english) to "en",
-                    stringResource(R.string.lang_czech) to "cs"
-                )
-                val currentLangCode = context.resources.configuration.locales.get(0).language
-                val selectedLang = languages.find { it.second == currentLangCode }?.first ?: stringResource(R.string.lang_english)
-
-                LaunchedEffect(currentLangCode) {
-                    if (language != currentLangCode) {
-                        viewModel.setLanguage(currentLangCode)
                     }
                 }
+                
+                item {
+                    val context = LocalContext.current
+                    var expanded by remember { mutableStateOf(false) }
+                    val languages = listOf(
+                        stringResource(R.string.lang_english) to "en",
+                        stringResource(R.string.lang_czech) to "cs"
+                    )
+                    val currentLangCode = context.resources.configuration.locales.get(0).language
+                    val selectedLang = languages.find { it.second == currentLangCode }?.first ?: stringResource(R.string.lang_english)
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.settings_language_label))
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier.wrapContentWidth()
+                    LaunchedEffect(currentLangCode) {
+                        if (language != currentLangCode) {
+                            viewModel.setLanguage(currentLangCode)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
-                            value = selectedLang,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .wrapContentWidth()
-                                .widthIn(max = 150.dp),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() 
-                        )
-                        ExposedDropdownMenu(
+                        Text(stringResource(R.string.settings_language_label))
+                        ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                            onExpandedChange = { expanded = !expanded },
+                            modifier = Modifier.wrapContentWidth()
                         ) {
-                            languages.forEach { (display, code) ->
-                                DropdownMenuItem(
-                                    text = { Text(display) },
-                                    onClick = {
-                                        viewModel.setLanguage(code)
-                                        (context as? MainActivity)?.updateLocale(code)
-                                        expanded = false
-                                    }
-                                )
+                            OutlinedTextField(
+                                value = selectedLang,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .wrapContentWidth()
+                                    .widthIn(max = 150.dp),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() 
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                languages.forEach { (display, code) ->
+                                    DropdownMenuItem(
+                                        text = { Text(display) },
+                                        onClick = {
+                                            viewModel.setLanguage(code)
+                                            (context as? MainActivity)?.updateLocale(code)
+                                            expanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-            items(lines.value) { line ->
-                Card(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                            viewModel.getLineInfo(line.id); showDialog = true
-                        },
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(text = "${stringResource(R.string.caller_id_label)} ${line.caller_id}")
-                        Text(text = "${stringResource(R.string.line_id_label)} ${line.id}")
+                items(lines.value) { line ->
+                    Card(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.getLineInfo(line.id); showDialog = true
+                            },
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(text = "${stringResource(R.string.caller_id_label)} ${line.caller_id}")
+                            Text(text = "${stringResource(R.string.line_id_label)} ${line.id}")
+                        }
                     }
                 }
-            }
-            item {
-                
-                Log.d("SettingsScreen", "Logout Button Composable rendered")
-                Button(
-                    onClick = {
-                        viewModel.logout()
-                        navController.navigate("login") {
-                            popUpTo("main") { inclusive = true }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(stringResource(R.string.logout))
+                item {
+                    
+                    Log.d("SettingsScreen", "Logout Button Composable rendered")
+                    Button(
+                        onClick = {
+                            viewModel.logout()
+                            navController.navigate("login") {
+                                popUpTo("main") { inclusive = true }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(stringResource(R.string.logout))
+                    }
                 }
-            }
-            
-            item {
-                Text(
-                    text = "Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant 
-                )
+                
+                item {
+                    Text(
+                        text = "Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant 
+                    )
+                }
             }
         }
     }

@@ -1,9 +1,9 @@
 package com.odorik.odorikbuddy;
 
 import com.odorik.odorikbuddy.di.AppModule;
-import com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules;
+import com.odorik.odorikbuddy.ui.history.HistoryViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.login.LoginViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.settings.SettingsViewModel_HiltModules;
@@ -159,11 +159,11 @@ public final class OdorikBuddyApplication_HiltComponents {
 
   @Subcomponent(
       modules = {
-          BalanceViewModel_HiltModules.KeyModule.class,
           CallViewModel_HiltModules.KeyModule.class,
           DashboardViewModel_HiltModules.KeyModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
           HiltWrapper_SavedStateHandleModule.class,
+          HistoryViewModel_HiltModules.KeyModule.class,
           LoginViewModel_HiltModules.KeyModule.class,
           NavigationViewModel_HiltModules.KeyModule.class,
           ActivityCBuilderModule.class,
@@ -205,10 +205,10 @@ public final class OdorikBuddyApplication_HiltComponents {
 
   @Subcomponent(
       modules = {
-          BalanceViewModel_HiltModules.BindsModule.class,
           CallViewModel_HiltModules.BindsModule.class,
           DashboardViewModel_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
+          HistoryViewModel_HiltModules.BindsModule.class,
           LoginViewModel_HiltModules.BindsModule.class,
           NavigationViewModel_HiltModules.BindsModule.class,
           SettingsViewModel_HiltModules.BindsModule.class,

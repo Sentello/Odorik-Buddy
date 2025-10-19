@@ -41,7 +41,7 @@ fun DashboardScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(text = stringResource(R.string.balance), style = MaterialTheme.typography.titleLarge)
                 Text(
-                    text = credit.value?.let { "%.2f CZK".format(it) } ?: stringResource(R.string.loading),
+                    text = credit.value?.let { "%.2f Kč".format(it) } ?: stringResource(R.string.loading),
                     style = MaterialTheme.typography.headlineMedium
                 )
             }

@@ -15,10 +15,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
 import com.odorik.odorikbuddy.ui.calls.CallScreen
 import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
+import com.odorik.odorikbuddy.ui.history.HistoryScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
 
@@ -37,6 +37,7 @@ fun MainScreen(navController: NavController) {
                     BottomNavItem.Dashboard,
                     BottomNavItem.Calls,
                     BottomNavItem.Sms,
+                    BottomNavItem.History,
                     BottomNavItem.Settings
                 )
                 items.forEach { screen ->
@@ -62,6 +63,7 @@ fun MainScreen(navController: NavController) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen() }
             composable(BottomNavItem.Calls.route) { CallScreen() }
             composable(BottomNavItem.Sms.route) { SmsScreen() }
+            composable(BottomNavItem.History.route) { HistoryScreen() }
             composable(BottomNavItem.Settings.route) { SettingsScreen(navController = navController) }
         }
     }

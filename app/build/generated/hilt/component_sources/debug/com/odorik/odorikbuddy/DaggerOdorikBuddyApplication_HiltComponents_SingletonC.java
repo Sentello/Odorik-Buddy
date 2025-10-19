@@ -9,14 +9,13 @@ import androidx.lifecycle.ViewModel;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.odorik.odorikbuddy.data.local.LocaleManager;
 import com.odorik.odorikbuddy.data.local.SecurePreferences;
-import com.odorik.odorikbuddy.data.local.SecureStorage;
 import com.odorik.odorikbuddy.data.local.ThemeManager;
 import com.odorik.odorikbuddy.data.remote.OdorikApi;
+import com.odorik.odorikbuddy.data.repository.HistoryRepository;
 import com.odorik.odorikbuddy.data.repository.UserRepository;
 import com.odorik.odorikbuddy.di.AppModule_ProvideLocaleManagerFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideOdorikApiFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideSecurePreferencesFactory;
-import com.odorik.odorikbuddy.di.AppModule_ProvideSecureStorageFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideThemeManagerFactory;
 import com.odorik.odorikbuddy.di.AppModule_ProvideUserRepositoryFactory;
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase;
@@ -25,12 +24,12 @@ import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetLineInfoUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase;
-import com.odorik.odorikbuddy.ui.balance.BalanceViewModel;
-import com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.odorik.odorikbuddy.ui.calls.CallViewModel;
 import com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel;
 import com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules_KeyModule_ProvideFactory;
+import com.odorik.odorikbuddy.ui.history.HistoryViewModel;
+import com.odorik.odorikbuddy.ui.history.HistoryViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.odorik.odorikbuddy.ui.login.LoginViewModel;
 import com.odorik.odorikbuddy.ui.login.LoginViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.odorik.odorikbuddy.ui.navigation.NavigationViewModel;
@@ -397,7 +396,7 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
 
     @Override
     public Set<String> getViewModelKeys() {
-      return SetBuilder.<String>newSetBuilder(7).add(BalanceViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(CallViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(DashboardViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LoginViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(NavigationViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SettingsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SmsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
+      return SetBuilder.<String>newSetBuilder(7).add(CallViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(DashboardViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(HistoryViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LoginViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(NavigationViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SettingsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SmsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
     }
 
     @Override
@@ -430,11 +429,11 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
 
     private final ViewModelCImpl viewModelCImpl = this;
 
-    private Provider<BalanceViewModel> balanceViewModelProvider;
-
     private Provider<CallViewModel> callViewModelProvider;
 
     private Provider<DashboardViewModel> dashboardViewModelProvider;
+
+    private Provider<HistoryViewModel> historyViewModelProvider;
 
     private Provider<LoginViewModel> loginViewModelProvider;
 
@@ -474,6 +473,10 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
       return new GetUserInfoUseCase(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideUserRepositoryProvider.get());
     }
 
+    private HistoryRepository historyRepository() {
+      return new HistoryRepository(singletonCImpl.provideOdorikApiProvider.get());
+    }
+
     private GetLineInfoUseCase getLineInfoUseCase() {
       return new GetLineInfoUseCase(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideUserRepositoryProvider.get());
     }
@@ -481,9 +484,9 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
     @SuppressWarnings("unchecked")
     private void initialize(final SavedStateHandle savedStateHandleParam,
         final ViewModelLifecycle viewModelLifecycleParam) {
-      this.balanceViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 0);
-      this.callViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 1);
-      this.dashboardViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 2);
+      this.callViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 0);
+      this.dashboardViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 1);
+      this.historyViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 2);
       this.loginViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 3);
       this.navigationViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 4);
       this.settingsViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 5);
@@ -492,7 +495,7 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
 
     @Override
     public Map<String, javax.inject.Provider<ViewModel>> getHiltViewModelMap() {
-      return MapBuilder.<String, javax.inject.Provider<ViewModel>>newMapBuilder(7).put("com.odorik.odorikbuddy.ui.balance.BalanceViewModel", ((Provider) balanceViewModelProvider)).put("com.odorik.odorikbuddy.ui.calls.CallViewModel", ((Provider) callViewModelProvider)).put("com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel", ((Provider) dashboardViewModelProvider)).put("com.odorik.odorikbuddy.ui.login.LoginViewModel", ((Provider) loginViewModelProvider)).put("com.odorik.odorikbuddy.ui.navigation.NavigationViewModel", ((Provider) navigationViewModelProvider)).put("com.odorik.odorikbuddy.ui.settings.SettingsViewModel", ((Provider) settingsViewModelProvider)).put("com.odorik.odorikbuddy.ui.sms.SmsViewModel", ((Provider) smsViewModelProvider)).build();
+      return MapBuilder.<String, javax.inject.Provider<ViewModel>>newMapBuilder(7).put("com.odorik.odorikbuddy.ui.calls.CallViewModel", ((Provider) callViewModelProvider)).put("com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel", ((Provider) dashboardViewModelProvider)).put("com.odorik.odorikbuddy.ui.history.HistoryViewModel", ((Provider) historyViewModelProvider)).put("com.odorik.odorikbuddy.ui.login.LoginViewModel", ((Provider) loginViewModelProvider)).put("com.odorik.odorikbuddy.ui.navigation.NavigationViewModel", ((Provider) navigationViewModelProvider)).put("com.odorik.odorikbuddy.ui.settings.SettingsViewModel", ((Provider) settingsViewModelProvider)).put("com.odorik.odorikbuddy.ui.sms.SmsViewModel", ((Provider) smsViewModelProvider)).build();
     }
 
     @Override
@@ -521,14 +524,14 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
       @Override
       public T get() {
         switch (id) {
-          case 0: // com.odorik.odorikbuddy.ui.balance.BalanceViewModel 
-          return (T) new BalanceViewModel(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideSecureStorageProvider.get());
-
-          case 1: // com.odorik.odorikbuddy.ui.calls.CallViewModel 
+          case 0: // com.odorik.odorikbuddy.ui.calls.CallViewModel 
           return (T) new CallViewModel(viewModelCImpl.getCallListUseCase(), viewModelCImpl.getLinesUseCase(), viewModelCImpl.callUseCase());
 
-          case 2: // com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel 
+          case 1: // com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel 
           return (T) new DashboardViewModel(viewModelCImpl.getCreditUseCase(), viewModelCImpl.getUserInfoUseCase());
+
+          case 2: // com.odorik.odorikbuddy.ui.history.HistoryViewModel 
+          return (T) new HistoryViewModel(viewModelCImpl.historyRepository(), singletonCImpl.provideSecurePreferencesProvider.get());
 
           case 3: // com.odorik.odorikbuddy.ui.login.LoginViewModel 
           return (T) new LoginViewModel(singletonCImpl.provideUserRepositoryProvider.get(), viewModelCImpl.getCreditUseCase());
@@ -626,11 +629,9 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
 
     private Provider<LocaleManager> provideLocaleManagerProvider;
 
-    private Provider<SecurePreferences> provideSecurePreferencesProvider;
-
     private Provider<OdorikApi> provideOdorikApiProvider;
 
-    private Provider<SecureStorage> provideSecureStorageProvider;
+    private Provider<SecurePreferences> provideSecurePreferencesProvider;
 
     private Provider<UserRepository> provideUserRepositoryProvider;
 
@@ -644,10 +645,9 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
     private void initialize(final ApplicationContextModule applicationContextModuleParam) {
       this.provideThemeManagerProvider = DoubleCheck.provider(new SwitchingProvider<ThemeManager>(singletonCImpl, 0));
       this.provideLocaleManagerProvider = DoubleCheck.provider(new SwitchingProvider<LocaleManager>(singletonCImpl, 1));
-      this.provideSecurePreferencesProvider = DoubleCheck.provider(new SwitchingProvider<SecurePreferences>(singletonCImpl, 3));
       this.provideOdorikApiProvider = DoubleCheck.provider(new SwitchingProvider<OdorikApi>(singletonCImpl, 2));
-      this.provideSecureStorageProvider = DoubleCheck.provider(new SwitchingProvider<SecureStorage>(singletonCImpl, 4));
-      this.provideUserRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UserRepository>(singletonCImpl, 5));
+      this.provideSecurePreferencesProvider = DoubleCheck.provider(new SwitchingProvider<SecurePreferences>(singletonCImpl, 4));
+      this.provideUserRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UserRepository>(singletonCImpl, 3));
     }
 
     @Override
@@ -690,16 +690,13 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
           return (T) AppModule_ProvideLocaleManagerFactory.provideLocaleManager(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
 
           case 2: // com.odorik.odorikbuddy.data.remote.OdorikApi 
-          return (T) AppModule_ProvideOdorikApiFactory.provideOdorikApi(singletonCImpl.provideSecurePreferencesProvider.get());
+          return (T) AppModule_ProvideOdorikApiFactory.provideOdorikApi();
 
-          case 3: // com.odorik.odorikbuddy.data.local.SecurePreferences 
-          return (T) AppModule_ProvideSecurePreferencesFactory.provideSecurePreferences(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
-
-          case 4: // com.odorik.odorikbuddy.data.local.SecureStorage 
-          return (T) AppModule_ProvideSecureStorageFactory.provideSecureStorage(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
-
-          case 5: // com.odorik.odorikbuddy.data.repository.UserRepository 
+          case 3: // com.odorik.odorikbuddy.data.repository.UserRepository 
           return (T) AppModule_ProvideUserRepositoryFactory.provideUserRepository(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule), singletonCImpl.provideSecurePreferencesProvider.get());
+
+          case 4: // com.odorik.odorikbuddy.data.local.SecurePreferences 
+          return (T) AppModule_ProvideSecurePreferencesFactory.provideSecurePreferences(ApplicationContextModule_ProvideApplicationFactory.provideApplication(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);
         }

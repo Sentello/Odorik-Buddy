@@ -37,13 +37,13 @@
     <string msgid="6107532579223922871" name="call_notification_incoming_text">"Příchozí hovor"</string>
     <string msgid="8623827134497363134" name="call_notification_ongoing_text">"Probíhající hovor"</string>
     <string msgid="59049573811482460" name="call_notification_screening_text">"Prověřování příchozího hovoru"</string>
+    <string name="callback_title">Zpětné volání</string>
     <string name="caller_id">Volající</string>
     <string name="caller_id_label">ID Volajícího:</string>
     <string name="calls">Volání</string>
     <string msgid="406453423630273620" name="close_drawer">"Zavřít navigační panel"</string>
     <string msgid="7573152094250666567" name="close_sheet">"Zavřít sešit"</string>
     <string name="cost_label">Cena:</string>
-    <string name="current_balance">Aktuální zůstatek: %s Kč</string>
     <string name="czech">Čeština</string>
     <string name="dark_mode">Tmavý režim</string>
     <string name="dashboard">Přehled</string>
@@ -56,6 +56,8 @@
     <string name="english">English</string>
     <string name="error">Chyba: %s</string>
     <string name="from_label">Od:</string>
+    <string name="history">Historie</string>
+    <string name="history_title">Historie volání a SMS</string>
     <string msgid="6827826412747255547" name="in_progress">"Probíhá"</string>
     <string msgid="7933458017204019916" name="indeterminate">"Částečně zaškrtnuto"</string>
     <string name="lang_czech">Čeština</string>
@@ -137,7 +139,6 @@
     <string msgid="5941395253238309765" name="range_end">"Konec rozsahu"</string>
     <string msgid="7097486360902471446" name="range_start">"Začátek rozsahu"</string>
     <string name="recipient">Příjemce</string>
-    <string name="refresh_balance">Obnovit zůstatek</string>
     <string name="remember_me">Zapamatovat si mě</string>
     <string name="result">Výsledek: %s</string>
     <string msgid="6264217191555673260" name="search_menu_title">"Hledat"</string>
@@ -149,6 +150,7 @@
     <string name="settings">Nastavení</string>
     <string name="settings_language_label">Jazyk</string>
     <string name="sms">SMS</string>
+    <string name="sms_title">SMS</string>
     <string msgid="6277540029070332960" name="status_bar_notification_info_overflow">"999+"</string>
     <string msgid="2561197295334830845" name="switch_role">"Přepnout"</string>
     <string msgid="1672349317127674378" name="tab">"Karta"</string>

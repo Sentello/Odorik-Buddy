@@ -17,7 +17,6 @@ import com.odorik.odorikbuddy.data.local.SecureStorage
 import com.odorik.odorikbuddy.data.local.ThemeManager 
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
-import okhttp3.Credentials
 import retrofit2.converter.gson.GsonConverterFactory
 
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
@@ -28,23 +27,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOdorikApi(securePreferences: SecurePreferences): OdorikApi {
+    fun provideOdorikApi(): OdorikApi {
         val logging = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
         }
         val httpClient = OkHttpClient.Builder()
             .addInterceptor(logging)
-            .addInterceptor { chain ->
-                val original = chain.request()
-                val user = securePreferences.getUser()
-                val password = securePreferences.getPassword()
-                val requestBuilder = original.newBuilder()
-                if (user != null && password != null) {
-                    val credentials = Credentials.basic(user, password)
-                    requestBuilder.header("Authorization", credentials)
-                }
-                chain.proceed(requestBuilder.build())
-            }
             .build()
 
         return Retrofit.Builder()

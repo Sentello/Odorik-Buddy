@@ -982,13 +982,13 @@ string call_notification_hang_up_action
 string call_notification_incoming_text
 string call_notification_ongoing_text
 string call_notification_screening_text
+string callback_title
 string caller_id
 string caller_id_label
 string calls
 string close_drawer
 string close_sheet
 string cost_label
-string current_balance
 string czech
 string dark_mode
 string dashboard
@@ -1001,6 +1001,8 @@ string email_label
 string english
 string error
 string from_label
+string history
+string history_title
 string in_progress
 string indeterminate
 string lang_czech
@@ -1082,7 +1084,6 @@ string phone_label
 string range_end
 string range_start
 string recipient
-string refresh_balance
 string remember_me
 string result
 string search_menu_title
@@ -1094,6 +1095,7 @@ string sender
 string settings
 string settings_language_label
 string sms
+string sms_title
 string status_bar_notification_info_overflow
 string switch_role
 string tab
