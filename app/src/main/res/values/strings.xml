@@ -14,6 +14,7 @@
     <string name="error">Error: %s</string>
     <string name="caller_id">Caller ID</string>
     <string name="recipient">Recipient</string>
+    <string name="called_number">Recipient</string>
     <string name="line">Line</string>
     <string name="select_line">Select Line</string>
     <string name="call">Call</string>
@@ -35,7 +36,7 @@
     <string name="caller_id_label">Caller ID:</string>
     <string name="password_label">Password:</string>
     <string name="ok">OK</string>
-    <string name="version">Version %s (Build %d)</string>
+    <string name="version">Version %1$s</string>
     <string name="dashboard">Dashboard</string>
     <string name="calls">Calls</string>
     <string name="sms">SMS</string>
@@ -46,8 +47,28 @@
     <string name="line_id_label">Line ID:</string>
     <string name="lang_english">English</string>
     <string name="lang_czech">Čeština</string>
+    <string name="pick_contact">Pick Contact</string>
+    <string name="line_info_title">Line Info</string>
+    <string name="line_name_label">Line name:</string>
+    <string name="caller_id_label_settings">Caller ID:</string>
+    <string name="password_label_settings">Password:</string>
+    <string name="call_history">Call</string>
+    <string name="sms_history">SMS</string>
+    <string name="from_history">From:</string>
+    <string name="to_history">To:</string>
+    <string name="currency_format">%.2f Kč</string>
+    <string name="pick_caller_id">Pick Caller ID</string>
+    <string name="pick_recipient">Pick Recipient</string>
+    <string name="invalid_credentials">Invalid credentials</string>
+    <string name="unknown_error">An unknown error occurred</string>
+    <string name="auth_credentials_not_set">Authentication credentials not set</string>
+    <string name="user_or_password_not_set">User or password not set</string>
     <string name="history">History</string>
     <string name="history_title">Call &amp; SMS History</string>
     <string name="callback_title">Callback</string>
     <string name="sms_title">SMS</string>
+    <string name="spending_summary">Spending Summary</string>
+    <string name="todays_spending">"Today's Spending:"</string>
+    <string name="this_months_spending">"This Month's Spending:"</string>
+    <string name="last_7_days">Last 7 Days</string>
 </resources>

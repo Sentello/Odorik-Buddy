@@ -4644,7 +4644,6 @@ androidx.compose.foundation.layout.Arrangement:
     public static synthetic void getBottom$annotations()
     public static synthetic void getCenter$annotations()
     public static synthetic void getEnd$annotations()
-    public final androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical getSpaceAround()
     public static synthetic void getSpaceAround$annotations()
     public static synthetic void getSpaceBetween$annotations()
     public final androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical getSpaceEvenly()
@@ -4691,7 +4690,6 @@ androidx.compose.foundation.layout.ColumnScope$DefaultImpls
 androidx.compose.foundation.layout.ColumnScope:
     public abstract androidx.compose.ui.Modifier alignBy(androidx.compose.ui.Modifier,androidx.compose.ui.layout.VerticalAlignmentLine)
     public abstract androidx.compose.ui.Modifier alignBy(androidx.compose.ui.Modifier,kotlin.jvm.functions.Function1)
-    public static synthetic androidx.compose.ui.Modifier weight$default(androidx.compose.foundation.layout.ColumnScope,androidx.compose.ui.Modifier,float,boolean,int,java.lang.Object)
 androidx.compose.foundation.layout.ColumnScopeInstance:
     public static final int $stable
     public androidx.compose.ui.Modifier alignBy(androidx.compose.ui.Modifier,androidx.compose.ui.layout.VerticalAlignmentLine)
@@ -4944,8 +4942,6 @@ androidx.compose.foundation.layout.SizeKt$requiredSizeIn-qDBjuR0$$inlined$debugI
 androidx.compose.foundation.layout.SizeKt$requiredWidth-3ABfNKs$$inlined$debugInspectorInfo$1
 androidx.compose.foundation.layout.SizeKt$requiredWidthIn-VpY3zN4$$inlined$debugInspectorInfo$1
 androidx.compose.foundation.layout.SizeKt:
-    public static final androidx.compose.ui.Modifier fillMaxHeight(androidx.compose.ui.Modifier,float)
-    public static synthetic androidx.compose.ui.Modifier fillMaxHeight$default(androidx.compose.ui.Modifier,float,int,java.lang.Object)
     public static final androidx.compose.ui.Modifier requiredHeight-3ABfNKs(androidx.compose.ui.Modifier,float)
     public static final androidx.compose.ui.Modifier requiredHeightIn-VpY3zN4(androidx.compose.ui.Modifier,float,float)
     public static synthetic androidx.compose.ui.Modifier requiredHeightIn-VpY3zN4$default(androidx.compose.ui.Modifier,float,float,int,java.lang.Object)
@@ -5442,6 +5438,11 @@ androidx.compose.foundation.lazy.layout.LazyLayoutKt:
     private static final int MaxItemsToRetainForReuse
     public static final void LazyLayout(androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider,androidx.compose.ui.Modifier,androidx.compose.foundation.lazy.layout.LazyLayoutPrefetchState,kotlin.jvm.functions.Function2,androidx.compose.runtime.Composer,int,int)
 androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScope:
+    public float toDp-GaN1DYA(long)
+    public float toDp-u2uoSUM(int)
+    public long toSize-XkaWNTQ(long)
+    public long toSp-0xMU5do(float)
+    public long toSp-kPz2Gy4(float)
     public long toSp-kPz2Gy4(int)
 androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScopeImpl:
     public static final int $stable
@@ -20348,7 +20349,6 @@ androidx.compose.runtime.Composer$Companion:
 androidx.compose.runtime.Composer:
     public boolean changed(byte)
     public boolean changed(char)
-    public boolean changed(double)
     public boolean changed(short)
     public abstract void disableReusing()
     public abstract void disableSourceInformation()
@@ -20383,7 +20383,6 @@ androidx.compose.runtime.ComposerImpl:
     public final java.lang.Object cache(boolean,kotlin.jvm.functions.Function0)
     public boolean changed(byte)
     public boolean changed(char)
-    public boolean changed(double)
     public boolean changed(short)
     public void disableReusing()
     public void disableSourceInformation()
@@ -35786,14 +35785,12 @@ com.odorik.odorikbuddy.R$color
 com.odorik.odorikbuddy.R$drawable
 com.odorik.odorikbuddy.R$mipmap
 com.odorik.odorikbuddy.R$string:
-    public static int current_balance
     public static int czech
     public static int english
     public static int line_info
     public static int line_name
     public static int password_label
-    public static int refresh_balance
-    public static int version
+    public static int pick_recipient
     private void <init>()
 com.odorik.odorikbuddy.R$style
 com.odorik.odorikbuddy.R$xml
@@ -35813,11 +35810,8 @@ com.odorik.odorikbuddy.data.local.SecurePreferences:
     public static synthetic java.lang.String getString$default(com.odorik.odorikbuddy.data.local.SecurePreferences,java.lang.String,java.lang.String,int,java.lang.Object)
     public final void saveString(java.lang.String,java.lang.String)
 com.odorik.odorikbuddy.data.local.SecurePreferences_Factory
-com.odorik.odorikbuddy.data.local.SecureStorage:
-    public final java.lang.String getSecurePassword()
-    public final java.lang.String getSecureUser()
-    private final android.content.SharedPreferences getSharedPreferences()
-    public final void saveCredentials(java.lang.String,java.lang.String)
+com.odorik.odorikbuddy.data.local.SecureStorage$sharedPreferences$2
+com.odorik.odorikbuddy.data.local.SecureStorage
 com.odorik.odorikbuddy.data.local.SecureStorage_Factory
 com.odorik.odorikbuddy.data.local.ThemeManager_Factory
 com.odorik.odorikbuddy.data.remote.OdorikApi$DefaultImpls
@@ -35825,6 +35819,7 @@ com.odorik.odorikbuddy.data.repository.HistoryRepository_Factory
 com.odorik.odorikbuddy.data.repository.UserRepository_Factory
 com.odorik.odorikbuddy.di.AppModule:
     public static final int $stable
+    public final com.odorik.odorikbuddy.data.local.SecureStorage provideSecureStorage(android.app.Application)
 com.odorik.odorikbuddy.di.AppModule_ProvideLocaleManagerFactory:
     private final javax.inject.Provider applicationProvider
     public void <init>(javax.inject.Provider)
@@ -35843,12 +35838,7 @@ com.odorik.odorikbuddy.di.AppModule_ProvideSecurePreferencesFactory:
     public static com.odorik.odorikbuddy.di.AppModule_ProvideSecurePreferencesFactory create(javax.inject.Provider)
     public com.odorik.odorikbuddy.data.local.SecurePreferences get()
     public synthetic bridge java.lang.Object get()
-com.odorik.odorikbuddy.di.AppModule_ProvideSecureStorageFactory:
-    private final javax.inject.Provider applicationProvider
-    public void <init>(javax.inject.Provider)
-    public static com.odorik.odorikbuddy.di.AppModule_ProvideSecureStorageFactory create(javax.inject.Provider)
-    public com.odorik.odorikbuddy.data.local.SecureStorage get()
-    public synthetic bridge java.lang.Object get()
+com.odorik.odorikbuddy.di.AppModule_ProvideSecureStorageFactory
 com.odorik.odorikbuddy.di.AppModule_ProvideThemeManagerFactory:
     private final javax.inject.Provider applicationProvider
     public void <init>(javax.inject.Provider)
@@ -35872,7 +35862,6 @@ com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase_Factory
 com.odorik.odorikbuddy.domain.usecase.GetSmsListUseCase
 com.odorik.odorikbuddy.domain.usecase.GetSmsListUseCase_Factory
 com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase_Factory
-com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase
 com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase_Factory
 com.odorik.odorikbuddy.model.HistoryItem:
     public static final int $stable
@@ -35890,32 +35879,7 @@ com.odorik.odorikbuddy.model.HistoryItem:
     public final java.lang.String getDirection()
     public final java.lang.String getId()
     public final java.lang.String getStatus()
-com.odorik.odorikbuddy.ui.balance.BalanceScreenKt$BalanceScreen$1$1
-com.odorik.odorikbuddy.ui.balance.BalanceScreenKt$BalanceScreen$2
-com.odorik.odorikbuddy.ui.balance.BalanceScreenKt
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel$fetchBalance$1
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel:
-    public static final synthetic com.odorik.odorikbuddy.data.remote.OdorikApi access$getOdorikApi$p(com.odorik.odorikbuddy.ui.balance.BalanceViewModel)
-    public static final synthetic com.odorik.odorikbuddy.data.local.SecureStorage access$getSecureStorage$p(com.odorik.odorikbuddy.ui.balance.BalanceViewModel)
-    public static final synthetic kotlinx.coroutines.flow.MutableStateFlow access$get_balance$p(com.odorik.odorikbuddy.ui.balance.BalanceViewModel)
-    public static final synthetic kotlinx.coroutines.flow.MutableStateFlow access$get_error$p(com.odorik.odorikbuddy.ui.balance.BalanceViewModel)
-    public final kotlinx.coroutines.Job fetchBalance()
-    public final kotlinx.coroutines.flow.StateFlow getBalance()
-    public final kotlinx.coroutines.flow.StateFlow getError()
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_Factory
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules$BindsModule
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules$KeyModule:
-    private void <init>()
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules_KeyModule_ProvideFactory$InstanceHolder
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules_KeyModule_ProvideFactory:
-    public void <init>()
-    public static com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules_KeyModule_ProvideFactory create()
-    public synthetic bridge java.lang.Object get()
-    public java.lang.String get()
-com.odorik.odorikbuddy.ui.balance.ComposableSingletons$BalanceScreenKt$lambda-1$1
-com.odorik.odorikbuddy.ui.balance.ComposableSingletons$BalanceScreenKt
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$8$1$invoke$$inlined$items$default$2
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$invoke$$inlined$items$default$2
 com.odorik.odorikbuddy.ui.calls.CallViewModel:
     public final kotlinx.coroutines.flow.StateFlow getError()
 com.odorik.odorikbuddy.ui.calls.CallViewModel_Factory
@@ -35988,6 +35952,7 @@ com.odorik.odorikbuddy.ui.main.BottomNavItem$Sms:
     public static final int $stable
 com.odorik.odorikbuddy.ui.main.BottomNavItem:
     public static final int $stable
+com.odorik.odorikbuddy.ui.navigation.NavigationRoutes
 com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_Factory
 com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules$BindsModule
 com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules$KeyModule:
@@ -35999,7 +35964,7 @@ com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules_KeyModule_P
     public static com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules_KeyModule_ProvideFactory create()
     public synthetic bridge java.lang.Object get()
     public java.lang.String get()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$invoke$$inlined$items$default$2
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$invoke$$inlined$items$default$2
 com.odorik.odorikbuddy.ui.settings.SettingsViewModel:
     public final kotlinx.coroutines.flow.StateFlow getLogoutEvent()
 com.odorik.odorikbuddy.ui.settings.SettingsViewModel_Factory
@@ -36146,15 +36111,18 @@ dagger.hilt.android.internal.migration.HasCustomInject
 dagger.hilt.android.internal.migration.InjectedByHilt
 dagger.hilt.android.internal.modules.ActivityModule
 dagger.hilt.android.internal.modules.ActivityModule_ProvideFragmentActivityFactory
-dagger.hilt.android.internal.modules.ApplicationContextModule:
-    android.content.Context provideContext()
 dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideApplicationFactory:
     private final dagger.hilt.android.internal.modules.ApplicationContextModule module
     public void <init>(dagger.hilt.android.internal.modules.ApplicationContextModule)
     public static dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideApplicationFactory create(dagger.hilt.android.internal.modules.ApplicationContextModule)
     public android.app.Application get()
     public synthetic bridge java.lang.Object get()
-dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideContextFactory
+dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideContextFactory:
+    private final dagger.hilt.android.internal.modules.ApplicationContextModule module
+    public void <init>(dagger.hilt.android.internal.modules.ApplicationContextModule)
+    public static dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideContextFactory create(dagger.hilt.android.internal.modules.ApplicationContextModule)
+    public android.content.Context get()
+    public synthetic bridge java.lang.Object get()
 dagger.hilt.android.internal.modules.HiltWrapper_ActivityModule
 dagger.hilt.android.lifecycle.ActivityRetainedSavedState
 dagger.hilt.android.lifecycle.HiltViewModel
@@ -36285,8 +36253,6 @@ dagger.multibindings.StringKey
 hilt_aggregated_deps._com_odorik_odorikbuddy_MainActivity_GeneratedInjector
 hilt_aggregated_deps._com_odorik_odorikbuddy_OdorikBuddyApplication_GeneratedInjector
 hilt_aggregated_deps._com_odorik_odorikbuddy_di_AppModule
-hilt_aggregated_deps._com_odorik_odorikbuddy_ui_balance_BalanceViewModel_HiltModules_BindsModule
-hilt_aggregated_deps._com_odorik_odorikbuddy_ui_balance_BalanceViewModel_HiltModules_KeyModule
 hilt_aggregated_deps._com_odorik_odorikbuddy_ui_calls_CallViewModel_HiltModules_BindsModule
 hilt_aggregated_deps._com_odorik_odorikbuddy_ui_calls_CallViewModel_HiltModules_KeyModule
 hilt_aggregated_deps._com_odorik_odorikbuddy_ui_dashboard_DashboardViewModel_HiltModules_BindsModule
@@ -38840,7 +38806,6 @@ kotlin.collections.CollectionsKt___CollectionsKt:
     private static final java.lang.Float maxOfOrNull(java.lang.Iterable,kotlin.jvm.functions.Function1)
     private static final java.lang.Object maxOfWith(java.lang.Iterable,java.util.Comparator,kotlin.jvm.functions.Function1)
     private static final java.lang.Object maxOfWithOrNull(java.lang.Iterable,java.util.Comparator,kotlin.jvm.functions.Function1)
-    public static final java.lang.Double maxOrNull(java.lang.Iterable)
     public static final java.lang.Float maxOrNull(java.lang.Iterable)
     public static final double maxOrThrow(java.lang.Iterable)
     public static final float maxOrThrow(java.lang.Iterable)
@@ -47255,6 +47220,8 @@ androidx.compose.foundation.BackgroundElement:
     public static androidx.compose.foundation.BackgroundNode create()
     public static void update$1()
 androidx.compose.foundation.BackgroundKt$background-bw27NRU$$inlined$debugInspectorInfo$1
+androidx.compose.foundation.BackgroundKt:
+    public static synthetic androidx.compose.ui.Modifier background-bw27NRU$default(androidx.compose.ui.Modifier,long)
 androidx.compose.foundation.BackgroundNode:
     public static void drawOutline()
     public static void drawRect()
@@ -47903,11 +47870,11 @@ androidx.compose.foundation.layout.Arrangement$spacedBy$1:
     public static java.lang.Integer invoke$2()
 androidx.compose.foundation.layout.Arrangement:
     public static final androidx.compose.foundation.layout.Arrangement INSTANCE
-    public static final androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical SpaceAround
     public static final androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical SpaceEvenly
     public static androidx.compose.foundation.layout.Arrangement$Vertical getBottom()
     public static androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical getCenter()
     public static androidx.compose.foundation.layout.Arrangement$Horizontal getEnd()
+    public static androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical getSpaceAround()
     public static androidx.compose.foundation.layout.Arrangement$HorizontalOrVertical getSpaceBetween()
     public static androidx.compose.foundation.layout.Arrangement$Horizontal getStart()
     public static androidx.compose.foundation.layout.Arrangement$Vertical getTop()
@@ -47937,10 +47904,10 @@ androidx.compose.foundation.layout.BoxMeasurePolicy$measure$5:
 androidx.compose.foundation.layout.BoxScopeInstance$align$$inlined$debugInspectorInfo$1
 androidx.compose.foundation.layout.ColumnScope:
     public abstract androidx.compose.ui.Modifier align(androidx.compose.ui.Modifier,androidx.compose.ui.BiasAlignment$Horizontal)
-    public abstract androidx.compose.ui.Modifier weight()
+    public abstract androidx.compose.ui.Modifier weight(boolean)
 androidx.compose.foundation.layout.ColumnScopeInstance:
     public final androidx.compose.ui.Modifier align(androidx.compose.ui.Modifier,androidx.compose.ui.BiasAlignment$Horizontal)
-    public final androidx.compose.ui.Modifier weight()
+    public final androidx.compose.ui.Modifier weight(boolean)
 androidx.compose.foundation.layout.CrossAxisAlignment$CenterCrossAxisAlignment:
     public static final androidx.compose.foundation.layout.CrossAxisAlignment$CenterCrossAxisAlignment INSTANCE
 androidx.compose.foundation.layout.CrossAxisAlignment$Companion
@@ -48181,7 +48148,7 @@ androidx.compose.foundation.layout.SizeKt$sizeIn-qDBjuR0$$inlined$debugInspector
 androidx.compose.foundation.layout.SizeKt$width-3ABfNKs$$inlined$debugInspectorInfo$1
 androidx.compose.foundation.layout.SizeKt$widthIn-VpY3zN4$$inlined$debugInspectorInfo$1
 androidx.compose.foundation.layout.SizeKt:
-    public static final androidx.compose.foundation.layout.FillElement FillWholeMaxHeight
+    public static androidx.compose.ui.Modifier fillMaxHeight$default()
     public static androidx.compose.ui.Modifier fillMaxSize$default()
     public static androidx.compose.ui.Modifier fillMaxWidth$default(androidx.compose.ui.Modifier)
     public static synthetic androidx.compose.ui.Modifier heightIn-VpY3zN4$default(androidx.compose.ui.Modifier,float)
@@ -48575,10 +48542,6 @@ androidx.compose.foundation.lazy.layout.LazyLayoutKt$LazyLayout$3:
     public static void invoke$17()
 androidx.compose.foundation.lazy.layout.LazyLayoutKt$LazyLayout$4:
     public final void invoke$2()
-androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScope:
-    public float toDp-GaN1DYA(long)
-    public float toDp-u2uoSUM(int)
-    public long toSize-XkaWNTQ(long)
 androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScopeImpl:
     static void <clinit>()
 androidx.compose.foundation.lazy.layout.LazyLayoutNearestRangeState$Companion:
@@ -51597,6 +51560,7 @@ androidx.compose.runtime.Composer:
     public static final androidx.compose.runtime.Composer$Companion Companion
     static void <clinit>()
     public abstract androidx.compose.runtime.ComposerImpl$CompositionContextImpl buildContext()
+    public boolean changed(double)
     public abstract void endDefaults()
     public abstract void endProvider()
     public abstract void endProviders()
@@ -56428,8 +56392,6 @@ androidx.compose.ui.res.ImageVectorCache:
     public final void clear()
     public static void prune()
 androidx.compose.ui.res.Resources_androidKt
-androidx.compose.ui.res.StringResources_androidKt:
-    public static final java.lang.String stringResource(int,java.lang.Object[],androidx.compose.runtime.Composer)
 androidx.compose.ui.semantics.AccessibilityAction:
     static void <clinit>()
     public static kotlin.Function getAction()
@@ -61890,7 +61852,7 @@ com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$Vi
     public final com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$ActivityRetainedCImpl activityRetainedCImpl
     public final com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$ViewModelCImpl viewModelCImpl
     public static com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase -$$Nest$mgetCreditUseCase(com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$ViewModelCImpl)
-    public static com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase -$$Nest$mgetLinesUseCase(com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$ViewModelCImpl)
+    public static com.odorik.odorikbuddy.data.repository.HistoryRepository -$$Nest$mhistoryRepository(com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$ViewModelCImpl)
     public static com.odorik.odorikbuddy.domain.usecase.CallUseCase callUseCase()
     public static com.odorik.odorikbuddy.domain.usecase.GetCallListUseCase getCallListUseCase()
     public static com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase getCreditUseCase()
@@ -61899,6 +61861,7 @@ com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC$Vi
     public static com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase getUserInfoUseCase()
     public static com.odorik.odorikbuddy.data.repository.HistoryRepository historyRepository()
     public static void initialize$2()
+    public static com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase sendSmsUseCase()
 com.odorik.odorikbuddy.DaggerOdorikBuddyApplication_HiltComponents_SingletonC
 com.odorik.odorikbuddy.Hilt_MainActivity:
     public abstract void _initHiltInternal()
@@ -61949,12 +61912,6 @@ com.odorik.odorikbuddy.data.local.SecurePreferences:
     public final void clearUser()
     public static void savePassword()
     public static void saveUser()
-com.odorik.odorikbuddy.data.local.SecureStorage$sharedPreferences$2:
-    public static android.content.SharedPreferences invoke()
-com.odorik.odorikbuddy.data.local.SecureStorage:
-    public static final int $stable
-    public final kotlin.SynchronizedLazyImpl sharedPreferences$delegate
-    static void <clinit>()
 com.odorik.odorikbuddy.data.local.ThemeManager:
     public static final int $stable
     public final java.lang.String KEY_DARK_MODE
@@ -61997,7 +61954,6 @@ com.odorik.odorikbuddy.di.AppModule
 com.odorik.odorikbuddy.di.AppModule_ProvideLocaleManagerFactory
 com.odorik.odorikbuddy.di.AppModule_ProvideOdorikApiFactory
 com.odorik.odorikbuddy.di.AppModule_ProvideSecurePreferencesFactory
-com.odorik.odorikbuddy.di.AppModule_ProvideSecureStorageFactory
 com.odorik.odorikbuddy.di.AppModule_ProvideThemeManagerFactory
 com.odorik.odorikbuddy.di.AppModule_ProvideUserRepositoryFactory
 com.odorik.odorikbuddy.domain.usecase.AuthenticationException:
@@ -62022,6 +61978,10 @@ com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase:
     public static final int $stable
     public final com.odorik.odorikbuddy.data.repository.UserRepository userRepository
     static void <clinit>()
+com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase:
+    public static final int $stable
+    public final com.odorik.odorikbuddy.data.repository.UserRepository userRepository
+    static void <clinit>()
 com.odorik.odorikbuddy.model.HistoryItem:
     public final java.lang.String date
     public final java.lang.String destination_number
@@ -62037,77 +61997,69 @@ com.odorik.odorikbuddy.model.HistoryItem:
     public static java.lang.Integer getLength()
     public static double getPrice()
     public static java.lang.String getSource_number()
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel:
-    public static final int $stable
-    public final kotlinx.coroutines.flow.StateFlowImpl _balance
-    public final kotlinx.coroutines.flow.StateFlowImpl _error
-    public final kotlinx.coroutines.flow.StateFlowImpl balance
-    public final kotlinx.coroutines.flow.StateFlowImpl error
-    public final com.odorik.odorikbuddy.data.local.SecureStorage secureStorage
-    static void <clinit>()
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules$KeyModule
-com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules_KeyModule_ProvideFactory
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$1:
     public int label
     public final java.lang.Object invoke$3()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$2$1:
     public int label
     public final java.lang.Object invoke$3()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$1$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$2$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$2$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$2:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$2:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$3$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$3$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$4$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$4$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$4:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$4:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$5$1:
     public final void invoke$24()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6$2:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6$2:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6$3:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6$3:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6$4$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6$4$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6$5$1$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6$5$1$1:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6$5$1$2$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6$5$1$2$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6$5:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6$5:
     public final void invoke$74()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$6:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$6:
     public final void invoke$75()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$7:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$7:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$8$1$1$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$1$1:
     public final void invoke$74()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$8$1$invoke$$inlined$items$default$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$invoke$$inlined$items$default$1:
     public final java.lang.Void invoke$1()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$8$1$invoke$$inlined$items$default$3:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$invoke$$inlined$items$default$3:
     public final java.lang.Object invoke$12()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$8$1$invoke$$inlined$items$default$4:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$invoke$$inlined$items$default$4:
     public final void invoke$15()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$8$1:
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1:
     public final void invoke$76()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3:
+    public final void invoke$77()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$4:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$callerIdLauncher$1$1$1:
     public final void invoke$73()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$callerIdLauncher$1:
-    public final void invoke$77()
+    public final void invoke$78()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$recipientLauncher$1$1$1:
     public final void invoke$73()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$recipientLauncher$1:
-    public final void invoke$77()
+    public final void invoke$78()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$requestPermissionLauncher$1:
     public final void invoke$24()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt:
     public static final java.util.List CallScreen$lambda$0()
-    public static final boolean CallScreen$lambda$11(androidx.compose.runtime.MutableState)
+    public static final boolean CallScreen$lambda$11()
     public static final void CallScreen$lambda$12()
     public static final java.lang.String CallScreen$lambda$2()
     public static final void CallScreen$lambda$3()
@@ -62115,6 +62067,7 @@ com.odorik.odorikbuddy.ui.calls.CallScreenKt:
     public static final void CallScreen$lambda$6()
     public static final java.lang.String CallScreen$lambda$8()
     public static final void CallScreen$lambda$9()
+    public static final boolean access$CallScreen$lambda$11(androidx.compose.runtime.MutableState)
     public static final void access$CallScreen$lambda$12(androidx.compose.runtime.MutableState,boolean)
 com.odorik.odorikbuddy.ui.calls.CallViewModel$getLines$1:
     public final java.lang.Object invoke$3()
@@ -62145,6 +62098,10 @@ com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-4$1:
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-5$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-6$1:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-7$1:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-8$1:
     public final void invoke$29()
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt:
     public static final com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt INSTANCE
@@ -62153,16 +62110,55 @@ com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt:
     public static kotlin.jvm.functions.Function2 getLambda-3$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-4$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-5$app_release()
-    public static kotlin.jvm.functions.Function3 getLambda-6$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-6$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-7$app_release()
+    public static kotlin.jvm.functions.Function3 getLambda-8$app_release()
+com.odorik.odorikbuddy.ui.dashboard.ComposableSingletons$DashboardScreenKt$lambda-1$1:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.dashboard.ComposableSingletons$DashboardScreenKt$lambda-2$1:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.dashboard.ComposableSingletons$DashboardScreenKt:
+    public static final com.odorik.odorikbuddy.ui.dashboard.ComposableSingletons$DashboardScreenKt INSTANCE
+    public static kotlin.jvm.functions.Function2 getLambda-1$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-2$app_release()
 com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$1:
     public int label
     public final java.lang.Object invoke$3()
-com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1:
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1$1$1:
     public final void invoke$74()
-com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$2$1:
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1$1:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1$2:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1$3:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1$4$1$1:
     public final void invoke$74()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1$4:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2$1$1:
+    public final void invoke$76()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$2:
+    public final void invoke$77()
 com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$DashboardScreen$3:
     public final void invoke$2()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$SpendingChart$1:
+    public final void invoke$74()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$SpendingChart$2:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$SpendingSummary$1:
+    public final void invoke$74()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt$SpendingSummary$2:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.dashboard.DashboardScreenKt:
+    public static final java.lang.Double DashboardScreen$lambda$0()
+    public static final com.odorik.odorikbuddy.data.model.UserInfo DashboardScreen$lambda$1()
+    public static final double DashboardScreen$lambda$2()
+    public static final double DashboardScreen$lambda$3()
+    public static final java.util.List DashboardScreen$lambda$4()
+    public static final java.lang.String DashboardScreen$lambda$5()
+com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel$fetchSpendingData$1:
+    public final java.lang.Object invoke$3()
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel$getCredit$1:
     public final java.lang.Object invoke$3()
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel:
@@ -62170,11 +62166,21 @@ com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel:
     public final kotlinx.coroutines.flow.StateFlowImpl _userInfo
     public final com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase getUserInfoUseCase
     static void <clinit>()
+    public static void calculateThisMonthsSpending()
+    public static void calculateTodaysSpending()
+    public static void calculateWeeklySpending()
+    public static void fetchSpendingData()
     public static kotlinx.coroutines.flow.StateFlow getCredit()
     public static void getCredit()
+    public final kotlinx.coroutines.flow.StateFlow getError()
+    public static kotlinx.coroutines.flow.StateFlow getThisMonthsSpending()
+    public static kotlinx.coroutines.flow.StateFlow getTodaysSpending()
     public static kotlinx.coroutines.flow.StateFlow getUserInfo()
     public static void getUserInfo()
+    public static kotlinx.coroutines.flow.StateFlow getWeeklySpending()
+    public static boolean isSameMonth()
     public static void loadData()
+    public static java.util.Date parseIsoDate()
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules$KeyModule
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules_KeyModule_ProvideFactory
 com.odorik.odorikbuddy.ui.history.ComposableSingletons$HistoryScreenKt$lambda-1$1:
@@ -62196,7 +62202,7 @@ com.odorik.odorikbuddy.ui.history.HistoryScreenKt$HistoryScreen$1$2$1$invoke$$in
 com.odorik.odorikbuddy.ui.history.HistoryScreenKt$HistoryScreen$1$2$1:
     public final void invoke$76()
 com.odorik.odorikbuddy.ui.history.HistoryScreenKt$HistoryScreen$1:
-    public final void invoke$78()
+    public final void invoke$77()
 com.odorik.odorikbuddy.ui.history.HistoryScreenKt$HistoryScreen$2:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.history.HistoryScreenKt:
@@ -62292,9 +62298,9 @@ com.odorik.odorikbuddy.ui.main.MainScreenKt$MainScreen$1:
 com.odorik.odorikbuddy.ui.main.MainScreenKt$MainScreen$2$1$1:
     public final void invoke$71()
 com.odorik.odorikbuddy.ui.main.MainScreenKt$MainScreen$2$1:
-    public final void invoke$79()
+    public final void invoke$80()
 com.odorik.odorikbuddy.ui.main.MainScreenKt$MainScreen$2:
-    public final void invoke$78()
+    public final void invoke$77()
 com.odorik.odorikbuddy.ui.main.MainScreenKt$MainScreen$3:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.navigation.AppNavigationKt$AppNavigation$1$1$1$1$1:
@@ -62308,7 +62314,7 @@ com.odorik.odorikbuddy.ui.navigation.AppNavigationKt$AppNavigation$1$1:
 com.odorik.odorikbuddy.ui.navigation.AppNavigationKt$AppNavigation$1$2:
     public final void invoke$71()
 com.odorik.odorikbuddy.ui.navigation.AppNavigationKt$AppNavigation$1:
-    public final void invoke$79()
+    public final void invoke$80()
 com.odorik.odorikbuddy.ui.navigation.AppNavigationKt$AppNavigation$2:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.navigation.NavigationViewModel:
@@ -62318,70 +62324,78 @@ com.odorik.odorikbuddy.ui.navigation.NavigationViewModel:
 com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules$KeyModule
 com.odorik.odorikbuddy.ui.navigation.NavigationViewModel_HiltModules_KeyModule_ProvideFactory
 com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt$lambda-1$1:
-    public final void invoke$29()
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt$lambda-2$1:
-    public final void invoke$80()
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt$lambda-3$1:
     public final void invoke$29()
 com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt$lambda-4$1:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt$lambda-5$1:
+    public final void invoke$29()
+com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt$lambda-6$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt:
     public static final com.odorik.odorikbuddy.ui.settings.ComposableSingletons$SettingsScreenKt INSTANCE
-    public static kotlin.jvm.functions.Function3 getLambda-1$app_release()
-    public static kotlin.jvm.functions.Function3 getLambda-2$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-1$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-2$app_release()
     public static kotlin.jvm.functions.Function3 getLambda-3$app_release()
-    public static kotlin.jvm.functions.Function2 getLambda-4$app_release()
+    public static kotlin.jvm.functions.Function3 getLambda-4$app_release()
+    public static kotlin.jvm.functions.Function3 getLambda-5$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-6$app_release()
 com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$1:
     public int label
     public final java.lang.Object invoke$3()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$1$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$1$1$1:
     public final void invoke$24()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1:
-    public final void invoke$80()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$1:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$1:
     public int label
     public final java.lang.Object invoke$3()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$1$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$1$1:
     public final void invoke$24()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2$2:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2$2:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2$3$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2$3$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2$4$1$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2$4$1$1:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2$4$1$2:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2$4$1$2:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2$4:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2$4:
     public final void invoke$74()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2$2$2:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2$2$2:
     public final void invoke$75()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$2:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$2:
     public static final void access$invoke$lambda$2(androidx.compose.runtime.MutableState,boolean)
-    public final void invoke$80()
+    public final void invoke$79()
     public static final boolean invoke$lambda$1(androidx.compose.runtime.MutableState)
     public static final void invoke$lambda$2$1()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$3$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$3$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$3$2:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$3$2:
     public final void invoke$74()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$4$1$1$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$4$1$1$1:
     public final void invoke$70()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$4$1$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$4$1$1:
     public final void invoke$67()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$4$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$4$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$4:
-    public final void invoke$80()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$invoke$$inlined$items$default$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$4:
+    public final void invoke$79()
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$invoke$$inlined$items$default$1:
     public final java.lang.Void invoke$1()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$invoke$$inlined$items$default$3:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$invoke$$inlined$items$default$3:
     public final java.lang.Object invoke$12()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$invoke$$inlined$items$default$4:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1$invoke$$inlined$items$default$4:
     public final void invoke$15()
-com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1:
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2$1$1:
     public final void invoke$76()
+com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$2:
+    public final void invoke$77()
 com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$3$1$1:
     public final void invoke$1()
 com.odorik.odorikbuddy.ui.settings.SettingsScreenKt$SettingsScreen$3$2$1$1:
@@ -62428,6 +62442,10 @@ com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-4$1:
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-5$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-6$1:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-7$1:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-8$1:
     public final void invoke$29()
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt:
     public static final com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt INSTANCE
@@ -62436,44 +62454,48 @@ com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt:
     public static kotlin.jvm.functions.Function2 getLambda-3$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-4$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-5$app_release()
-    public static kotlin.jvm.functions.Function3 getLambda-6$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-6$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-7$app_release()
+    public static kotlin.jvm.functions.Function3 getLambda-8$app_release()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$1:
     public int label
     public final java.lang.Object invoke$3()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$1$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$2$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$2$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$2:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$2:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$3$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$3$1:
     public final void invoke$24()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$2:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4$2:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$3$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4$3$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$4$1$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4$4$1$1:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$4$1$2$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4$4$1$2$1:
     public final void invoke$1()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$4:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4$4:
     public final void invoke$74()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$4:
     public final void invoke$75()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$5$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$5$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$6$1:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$6$1:
     public final void invoke$73()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$7:
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$7:
     public final void invoke$1()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2:
+    public final void invoke$77()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$3:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$launcher$1$1$1:
     public final void invoke$73()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$launcher$1:
-    public final void invoke$77()
+    public final void invoke$78()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$requestPermissionLauncher$1:
     public final void invoke$24()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt:
@@ -62483,13 +62505,14 @@ com.odorik.odorikbuddy.ui.sms.SmsScreenKt:
     public static final void SmsScreen$lambda$11()
     public static final java.lang.String SmsScreen$lambda$13()
     public static final void SmsScreen$lambda$14()
-    public static final boolean SmsScreen$lambda$16(androidx.compose.runtime.MutableState)
+    public static final boolean SmsScreen$lambda$16()
     public static final void SmsScreen$lambda$17()
     public static final java.lang.String SmsScreen$lambda$2()
     public static final java.lang.String SmsScreen$lambda$4()
     public static final void SmsScreen$lambda$5()
     public static final java.lang.String SmsScreen$lambda$7()
     public static final void SmsScreen$lambda$8()
+    public static final boolean access$SmsScreen$lambda$16(androidx.compose.runtime.MutableState)
     public static final void access$SmsScreen$lambda$17(androidx.compose.runtime.MutableState,boolean)
 com.odorik.odorikbuddy.ui.sms.SmsViewModel$fetchAllowedSenders$1:
     public final java.lang.Object invoke$3()
@@ -62497,10 +62520,13 @@ com.odorik.odorikbuddy.ui.sms.SmsViewModel$sendSms$1:
     public final java.lang.Object invoke$3()
 com.odorik.odorikbuddy.ui.sms.SmsViewModel:
     public static final int $stable
+    public final com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase getLinesUseCase
+    public final com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase sendSmsUseCase
+    public final com.odorik.odorikbuddy.data.repository.UserRepository userRepository
     static void <clinit>()
     public static kotlinx.coroutines.Job fetchAllowedSenders()
     public static kotlinx.coroutines.flow.StateFlow getAllowedSenders()
-    public static kotlinx.coroutines.flow.StateFlow getError()
+    public final kotlinx.coroutines.flow.StateFlow getError()
     public static kotlinx.coroutines.flow.StateFlow getSendResult()
     public final void handleContactSelection(android.content.ContentResolver,android.net.Uri,kotlin.jvm.functions.Function1)
     public static kotlinx.coroutines.Job sendSms()
@@ -62562,7 +62588,9 @@ dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrappe
     public android.view.LayoutInflater inflater
 dagger.hilt.android.internal.modules.ApplicationContextModule:
     public static android.app.Application provideApplication()
+    public static android.content.Context provideContext()
 dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideApplicationFactory
+dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideContextFactory
 dagger.hilt.internal.Preconditions
 dagger.hilt.internal.TestSingletonComponent
 dagger.hilt.internal.UnsafeCasts
@@ -62717,6 +62745,7 @@ kotlin.collections.CollectionsKt___CollectionsKt:
     public static java.lang.Object getOrNull()
     public static java.util.Set intersect()
     public static final java.lang.String joinToString()
+    public static java.lang.Double maxOrNull()
     public static java.lang.Comparable minOrNull()
     public static java.lang.Object single()
     public static final java.lang.Object single$1()

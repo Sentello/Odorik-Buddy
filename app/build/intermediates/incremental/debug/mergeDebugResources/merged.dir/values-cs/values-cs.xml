@@ -28,8 +28,10 @@
     <string msgid="9055268688411532828" name="abc_shareactionprovider_share_with_application">"Sdílet s aplikací <ns1:g id="APPLICATION_NAME">%s</ns1:g>"</string>
     <string msgid="1656852541809559762" name="abc_toolbar_collapse_description">"Sbalit"</string>
     <string name="app_name">Odorik Buddy</string>
+    <string name="auth_credentials_not_set">Přihlašovací údaje nejsou nastaveny</string>
     <string name="balance">Zůstatek</string>
     <string name="call">Volat</string>
+    <string name="call_history">Hovor</string>
     <string msgid="881409763997275156" name="call_notification_answer_action">"Přijmout"</string>
     <string msgid="8793775615905189152" name="call_notification_answer_video_action">"Video"</string>
     <string msgid="3229508546291798546" name="call_notification_decline_action">"Odmítnout"</string>
@@ -38,12 +40,15 @@
     <string msgid="8623827134497363134" name="call_notification_ongoing_text">"Probíhající hovor"</string>
     <string msgid="59049573811482460" name="call_notification_screening_text">"Prověřování příchozího hovoru"</string>
     <string name="callback_title">Zpětné volání</string>
+    <string name="called_number">Volaný</string>
     <string name="caller_id">Volající</string>
     <string name="caller_id_label">ID Volajícího:</string>
+    <string name="caller_id_label_settings">ID volajícího:</string>
     <string name="calls">Volání</string>
     <string msgid="406453423630273620" name="close_drawer">"Zavřít navigační panel"</string>
     <string msgid="7573152094250666567" name="close_sheet">"Zavřít sešit"</string>
     <string name="cost_label">Cena:</string>
+    <string name="currency_format">%.2f Kč</string>
     <string name="czech">Čeština</string>
     <string name="dark_mode">Tmavý režim</string>
     <string name="dashboard">Přehled</string>
@@ -55,17 +60,22 @@
     <string name="email_label">E-mail:</string>
     <string name="english">English</string>
     <string name="error">Chyba: %s</string>
+    <string name="from_history">Od:</string>
     <string name="from_label">Od:</string>
     <string name="history">Historie</string>
     <string name="history_title">Historie volání a SMS</string>
     <string msgid="6827826412747255547" name="in_progress">"Probíhá"</string>
     <string msgid="7933458017204019916" name="indeterminate">"Částečně zaškrtnuto"</string>
+    <string name="invalid_credentials">Neplatné přihlašovací údaje</string>
     <string name="lang_czech">Čeština</string>
     <string name="lang_english">English</string>
+    <string name="last_7_days">Posledních 7 dní</string>
     <string name="line">Linka</string>
     <string name="line_id_label">ID Linky:</string>
     <string name="line_info">Informace o lince</string>
+    <string name="line_info_title">Informace o lince</string>
     <string name="line_name">Název linky:</string>
+    <string name="line_name_label">Název linky:</string>
     <string name="loading">Načítání...</string>
     <string name="logging_in">Přihlašování...</string>
     <string name="login">Přihlásit se</string>
@@ -135,7 +145,11 @@
     <string msgid="8655164131929253426" name="on">"Zapnuto"</string>
     <string name="password">Heslo</string>
     <string name="password_label">Heslo:</string>
+    <string name="password_label_settings">Heslo:</string>
     <string name="phone_label">Telefon:</string>
+    <string name="pick_caller_id">Vybrat volajícího</string>
+    <string name="pick_contact">Vybrat kontakt</string>
+    <string name="pick_recipient">Vybrat příjemce</string>
     <string msgid="5941395253238309765" name="range_end">"Konec rozsahu"</string>
     <string msgid="7097486360902471446" name="range_start">"Začátek rozsahu"</string>
     <string name="recipient">Příjemce</string>
@@ -150,16 +164,23 @@
     <string name="settings">Nastavení</string>
     <string name="settings_language_label">Jazyk</string>
     <string name="sms">SMS</string>
+    <string name="sms_history">SMS</string>
     <string name="sms_title">SMS</string>
+    <string name="spending_summary">Přehled útraty</string>
     <string msgid="6277540029070332960" name="status_bar_notification_info_overflow">"999+"</string>
     <string msgid="2561197295334830845" name="switch_role">"Přepnout"</string>
     <string msgid="1672349317127674378" name="tab">"Karta"</string>
     <string msgid="5946805113151406391" name="template_percent">"<ns1:g id="PERCENTAGE">%1$d</ns1:g> procent."</string>
+    <string name="this_months_spending">Měsíční útrata:</string>
     <string name="time_label">Čas:</string>
+    <string name="to_history">Komu:</string>
     <string name="to_label">Do:</string>
+    <string name="todays_spending">Dnešní útrata:</string>
     <string msgid="3765533235322692011" name="tooltip_description">"popisek"</string>
     <string msgid="3124740595719787496" name="tooltip_label">"zobrazit popisek"</string>
+    <string name="unknown_error">Vyskytla se neznámá chyba</string>
     <string name="user_id">Uživatelské ID</string>
     <string name="user_info">Informace o uživateli</string>
-    <string name="version">Verze %s (Build %d)</string>
+    <string name="user_or_password_not_set">Uživatel nebo heslo není nastaveno</string>
+    <string name="version">Verze %1$s</string>
 </resources>

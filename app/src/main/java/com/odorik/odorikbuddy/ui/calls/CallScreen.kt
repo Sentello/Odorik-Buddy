@@ -115,7 +115,7 @@ fun CallScreen(
                             }
                         }
                     }) {
-                        Icon(Icons.Default.Contacts, contentDescription = "Pick Caller ID")
+                        Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_caller_id))
                     }
                 }
             )
@@ -123,7 +123,7 @@ fun CallScreen(
             OutlinedTextField(
                 value = recipient,
                 onValueChange = { recipient = it },
-                label = { Text(stringResource(R.string.recipient)) },
+                label = { Text(stringResource(R.string.called_number)) },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     IconButton(onClick = {

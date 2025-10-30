@@ -1,7 +1,6 @@
 package com.odorik.odorikbuddy;
 
 import com.odorik.odorikbuddy.di.AppModule;
-import com.odorik.odorikbuddy.ui.balance.BalanceViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules;
 import com.odorik.odorikbuddy.ui.history.HistoryViewModel_HiltModules;
@@ -160,7 +159,6 @@ public final class OdorikBuddyApplication_HiltComponents {
 
   @Subcomponent(
       modules = {
-          BalanceViewModel_HiltModules.KeyModule.class,
           CallViewModel_HiltModules.KeyModule.class,
           DashboardViewModel_HiltModules.KeyModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
@@ -207,7 +205,6 @@ public final class OdorikBuddyApplication_HiltComponents {
 
   @Subcomponent(
       modules = {
-          BalanceViewModel_HiltModules.BindsModule.class,
           CallViewModel_HiltModules.BindsModule.class,
           DashboardViewModel_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,

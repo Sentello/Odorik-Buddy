@@ -58,7 +58,7 @@ fun MainScreen(navController: NavController) {
                 }
             }
         }
-    ) {
+    ) { 
         NavHost(bottomNavController, startDestination = BottomNavItem.Dashboard.route) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen() }
             composable(BottomNavItem.Calls.route) { CallScreen() }

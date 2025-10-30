@@ -9,7 +9,10 @@ import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import com.odorik.odorikbuddy.domain.usecase.AuthenticationException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import android.content.Context
+import com.odorik.odorikbuddy.R
 
 sealed class LoginUiState {
     object Idle : LoginUiState()
@@ -21,7 +24,8 @@ sealed class LoginUiState {
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val getCreditUseCase: GetCreditUseCase
+    private val getCreditUseCase: GetCreditUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _loginUiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -39,9 +43,9 @@ class LoginViewModel @Inject constructor(
                 _loginUiState.value = LoginUiState.Success 
             }.onFailure { e ->
                 if (e is AuthenticationException) {
-                    _loginUiState.value = LoginUiState.Error("Invalid credentials")
+                    _loginUiState.value = LoginUiState.Error(context.getString(R.string.invalid_credentials))
                 } else {
-                    _loginUiState.value = LoginUiState.Error(e.message ?: "An unknown error occurred")
+                    _loginUiState.value = LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
                 }
             }
         }

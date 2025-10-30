@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Odorik Buddy</string>
+    <string name="auth_credentials_not_set">Přihlašovací údaje nejsou nastaveny</string>
     <string name="balance">Zůstatek</string>
     <string name="call">Volat</string>
+    <string name="call_history">Hovor</string>
     <string name="callback_title">Zpětné volání</string>
+    <string name="called_number">Volaný</string>
     <string name="caller_id">Volající</string>
     <string name="caller_id_label">ID Volajícího:</string>
+    <string name="caller_id_label_settings">ID volajícího:</string>
     <string name="calls">Volání</string>
     <string name="cost_label">Cena:</string>
+    <string name="currency_format">%.2f Kč</string>
     <string name="czech">Čeština</string>
     <string name="dark_mode">Tmavý režim</string>
     <string name="dashboard">Přehled</string>
@@ -16,15 +21,20 @@
     <string name="email_label">E-mail:</string>
     <string name="english">English</string>
     <string name="error">Chyba: %s</string>
+    <string name="from_history">Od:</string>
     <string name="from_label">Od:</string>
     <string name="history">Historie</string>
     <string name="history_title">Historie volání a SMS</string>
+    <string name="invalid_credentials">Neplatné přihlašovací údaje</string>
     <string name="lang_czech">Čeština</string>
     <string name="lang_english">English</string>
+    <string name="last_7_days">Posledních 7 dní</string>
     <string name="line">Linka</string>
     <string name="line_id_label">ID Linky:</string>
     <string name="line_info">Informace o lince</string>
+    <string name="line_info_title">Informace o lince</string>
     <string name="line_name">Název linky:</string>
+    <string name="line_name_label">Název linky:</string>
     <string name="loading">Načítání...</string>
     <string name="logging_in">Přihlašování...</string>
     <string name="login">Přihlásit se</string>
@@ -34,7 +44,11 @@
     <string name="ok">OK</string>
     <string name="password">Heslo</string>
     <string name="password_label">Heslo:</string>
+    <string name="password_label_settings">Heslo:</string>
     <string name="phone_label">Telefon:</string>
+    <string name="pick_caller_id">Vybrat volajícího</string>
+    <string name="pick_contact">Vybrat kontakt</string>
+    <string name="pick_recipient">Vybrat příjemce</string>
     <string name="recipient">Příjemce</string>
     <string name="remember_me">Zapamatovat si mě</string>
     <string name="result">Výsledek: %s</string>
@@ -45,10 +59,17 @@
     <string name="settings">Nastavení</string>
     <string name="settings_language_label">Jazyk</string>
     <string name="sms">SMS</string>
+    <string name="sms_history">SMS</string>
     <string name="sms_title">SMS</string>
+    <string name="spending_summary">Přehled útraty</string>
+    <string name="this_months_spending">Měsíční útrata:</string>
     <string name="time_label">Čas:</string>
+    <string name="to_history">Komu:</string>
     <string name="to_label">Do:</string>
+    <string name="todays_spending">Dnešní útrata:</string>
+    <string name="unknown_error">Vyskytla se neznámá chyba</string>
     <string name="user_id">Uživatelské ID</string>
     <string name="user_info">Informace o uživateli</string>
-    <string name="version">Verze %s (Build %d)</string>
+    <string name="user_or_password_not_set">Uživatel nebo heslo není nastaveno</string>
+    <string name="version">Verze %1$s</string>
 </resources>

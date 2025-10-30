@@ -91,7 +91,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                             }
                         }
                     }) {
-                        Icon(Icons.Default.Contacts, contentDescription = "Pick Contact")
+                        Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact))
                     }
                 }
             )

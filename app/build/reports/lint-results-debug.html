@@ -179,7 +179,7 @@ document.getElementById(id).style.display = 'none';
     <div class="mdl-layout__header-row">
       <span class="mdl-layout-title">Lint Report: 56 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Mon Sep 15 22:20:42 CEST 2025 by AGP (8.4.0)</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Wed Sep 17 15:45:23 CEST 2025 by AGP (8.4.0)</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
@@ -354,13 +354,13 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:15</span>: <span class="message">Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the <code>android.os.Build.VERSION_CODES</code> javadoc for details.</span><br /><pre class="errorlines">
-<span class="lineno">  12 </span>    defaultConfig {
-<span class="lineno">  13 </span>        applicationId = "com.odorik.odorikbuddy"
-<span class="lineno">  14 </span>        minSdk = 24
-<span class="caretline"><span class="lineno">  15 </span>        <span class="warning">targetSdk = 34</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  16 </span>        versionCode = 1
-<span class="lineno">  17 </span>        versionName = "1.0.20250912"
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:18</span>: <span class="message">Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the <code>android.os.Build.VERSION_CODES</code> javadoc for details.</span><br /><pre class="errorlines">
+<span class="lineno">  15 </span>    defaultConfig {
+<span class="lineno">  16 </span>        applicationId = "com.odorik.odorikbuddy"
+<span class="lineno">  17 </span>        minSdk = 24
+<span class="caretline"><span class="lineno">  18 </span>        <span class="warning">targetSdk = 34</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  19 </span>                versionCode = 2
+<span class="lineno">  20 </span>        versionName = "1.1.0"
 </pre>
 
 </div>
@@ -494,145 +494,145 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:71</span>: <span class="message">A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.17.0</span><br /><pre class="errorlines">
-<span class="lineno">  68 </span>}
-<span class="lineno">  69 </span>
-<span class="lineno">  70 </span>dependencies {
-<span class="caretline"><span class="lineno">  71 </span>    implementation("<span class="warning">androidx.core:core-ktx:1.12.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  72 </span>    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-<span class="lineno">  73 </span>    implementation("androidx.activity:activity-compose:1.8.2")
-<span class="lineno">  74 </span>    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:81</span>: <span class="message">A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.17.0</span><br /><pre class="errorlines">
+<span class="lineno">  78 </span>}
+<span class="lineno">  79 </span>
+<span class="lineno">  80 </span>dependencies {
+<span class="caretline"><span class="lineno">  81 </span>    implementation("<span class="warning">androidx.core:core-ktx:1.12.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  82 </span>    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+<span class="lineno">  83 </span>    implementation("androidx.activity:activity-compose:1.8.2")
+<span class="lineno">  84 </span>    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:72</span>: <span class="message">A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.6.2 is available: 2.9.3</span><br /><pre class="errorlines">
-<span class="lineno">  69 </span>
-<span class="lineno">  70 </span>dependencies {
-<span class="lineno">  71 </span>    implementation("androidx.core:core-ktx:1.12.0")
-<span class="caretline"><span class="lineno">  72 </span>    implementation("<span class="warning">androidx.lifecycle:lifecycle-runtime-ktx:2.6.2</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  73 </span>    implementation("androidx.activity:activity-compose:1.8.2")
-<span class="lineno">  74 </span>    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
-<span class="lineno">  75 </span>    implementation("androidx.compose.ui:ui")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:82</span>: <span class="message">A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.6.2 is available: 2.9.3</span><br /><pre class="errorlines">
+<span class="lineno">  79 </span>
+<span class="lineno">  80 </span>dependencies {
+<span class="lineno">  81 </span>    implementation("androidx.core:core-ktx:1.12.0")
+<span class="caretline"><span class="lineno">  82 </span>    implementation("<span class="warning">androidx.lifecycle:lifecycle-runtime-ktx:2.6.2</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  83 </span>    implementation("androidx.activity:activity-compose:1.8.2")
+<span class="lineno">  84 </span>    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+<span class="lineno">  85 </span>    implementation("androidx.compose.ui:ui")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:73</span>: <span class="message">A newer version of androidx.activity:activity-compose than 1.8.2 is available: 1.11.0</span><br /><pre class="errorlines">
-<span class="lineno">  70 </span>dependencies {
-<span class="lineno">  71 </span>    implementation("androidx.core:core-ktx:1.12.0")
-<span class="lineno">  72 </span>    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-<span class="caretline"><span class="lineno">  73 </span>    implementation("<span class="warning">androidx.activity:activity-compose:1.8.2</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  74 </span>    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
-<span class="lineno">  75 </span>    implementation("androidx.compose.ui:ui")
-<span class="lineno">  76 </span>    implementation("androidx.compose.ui:ui-graphics")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:83</span>: <span class="message">A newer version of androidx.activity:activity-compose than 1.8.2 is available: 1.11.0</span><br /><pre class="errorlines">
+<span class="lineno">  80 </span>dependencies {
+<span class="lineno">  81 </span>    implementation("androidx.core:core-ktx:1.12.0")
+<span class="lineno">  82 </span>    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+<span class="caretline"><span class="lineno">  83 </span>    implementation("<span class="warning">androidx.activity:activity-compose:1.8.2</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  84 </span>    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+<span class="lineno">  85 </span>    implementation("androidx.compose.ui:ui")
+<span class="lineno">  86 </span>    implementation("androidx.compose.ui:ui-graphics")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:74</span>: <span class="message">A newer version of androidx.compose:compose-bom than 2024.06.00 is available: 2025.09.00</span><br /><pre class="errorlines">
-<span class="lineno">  71 </span>    implementation("androidx.core:core-ktx:1.12.0")
-<span class="lineno">  72 </span>    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-<span class="lineno">  73 </span>    implementation("androidx.activity:activity-compose:1.8.2")
-<span class="caretline"><span class="lineno">  74 </span>    implementation(<span class="warning">platform("androidx.compose:compose-bom:2024.06.00")</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  75 </span>    implementation("androidx.compose.ui:ui")
-<span class="lineno">  76 </span>    implementation("androidx.compose.ui:ui-graphics")
-<span class="lineno">  77 </span>    implementation("androidx.compose.ui:ui-tooling-preview")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:84</span>: <span class="message">A newer version of androidx.compose:compose-bom than 2024.06.00 is available: 2025.09.00</span><br /><pre class="errorlines">
+<span class="lineno">  81 </span>    implementation("androidx.core:core-ktx:1.12.0")
+<span class="lineno">  82 </span>    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+<span class="lineno">  83 </span>    implementation("androidx.activity:activity-compose:1.8.2")
+<span class="caretline"><span class="lineno">  84 </span>    implementation(<span class="warning">platform("androidx.compose:compose-bom:2024.06.00")</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  85 </span>    implementation("androidx.compose.ui:ui")
+<span class="lineno">  86 </span>    implementation("androidx.compose.ui:ui-graphics")
+<span class="lineno">  87 </span>    implementation("androidx.compose.ui:ui-tooling-preview")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:85</span>: <span class="message">A newer version of androidx.hilt:hilt-navigation-compose than 1.1.0 is available: 1.3.0</span><br /><pre class="errorlines">
-<span class="lineno">  82 </span>    // Hilt
-<span class="lineno">  83 </span>    implementation("com.google.dagger:hilt-android:2.50")
-<span class="lineno">  84 </span>    kapt("com.google.dagger:hilt-compiler:2.50")
-<span class="caretline"><span class="lineno">  85 </span>    implementation("<span class="warning">androidx.hilt:hilt-navigation-compose:1.1.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  86 </span>
-<span class="lineno">  87 </span>    // Retrofit
-<span class="lineno">  88 </span>    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:95</span>: <span class="message">A newer version of androidx.hilt:hilt-navigation-compose than 1.1.0 is available: 1.3.0</span><br /><pre class="errorlines">
+<span class="lineno">  92 </span>    // Hilt
+<span class="lineno">  93 </span>    implementation("com.google.dagger:hilt-android:2.50")
+<span class="lineno">  94 </span>    kapt("com.google.dagger:hilt-compiler:2.50")
+<span class="caretline"><span class="lineno">  95 </span>    implementation("<span class="warning">androidx.hilt:hilt-navigation-compose:1.1.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  96 </span>
+<span class="lineno">  97 </span>    // Retrofit
+<span class="lineno">  98 </span>    implementation("com.squareup.retrofit2:retrofit:2.11.0")
 </pre>
 
 <button class="mdl-button mdl-js-button mdl-button--primary" id="GradleDependencyDivLink" onclick="reveal('GradleDependencyDiv');" />+ 9 More Occurrences...</button>
 <div id="GradleDependencyDiv" style="display: none">
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:91</span>: <span class="message">A newer version of com.squareup.okhttp3:logging-interceptor than 4.11.0 is available: 4.12.0</span><br /><pre class="errorlines">
-<span class="lineno">  88 </span>    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-<span class="lineno">  89 </span>    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-<span class="lineno">  90 </span>    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-<span class="caretline"><span class="lineno">  91 </span>    implementation("<span class="warning">com.squareup.okhttp3:logging-interceptor:4.11.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  92 </span>
-<span class="lineno">  93 </span>    // Room
-<span class="lineno">  94 </span>    implementation("androidx.room:room-runtime:2.6.1")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:101</span>: <span class="message">A newer version of com.squareup.okhttp3:logging-interceptor than 4.11.0 is available: 4.12.0</span><br /><pre class="errorlines">
+<span class="lineno">  98 </span>    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+<span class="lineno">  99 </span>    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+<span class="lineno"> 100 </span>    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+<span class="caretline"><span class="lineno"> 101 </span>    implementation("<span class="warning">com.squareup.okhttp3:logging-interceptor:4.11.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 102 </span>
+<span class="lineno"> 103 </span>    // Room
+<span class="lineno"> 104 </span>    implementation("androidx.room:room-runtime:2.6.1")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:94</span>: <span class="message">A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.0</span><br /><pre class="errorlines">
-<span class="lineno">  91 </span>    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
-<span class="lineno">  92 </span>
-<span class="lineno">  93 </span>    // Room
-<span class="caretline"><span class="lineno">  94 </span>    implementation("<span class="warning">androidx.room:room-runtime:2.6.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  95 </span>    kapt("androidx.room:room-compiler:2.6.1")
-<span class="lineno">  96 </span>    implementation("androidx.room:room-ktx:2.6.1")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:104</span>: <span class="message">A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.0</span><br /><pre class="errorlines">
+<span class="lineno"> 101 </span>    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+<span class="lineno"> 102 </span>
+<span class="lineno"> 103 </span>    // Room
+<span class="caretline"><span class="lineno"> 104 </span>    implementation("<span class="warning">androidx.room:room-runtime:2.6.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 105 </span>    kapt("androidx.room:room-compiler:2.6.1")
+<span class="lineno"> 106 </span>    implementation("androidx.room:room-ktx:2.6.1")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:95</span>: <span class="message">A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.0</span><br /><pre class="errorlines">
-<span class="lineno">  92 </span>
-<span class="lineno">  93 </span>    // Room
-<span class="lineno">  94 </span>    implementation("androidx.room:room-runtime:2.6.1")
-<span class="caretline"><span class="lineno">  95 </span>    kapt("<span class="warning">androidx.room:room-compiler:2.6.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  96 </span>    implementation("androidx.room:room-ktx:2.6.1")
-<span class="lineno">  97 </span>
-<span class="lineno">  98 </span>    // Jetpack Security
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:105</span>: <span class="message">A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.0</span><br /><pre class="errorlines">
+<span class="lineno"> 102 </span>
+<span class="lineno"> 103 </span>    // Room
+<span class="lineno"> 104 </span>    implementation("androidx.room:room-runtime:2.6.1")
+<span class="caretline"><span class="lineno"> 105 </span>    kapt("<span class="warning">androidx.room:room-compiler:2.6.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 106 </span>    implementation("androidx.room:room-ktx:2.6.1")
+<span class="lineno"> 107 </span>
+<span class="lineno"> 108 </span>    // Jetpack Security
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:96</span>: <span class="message">A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.0</span><br /><pre class="errorlines">
-<span class="lineno">  93 </span>    // Room
-<span class="lineno">  94 </span>    implementation("androidx.room:room-runtime:2.6.1")
-<span class="lineno">  95 </span>    kapt("androidx.room:room-compiler:2.6.1")
-<span class="caretline"><span class="lineno">  96 </span>    implementation("<span class="warning">androidx.room:room-ktx:2.6.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  97 </span>
-<span class="lineno">  98 </span>    // Jetpack Security
-<span class="lineno">  99 </span>    implementation("androidx.security:security-crypto:1.0.0")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:106</span>: <span class="message">A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.0</span><br /><pre class="errorlines">
+<span class="lineno"> 103 </span>    // Room
+<span class="lineno"> 104 </span>    implementation("androidx.room:room-runtime:2.6.1")
+<span class="lineno"> 105 </span>    kapt("androidx.room:room-compiler:2.6.1")
+<span class="caretline"><span class="lineno"> 106 </span>    implementation("<span class="warning">androidx.room:room-ktx:2.6.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 107 </span>
+<span class="lineno"> 108 </span>    // Jetpack Security
+<span class="lineno"> 109 </span>    implementation("androidx.security:security-crypto:1.0.0")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:99</span>: <span class="message">A newer version of androidx.security:security-crypto than 1.0.0 is available: 1.1.0</span><br /><pre class="errorlines">
-<span class="lineno">  96 </span>    implementation("androidx.room:room-ktx:2.6.1")
-<span class="lineno">  97 </span>
-<span class="lineno">  98 </span>    // Jetpack Security
-<span class="caretline"><span class="lineno">  99 </span>    implementation("<span class="warning">androidx.security:security-crypto:1.0.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 100 </span>
-<span class="lineno"> 101 </span>    // Navigation
-<span class="lineno"> 102 </span>    implementation("androidx.navigation:navigation-compose:2.7.6")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:109</span>: <span class="message">A newer version of androidx.security:security-crypto than 1.0.0 is available: 1.1.0</span><br /><pre class="errorlines">
+<span class="lineno"> 106 </span>    implementation("androidx.room:room-ktx:2.6.1")
+<span class="lineno"> 107 </span>
+<span class="lineno"> 108 </span>    // Jetpack Security
+<span class="caretline"><span class="lineno"> 109 </span>    implementation("<span class="warning">androidx.security:security-crypto:1.0.0</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 110 </span>
+<span class="lineno"> 111 </span>    // Navigation
+<span class="lineno"> 112 </span>    implementation("androidx.navigation:navigation-compose:2.7.6")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:102</span>: <span class="message">A newer version of androidx.navigation:navigation-compose than 2.7.6 is available: 2.9.4</span><br /><pre class="errorlines">
-<span class="lineno">  99 </span>    implementation("androidx.security:security-crypto:1.0.0")
-<span class="lineno"> 100 </span>
-<span class="lineno"> 101 </span>    // Navigation
-<span class="caretline"><span class="lineno"> 102 </span>    implementation("<span class="warning">androidx.navigation:navigation-compose:2.7.6</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 103 </span>
-<span class="lineno"> 104 </span>    // Lottie
-<span class="lineno"> 105 </span>    implementation("com.airbnb.android:lottie-compose:6.0.0")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:112</span>: <span class="message">A newer version of androidx.navigation:navigation-compose than 2.7.6 is available: 2.9.4</span><br /><pre class="errorlines">
+<span class="lineno"> 109 </span>    implementation("androidx.security:security-crypto:1.0.0")
+<span class="lineno"> 110 </span>
+<span class="lineno"> 111 </span>    // Navigation
+<span class="caretline"><span class="lineno"> 112 </span>    implementation("<span class="warning">androidx.navigation:navigation-compose:2.7.6</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 113 </span>
+<span class="lineno"> 114 </span>    // Lottie
+<span class="lineno"> 115 </span>    implementation("com.airbnb.android:lottie-compose:6.0.0")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:114</span>: <span class="message">A newer version of androidx.test.ext:junit than 1.1.5 is available: 1.3.0</span><br /><pre class="errorlines">
-<span class="lineno"> 111 </span>    kaptAndroidTest("com.google.dagger:hilt-android-compiler:2.50")
-<span class="lineno"> 112 </span>
-<span class="lineno"> 113 </span>    testImplementation("junit:junit:4.13.2")
-<span class="caretline"><span class="lineno"> 114 </span>    androidTestImplementation("<span class="warning">androidx.test.ext:junit:1.1.5</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 115 </span>    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-<span class="lineno"> 116 </span>    androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
-<span class="lineno"> 117 </span>    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:124</span>: <span class="message">A newer version of androidx.test.ext:junit than 1.1.5 is available: 1.3.0</span><br /><pre class="errorlines">
+<span class="lineno"> 121 </span>    kaptAndroidTest("com.google.dagger:hilt-android-compiler:2.50")
+<span class="lineno"> 122 </span>
+<span class="lineno"> 123 </span>    testImplementation("junit:junit:4.13.2")
+<span class="caretline"><span class="lineno"> 124 </span>    androidTestImplementation("<span class="warning">androidx.test.ext:junit:1.1.5</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 125 </span>    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+<span class="lineno"> 126 </span>    androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
+<span class="lineno"> 127 </span>    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:115</span>: <span class="message">A newer version of androidx.test.espresso:espresso-core than 3.5.1 is available: 3.7.0</span><br /><pre class="errorlines">
-<span class="lineno"> 112 </span>
-<span class="lineno"> 113 </span>    testImplementation("junit:junit:4.13.2")
-<span class="lineno"> 114 </span>    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-<span class="caretline"><span class="lineno"> 115 </span>    androidTestImplementation("<span class="warning">androidx.test.espresso:espresso-core:3.5.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 116 </span>    androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
-<span class="lineno"> 117 </span>    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-<span class="lineno"> 118 </span>    debugImplementation("androidx.compose.ui:ui-tooling")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:125</span>: <span class="message">A newer version of androidx.test.espresso:espresso-core than 3.5.1 is available: 3.7.0</span><br /><pre class="errorlines">
+<span class="lineno"> 122 </span>
+<span class="lineno"> 123 </span>    testImplementation("junit:junit:4.13.2")
+<span class="lineno"> 124 </span>    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+<span class="caretline"><span class="lineno"> 125 </span>    androidTestImplementation("<span class="warning">androidx.test.espresso:espresso-core:3.5.1</span>")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 126 </span>    androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
+<span class="lineno"> 127 </span>    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+<span class="lineno"> 128 </span>    debugImplementation("androidx.compose.ui:ui-tooling")
 </pre>
 
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:116</span>: <span class="message">A newer version of androidx.compose:compose-bom than 2023.08.00 is available: 2025.09.00</span><br /><pre class="errorlines">
-<span class="lineno"> 113 </span>    testImplementation("junit:junit:4.13.2")
-<span class="lineno"> 114 </span>    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-<span class="lineno"> 115 </span>    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-<span class="caretline"><span class="lineno"> 116 </span>    androidTestImplementation(<span class="warning">platform("androidx.compose:compose-bom:2023.08.00")</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 117 </span>    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-<span class="lineno"> 118 </span>    debugImplementation("androidx.compose.ui:ui-tooling")
-<span class="lineno"> 119 </span>    debugImplementation("androidx.compose.ui:ui-test-manifest")
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:126</span>: <span class="message">A newer version of androidx.compose:compose-bom than 2024.06.00 is available: 2025.09.00</span><br /><pre class="errorlines">
+<span class="lineno"> 123 </span>    testImplementation("junit:junit:4.13.2")
+<span class="lineno"> 124 </span>    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+<span class="lineno"> 125 </span>    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+<span class="caretline"><span class="lineno"> 126 </span>    androidTestImplementation(<span class="warning">platform("androidx.compose:compose-bom:2024.06.00")</span>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 127 </span>    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+<span class="lineno"> 128 </span>    debugImplementation("androidx.compose.ui:ui-tooling")
+<span class="lineno"> 129 </span>    debugImplementation("androidx.compose.ui:ui-test-manifest")
 </pre>
 
 </div>
@@ -674,14 +674,14 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:95</span>: <span class="message">This library supports using KSP instead of kapt, which greatly improves performance. Learn more: <a href="https://developer.android.com/studio/build/migrate-to-ksp">https://developer.android.com/studio/build/migrate-to-ksp</a></span><br /><pre class="errorlines">
-<span class="lineno">  92 </span>
-<span class="lineno">  93 </span>    // Room
-<span class="lineno">  94 </span>    implementation("androidx.room:room-runtime:2.6.1")
-<span class="caretline"><span class="lineno">  95 </span>    <span class="warning">kapt("androidx.room:room-compiler:2.6.1")</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  96 </span>    implementation("androidx.room:room-ktx:2.6.1")
-<span class="lineno">  97 </span>
-<span class="lineno">  98 </span>    // Jetpack Security
+<span class="location"><a href="../../build.gradle.kts">../../build.gradle.kts</a>:105</span>: <span class="message">This library supports using KSP instead of kapt, which greatly improves performance. Learn more: <a href="https://developer.android.com/studio/build/migrate-to-ksp">https://developer.android.com/studio/build/migrate-to-ksp</a></span><br /><pre class="errorlines">
+<span class="lineno"> 102 </span>
+<span class="lineno"> 103 </span>    // Room
+<span class="lineno"> 104 </span>    implementation("androidx.room:room-runtime:2.6.1")
+<span class="caretline"><span class="lineno"> 105 </span>    <span class="warning">kapt("androidx.room:room-compiler:2.6.1")</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 106 </span>    implementation("androidx.room:room-ktx:2.6.1")
+<span class="lineno"> 107 </span>
+<span class="lineno"> 108 </span>    // Jetpack Security
 </pre>
 
 </div>
@@ -804,59 +804,59 @@ Dismiss</button>            </div>
 <span class="lineno">  5 </span>    <span class="prefix">android:</span><span class="attribute">viewportWidth</span>=<span class="value">"24"</span></pre>
 
 <span class="location"><a href="../../src/main/res/drawable/play_store_512.png">../../src/main/res/drawable/play_store_512.png</a></span>: <img class="embedimage" align="right" src="../../src/main/res/drawable/play_store_512.png" /><span class="message">The resource <code>R.drawable.play_store_512</code> appears to be unused</span><br clear="right"/>
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:35</span>: <span class="message">The resource <code>R.string.line_info</code> appears to be unused</span><br /><pre class="errorlines">
-<span class="lineno"> 32 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"result"</span>>Result: %s<span class="tag">&lt;/string></span>
-<span class="lineno"> 33 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dark_mode"</span>>Dark Mode<span class="tag">&lt;/string></span>
-<span class="lineno"> 34 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"logout"</span>>Logout<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 35 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"line_info"</span></span>>Line Info<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 36 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_name"</span>>Line name:<span class="tag">&lt;/string></span>
-<span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
-<span class="lineno"> 38 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"password_label"</span>>Password:<span class="tag">&lt;/string></span></pre>
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:34</span>: <span class="message">The resource <code>R.string.line_info</code> appears to be unused</span><br /><pre class="errorlines">
+<span class="lineno"> 31 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"result"</span>>Result: %s<span class="tag">&lt;/string></span>
+<span class="lineno"> 32 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dark_mode"</span>>Dark Mode<span class="tag">&lt;/string></span>
+<span class="lineno"> 33 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"logout"</span>>Logout<span class="tag">&lt;/string></span>
+<span class="caretline"><span class="lineno"> 34 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"line_info"</span></span>>Line Info<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 35 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_name"</span>>Line name:<span class="tag">&lt;/string></span>
+<span class="lineno"> 36 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
+<span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"password_label"</span>>Password:<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:36</span>: <span class="message">The resource <code>R.string.line_name</code> appears to be unused</span><br /><pre class="errorlines">
-<span class="lineno"> 33 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dark_mode"</span>>Dark Mode<span class="tag">&lt;/string></span>
-<span class="lineno"> 34 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"logout"</span>>Logout<span class="tag">&lt;/string></span>
-<span class="lineno"> 35 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_info"</span>>Line Info<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 36 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"line_name"</span></span>>Line name:<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
-<span class="lineno"> 38 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"password_label"</span>>Password:<span class="tag">&lt;/string></span>
-<span class="lineno"> 39 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"ok"</span>>OK<span class="tag">&lt;/string></span></pre>
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:35</span>: <span class="message">The resource <code>R.string.line_name</code> appears to be unused</span><br /><pre class="errorlines">
+<span class="lineno"> 32 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dark_mode"</span>>Dark Mode<span class="tag">&lt;/string></span>
+<span class="lineno"> 33 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"logout"</span>>Logout<span class="tag">&lt;/string></span>
+<span class="lineno"> 34 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_info"</span>>Line Info<span class="tag">&lt;/string></span>
+<span class="caretline"><span class="lineno"> 35 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"line_name"</span></span>>Line name:<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 36 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
+<span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"password_label"</span>>Password:<span class="tag">&lt;/string></span>
+<span class="lineno"> 38 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"ok"</span>>OK<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:38</span>: <span class="message">The resource <code>R.string.password_label</code> appears to be unused</span><br /><pre class="errorlines">
-<span class="lineno"> 35 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_info"</span>>Line Info<span class="tag">&lt;/string></span>
-<span class="lineno"> 36 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_name"</span>>Line name:<span class="tag">&lt;/string></span>
-<span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 38 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"password_label"</span></span>>Password:<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 39 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"ok"</span>>OK<span class="tag">&lt;/string></span>
-<span class="lineno"> 40 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"version"</span>>Version %s (Build %d)<span class="tag">&lt;/string></span>
-<span class="lineno"> 41 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dashboard"</span>>Dashboard<span class="tag">&lt;/string></span></pre>
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:37</span>: <span class="message">The resource <code>R.string.password_label</code> appears to be unused</span><br /><pre class="errorlines">
+<span class="lineno"> 34 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_info"</span>>Line Info<span class="tag">&lt;/string></span>
+<span class="lineno"> 35 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_name"</span>>Line name:<span class="tag">&lt;/string></span>
+<span class="lineno"> 36 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
+<span class="caretline"><span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"password_label"</span></span>>Password:<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 38 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"ok"</span>>OK<span class="tag">&lt;/string></span>
+<span class="lineno"> 39 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"version"</span>>Version %1$s<span class="tag">&lt;/string></span>
+<span class="lineno"> 40 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dashboard"</span>>Dashboard<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:40</span>: <span class="message">The resource <code>R.string.version</code> appears to be unused</span><br /><pre class="errorlines">
-<span class="lineno"> 37 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id_label"</span>>Caller ID:<span class="tag">&lt;/string></span>
-<span class="lineno"> 38 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"password_label"</span>>Password:<span class="tag">&lt;/string></span>
-<span class="lineno"> 39 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"ok"</span>>OK<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 40 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"version"</span></span>>Version %s (Build %d)<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 41 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"dashboard"</span>>Dashboard<span class="tag">&lt;/string></span>
-<span class="lineno"> 42 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"calls"</span>>Calls<span class="tag">&lt;/string></span>
-<span class="lineno"> 43 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"sms"</span>>SMS<span class="tag">&lt;/string></span></pre>
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:44</span>: <span class="message">The resource <code>R.string.english</code> appears to be unused</span><br /><pre class="errorlines">
+<span class="lineno"> 41 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"calls"</span>>Calls<span class="tag">&lt;/string></span>
+<span class="lineno"> 42 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"sms"</span>>SMS<span class="tag">&lt;/string></span>
+<span class="lineno"> 43 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings"</span>>Settings<span class="tag">&lt;/string></span>
+<span class="caretline"><span class="lineno"> 44 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"english"</span></span>>English<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 45 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"czech"</span>>Čeština<span class="tag">&lt;/string></span>
+<span class="lineno"> 46 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings_language_label"</span>>Language<span class="tag">&lt;/string></span>
+<span class="lineno"> 47 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_id_label"</span>>Line ID:<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:45</span>: <span class="message">The resource <code>R.string.english</code> appears to be unused</span><br /><pre class="errorlines">
-<span class="lineno"> 42 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"calls"</span>>Calls<span class="tag">&lt;/string></span>
-<span class="lineno"> 43 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"sms"</span>>SMS<span class="tag">&lt;/string></span>
-<span class="lineno"> 44 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings"</span>>Settings<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 45 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"english"</span></span>>English<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 46 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"czech"</span>>Čeština<span class="tag">&lt;/string></span>
-<span class="lineno"> 47 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings_language_label"</span>>Language<span class="tag">&lt;/string></span>
-<span class="lineno"> 48 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_id_label"</span>>Line ID:<span class="tag">&lt;/string></span></pre>
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:45</span>: <span class="message">The resource <code>R.string.czech</code> appears to be unused</span><br /><pre class="errorlines">
+<span class="lineno"> 42 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"sms"</span>>SMS<span class="tag">&lt;/string></span>
+<span class="lineno"> 43 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings"</span>>Settings<span class="tag">&lt;/string></span>
+<span class="lineno"> 44 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"english"</span>>English<span class="tag">&lt;/string></span>
+<span class="caretline"><span class="lineno"> 45 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"czech"</span></span>>Čeština<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 46 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings_language_label"</span>>Language<span class="tag">&lt;/string></span>
+<span class="lineno"> 47 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_id_label"</span>>Line ID:<span class="tag">&lt;/string></span>
+<span class="lineno"> 48 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"lang_english"</span>>English<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:46</span>: <span class="message">The resource <code>R.string.czech</code> appears to be unused</span><br /><pre class="errorlines">
-<span class="lineno"> 43 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"sms"</span>>SMS<span class="tag">&lt;/string></span>
-<span class="lineno"> 44 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings"</span>>Settings<span class="tag">&lt;/string></span>
-<span class="lineno"> 45 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"english"</span>>English<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 46 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"czech"</span></span>>Čeština<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 47 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"settings_language_label"</span>>Language<span class="tag">&lt;/string></span>
-<span class="lineno"> 48 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"line_id_label"</span>>Line ID:<span class="tag">&lt;/string></span>
-<span class="lineno"> 49 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"lang_english"</span>>English<span class="tag">&lt;/string></span></pre>
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:61</span>: <span class="message">The resource <code>R.string.pick_recipient</code> appears to be unused</span><br /><pre class="errorlines">
+<span class="lineno"> 58 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"to_history"</span>>To:<span class="tag">&lt;/string></span>
+<span class="lineno"> 59 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"currency_format"</span>>%.2f Kč<span class="tag">&lt;/string></span>
+<span class="lineno"> 60 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"pick_caller_id"</span>>Pick Caller ID<span class="tag">&lt;/string></span>
+<span class="caretline"><span class="lineno"> 61 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="warning"><span class="attribute">name</span>=<span class="value">"pick_recipient"</span></span>>Pick Recipient<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 62 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"invalid_credentials"</span>>Invalid credentials<span class="tag">&lt;/string></span>
+<span class="lineno"> 63 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"unknown_error"</span>>An unknown error occurred<span class="tag">&lt;/string></span>
+<span class="lineno"> 64 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"auth_credentials_not_set"</span>>Authentication credentials not set<span class="tag">&lt;/string></span></pre>
 
 </div>
 </div>
@@ -921,23 +921,23 @@ Dismiss</button>            </div>
 <span class="lineno">  9 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"user_info"</span>>User Info<span class="tag">&lt;/string></span>
 <span class="lineno"> 10 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"name_label"</span>>Name:<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values-cs/strings.xml">../../src/main/res/values-cs/strings.xml</a>:15</span>: <span class="message">Replace "..." with ellipsis character (&#8230;, &amp;#8230;) ?</span><br /><pre class="errorlines">
+<span class="location"><a href="../../src/main/res/values-cs/strings.xml">../../src/main/res/values-cs/strings.xml</a>:13</span>: <span class="message">Replace "..." with ellipsis character (&#8230;, &amp;#8230;) ?</span><br /><pre class="errorlines">
+<span class="lineno"> 10 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"name_label"</span>>Jméno:<span class="tag">&lt;/string></span>
+<span class="lineno"> 11 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"email_label"</span>>E-mail:<span class="tag">&lt;/string></span>
 <span class="lineno"> 12 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"phone_label"</span>>Telefon:<span class="tag">&lt;/string></span>
-<span class="lineno"> 13 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"refresh_balance"</span>>Obnovit zůstatek<span class="tag">&lt;/string></span>
-<span class="lineno"> 14 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"current_balance"</span>>Aktuální zůstatek: %s Kč<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 15 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"loading"</span>><span class="warning">Načítání...</span><span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 16 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"error"</span>>Chyba: %s<span class="tag">&lt;/string></span>
-<span class="lineno"> 17 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id"</span>>Volající<span class="tag">&lt;/string></span>
-<span class="lineno"> 18 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"recipient"</span>>Příjemce<span class="tag">&lt;/string></span></pre>
+<span class="caretline"><span class="lineno"> 13 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"loading"</span>><span class="warning">Načítání...</span><span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 14 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"error"</span>>Chyba: %s<span class="tag">&lt;/string></span>
+<span class="lineno"> 15 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id"</span>>Volající<span class="tag">&lt;/string></span>
+<span class="lineno"> 16 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"recipient"</span>>Příjemce<span class="tag">&lt;/string></span></pre>
 
-<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:15</span>: <span class="message">Replace "..." with ellipsis character (&#8230;, &amp;#8230;) ?</span><br /><pre class="errorlines">
+<span class="location"><a href="../../src/main/res/values/strings.xml">../../src/main/res/values/strings.xml</a>:13</span>: <span class="message">Replace "..." with ellipsis character (&#8230;, &amp;#8230;) ?</span><br /><pre class="errorlines">
+<span class="lineno"> 10 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"name_label"</span>>Name:<span class="tag">&lt;/string></span>
+<span class="lineno"> 11 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"email_label"</span>>Email:<span class="tag">&lt;/string></span>
 <span class="lineno"> 12 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"phone_label"</span>>Phone:<span class="tag">&lt;/string></span>
-<span class="lineno"> 13 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"refresh_balance"</span>>Refresh Balance<span class="tag">&lt;/string></span>
-<span class="lineno"> 14 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"current_balance"</span>>Current Balance: %s Kč<span class="tag">&lt;/string></span>
-<span class="caretline"><span class="lineno"> 15 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"loading"</span>><span class="warning">Loading...</span><span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 16 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"error"</span>>Error: %s<span class="tag">&lt;/string></span>
-<span class="lineno"> 17 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id"</span>>Caller ID<span class="tag">&lt;/string></span>
-<span class="lineno"> 18 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"recipient"</span>>Recipient<span class="tag">&lt;/string></span></pre>
+<span class="caretline"><span class="lineno"> 13 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"loading"</span>><span class="warning">Loading...</span><span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 14 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"error"</span>>Error: %s<span class="tag">&lt;/string></span>
+<span class="lineno"> 15 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"caller_id"</span>>Caller ID<span class="tag">&lt;/string></span>
+<span class="lineno"> 16 </span>    <span class="tag">&lt;string</span><span class="attribute"> name</span>=<span class="value">"recipient"</span>>Recipient<span class="tag">&lt;/string></span></pre>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationTypographyEllipsis" style="display: none;">

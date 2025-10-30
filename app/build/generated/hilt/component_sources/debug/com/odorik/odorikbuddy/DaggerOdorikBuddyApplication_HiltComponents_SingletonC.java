@@ -24,6 +24,7 @@ import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetLineInfoUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase;
+import com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase;
 import com.odorik.odorikbuddy.ui.calls.CallViewModel;
 import com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel;
@@ -53,6 +54,7 @@ import dagger.hilt.android.internal.managers.ActivityRetainedComponentManager_Li
 import dagger.hilt.android.internal.managers.SavedStateHandleHolder;
 import dagger.hilt.android.internal.modules.ApplicationContextModule;
 import dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideApplicationFactory;
+import dagger.hilt.android.internal.modules.ApplicationContextModule_ProvideContextFactory;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.DoubleCheck;
 import dagger.internal.MapBuilder;
@@ -481,6 +483,10 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
       return new GetLineInfoUseCase(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideUserRepositoryProvider.get());
     }
 
+    private SendSmsUseCase sendSmsUseCase() {
+      return new SendSmsUseCase(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideUserRepositoryProvider.get());
+    }
+
     @SuppressWarnings("unchecked")
     private void initialize(final SavedStateHandle savedStateHandleParam,
         final ViewModelLifecycle viewModelLifecycleParam) {
@@ -528,13 +534,13 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
           return (T) new CallViewModel(viewModelCImpl.getCallListUseCase(), viewModelCImpl.getLinesUseCase(), viewModelCImpl.callUseCase());
 
           case 1: // com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel 
-          return (T) new DashboardViewModel(viewModelCImpl.getCreditUseCase(), viewModelCImpl.getUserInfoUseCase());
+          return (T) new DashboardViewModel(viewModelCImpl.getCreditUseCase(), viewModelCImpl.getUserInfoUseCase(), viewModelCImpl.historyRepository(), singletonCImpl.provideSecurePreferencesProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           case 2: // com.odorik.odorikbuddy.ui.history.HistoryViewModel 
           return (T) new HistoryViewModel(viewModelCImpl.historyRepository(), singletonCImpl.provideSecurePreferencesProvider.get());
 
           case 3: // com.odorik.odorikbuddy.ui.login.LoginViewModel 
-          return (T) new LoginViewModel(singletonCImpl.provideUserRepositoryProvider.get(), viewModelCImpl.getCreditUseCase());
+          return (T) new LoginViewModel(singletonCImpl.provideUserRepositoryProvider.get(), viewModelCImpl.getCreditUseCase(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           case 4: // com.odorik.odorikbuddy.ui.navigation.NavigationViewModel 
           return (T) new NavigationViewModel(singletonCImpl.provideUserRepositoryProvider.get());
@@ -543,7 +549,7 @@ public final class DaggerOdorikBuddyApplication_HiltComponents_SingletonC {
           return (T) new SettingsViewModel(viewModelCImpl.getLinesUseCase(), viewModelCImpl.getLineInfoUseCase(), singletonCImpl.provideUserRepositoryProvider.get(), singletonCImpl.provideThemeManagerProvider.get(), singletonCImpl.provideLocaleManagerProvider.get());
 
           case 6: // com.odorik.odorikbuddy.ui.sms.SmsViewModel 
-          return (T) new SmsViewModel(singletonCImpl.provideOdorikApiProvider.get(), singletonCImpl.provideSecurePreferencesProvider.get());
+          return (T) new SmsViewModel(viewModelCImpl.sendSmsUseCase(), viewModelCImpl.getLinesUseCase(), singletonCImpl.provideUserRepositoryProvider.get(), singletonCImpl.provideSecurePreferencesProvider.get(), singletonCImpl.provideOdorikApiProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);
         }

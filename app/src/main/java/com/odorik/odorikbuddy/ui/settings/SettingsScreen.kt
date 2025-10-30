@@ -18,6 +18,8 @@ import android.util.Log
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.LOGIN
+import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.MAIN
 import com.odorik.odorikbuddy.ui.settings.SettingsViewModel
 import android.content.res.Configuration
 import java.util.Locale
@@ -159,8 +161,8 @@ fun SettingsScreen(
                     Button(
                         onClick = {
                             viewModel.logout()
-                            navController.navigate("login") {
-                                popUpTo("main") { inclusive = true }
+                            navController.navigate(LOGIN) {
+                                popUpTo(MAIN) { inclusive = true }
                             }
                         },
                         modifier = Modifier
@@ -173,7 +175,7 @@ fun SettingsScreen(
                 
                 item {
                     Text(
-                        text = "Version ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
+                        text = stringResource(R.string.version, BuildConfig.VERSION_NAME),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
@@ -189,12 +191,12 @@ fun SettingsScreen(
         lineInfo.value?.let {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text(text = "Line Info") },
+                title = { Text(text = stringResource(R.string.line_info_title)) },
                 text = {
                     Column {
-                        Text(text = "Line name: ${it.lineName}")
-                        Text(text = "Caller ID: ${it.callerId}")
-                        Text(text = "Password: ${it.password}")
+                        Text(text = "${stringResource(R.string.line_name_label)} ${it.lineName}")
+                        Text(text = "${stringResource(R.string.caller_id_label_settings)} ${it.callerId}")
+                        Text(text = "${stringResource(R.string.password_label_settings)} ${it.password}")
                     }
                 },
                 confirmButton = {

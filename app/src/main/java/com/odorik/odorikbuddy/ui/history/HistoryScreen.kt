@@ -81,20 +81,20 @@ fun HistoryListItem(item: HistoryItem) {
     ) {
         
         val icon = if (item.length != null) Icons.Default.Call else Icons.Default.Sms
-        Icon(imageVector = icon, contentDescription = if (item.length != null) "Call" else "SMS")
+        Icon(imageVector = icon, contentDescription = if (item.length != null) stringResource(R.string.call_history) else stringResource(R.string.sms_history))
         
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "From: ${item.source_number}", fontWeight = FontWeight.Bold)
-            Text(text = "To: ${item.destination_number}")
+            Text(text = "${stringResource(R.string.from_history)} ${item.source_number}", fontWeight = FontWeight.Bold)
+            Text(text = "${stringResource(R.string.to_history)} ${item.destination_number}")
             Text(text = formattedDate, style = MaterialTheme.typography.bodySmall)
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
-            text = "%.2f Kč".format(item.price),
+            text = stringResource(R.string.currency_format, item.price),
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )

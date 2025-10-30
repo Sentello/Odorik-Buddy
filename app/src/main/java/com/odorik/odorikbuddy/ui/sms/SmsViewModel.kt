@@ -1,22 +1,32 @@
 package com.odorik.odorikbuddy.ui.sms
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.remote.OdorikApi
+import com.odorik.odorikbuddy.data.repository.UserRepository
+import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
+import com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 
 @HiltViewModel
 class SmsViewModel @Inject constructor(
+    private val sendSmsUseCase: SendSmsUseCase,
+    private val getLinesUseCase: GetLinesUseCase,
+    private val userRepository: UserRepository,
+    private val securePreferences: SecurePreferences,
     private val api: OdorikApi,
-    private val securePreferences: SecurePreferences
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _allowedSenders = MutableStateFlow<List<String>>(emptyList())
     val allowedSenders: StateFlow<List<String>> = _allowedSenders
@@ -33,7 +43,7 @@ class SmsViewModel @Inject constructor(
             val password = securePreferences.getPassword()
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-                _error.value = "Authentication credentials not set."
+                _error.value = context.getString(R.string.auth_credentials_not_set)
                 println("SmsViewModel: Authentication credentials are null or empty.") 
                 return@launch
             }
@@ -61,7 +71,7 @@ class SmsViewModel @Inject constructor(
             val password = securePreferences.getPassword()
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-                _error.value = "Authentication credentials not set."
+                _error.value = context.getString(R.string.auth_credentials_not_set)
                 return@launch
             }
 

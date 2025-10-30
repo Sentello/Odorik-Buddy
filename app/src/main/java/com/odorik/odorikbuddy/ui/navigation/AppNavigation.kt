@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.odorik.odorikbuddy.ui.login.LoginScreen
 import com.odorik.odorikbuddy.ui.main.MainScreen
+import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.LOGIN
+import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.MAIN
 
 @Composable
 fun AppNavigation(
@@ -16,14 +18,14 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = viewModel.getStartDestination()) {
-        composable("login") {
+        composable(LOGIN) {
             LoginScreen(onLoginSuccess = {
-                navController.navigate("main") {
-                    popUpTo("login") { inclusive = true }
+                navController.navigate(MAIN) {
+                    popUpTo(LOGIN) { inclusive = true }
                 }
             })
         }
-        composable("main") {
+        composable(MAIN) {
             MainScreen(navController = navController)
         }
     }
