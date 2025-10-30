@@ -990,6 +990,8 @@ string caller_id
 string caller_id_label
 string caller_id_label_settings
 string calls
+string cancel
+string choose_phone_number
 string close_drawer
 string close_sheet
 string cost_label
@@ -1085,6 +1087,7 @@ string message
 string name_label
 string navigation_menu
 string not_selected
+string number_coppied
 string off
 string ok
 string on
@@ -1093,8 +1096,10 @@ string password_label
 string password_label_settings
 string phone_label
 string pick_caller_id
+string pick_caller_id_number
 string pick_contact
 string pick_recipient
+string pick_recipient_number
 string range_end
 string range_start
 string recipient

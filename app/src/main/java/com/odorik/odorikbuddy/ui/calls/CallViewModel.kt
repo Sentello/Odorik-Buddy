@@ -6,6 +6,7 @@ import android.provider.ContactsContract
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.model.CallInfo
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
@@ -21,7 +22,8 @@ import javax.inject.Inject
 class CallViewModel @Inject constructor(
     private val getCallListUseCase: GetCallListUseCase,
     private val getLinesUseCase: GetLinesUseCase,
-    private val callUseCase: CallUseCase
+    private val callUseCase: CallUseCase,
+    private val securePreferences: SecurePreferences
 ) : ViewModel() {
 
     private val _callList = MutableStateFlow<List<CallInfo>>(emptyList())
@@ -35,6 +37,27 @@ class CallViewModel @Inject constructor(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+
+    private val _callerId = MutableStateFlow("")
+    val callerId: StateFlow<String> = _callerId
+
+    private val _recipient = MutableStateFlow("")
+    val recipient: StateFlow<String> = _recipient
+
+    init {
+        _callerId.value = securePreferences.getString("caller_id", "") ?: ""
+        _recipient.value = securePreferences.getString("recipient", "") ?: ""
+    }
+
+    fun updateCallerId(newCallerId: String) {
+        _callerId.value = newCallerId
+        securePreferences.saveString("caller_id", newCallerId)
+    }
+
+    fun updateRecipient(newRecipient: String) {
+        _recipient.value = newRecipient
+        securePreferences.saveString("recipient", newRecipient)
+    }
 
     fun getCallList() {
         

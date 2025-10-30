@@ -65,10 +65,15 @@
     <string name="user_or_password_not_set">User or password not set</string>
     <string name="history">History</string>
     <string name="history_title">Call &amp; SMS History</string>
+    <string name="number_coppied">Copied %s to clipboard</string>
     <string name="callback_title">Callback</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Spending Summary</string>
     <string name="todays_spending">"Today's Spending:"</string>
     <string name="this_months_spending">"This Month's Spending:"</string>
     <string name="last_7_days">Last 7 Days</string>
+    <string name="pick_caller_id_number">Choose Caller</string>
+    <string name="pick_recipient_number">Choose Recipient</string>
+    <string name="choose_phone_number">Choose Phone Number</string>
+    <string name="cancel">Cancel</string>
 </resources>

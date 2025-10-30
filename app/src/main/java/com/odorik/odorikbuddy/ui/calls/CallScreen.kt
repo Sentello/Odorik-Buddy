@@ -1,7 +1,10 @@
 package com.odorik.odorikbuddy.ui.calls
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.ContactsContract
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +24,38 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 
+private fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
+    val numbers = mutableListOf<String>()
+    contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
+        if (contactCursor.moveToFirst()) {
+            val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
+            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
+            val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            contentResolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                phoneProjection,
+                phoneSelection,
+                phoneSelectionArgs,
+                null
+            )?.use { phoneCursor ->
+                while (phoneCursor.moveToNext()) {
+                    var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                    number = number.replace(Regex("[^0-9+]"), "") 
+                    if (number.isNotBlank()) {
+                        numbers.add(number)
+                    }
+                }
+            }
+        }
+    }
+    return numbers
+}
+
+enum class ContactField {
+    CALLER_ID, RECIPIENT
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallScreen(
@@ -29,10 +64,15 @@ fun CallScreen(
     val callList = viewModel.callList.collectAsState()
     val callResult = viewModel.callResult.collectAsState()
     val lines by viewModel.lines.collectAsState()
-    var callerId by remember { mutableStateOf("") }
-    var recipient by remember { mutableStateOf("") }
+    val callerId by viewModel.callerId.collectAsState()
+    val recipient by viewModel.recipient.collectAsState()
     var selectedLine by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }
+
+    
+    var showPhoneNumberDialog by remember { mutableStateOf(false) }
+    var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
+    var currentContactField by remember { mutableStateOf<ContactField?>(null) }
 
     val context = LocalContext.current
 
@@ -40,8 +80,13 @@ fun CallScreen(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
             contactUri?.let {
-                viewModel.handleContactSelection(context.contentResolver, it) { phoneNumber ->
-                    callerId = phoneNumber
+                val numbers = getPhoneNumbersFromContact(context.contentResolver, it)
+                if (numbers.size == 1) {
+                    viewModel.updateCallerId(numbers.first())
+                } else if (numbers.size > 1) {
+                    phoneNumbers = numbers
+                    currentContactField = ContactField.CALLER_ID
+                    showPhoneNumberDialog = true
                 }
             }
         }
@@ -51,8 +96,13 @@ fun CallScreen(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
             contactUri?.let {
-                viewModel.handleContactSelection(context.contentResolver, it) { phoneNumber ->
-                    recipient = phoneNumber
+                val numbers = getPhoneNumbersFromContact(context.contentResolver, it)
+                if (numbers.size == 1) {
+                    viewModel.updateRecipient(numbers.first())
+                } else if (numbers.size > 1) {
+                    phoneNumbers = numbers
+                    currentContactField = ContactField.RECIPIENT
+                    showPhoneNumberDialog = true
                 }
             }
         }
@@ -63,7 +113,8 @@ fun CallScreen(
         onResult = { isGranted ->
             if (isGranted) {
                 
-            } else {
+            }
+            else {
                 
             }
         }
@@ -98,7 +149,7 @@ fun CallScreen(
         ) {
             OutlinedTextField(
                 value = callerId,
-                onValueChange = { callerId = it },
+                onValueChange = { viewModel.updateCallerId(it) },
                 label = { Text(stringResource(R.string.caller_id)) },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
@@ -122,7 +173,7 @@ fun CallScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = recipient,
-                onValueChange = { recipient = it },
+                onValueChange = { viewModel.updateRecipient(it) },
                 label = { Text(stringResource(R.string.called_number)) },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
@@ -196,6 +247,46 @@ fun CallScreen(
                     }
                 }
             }
+        }
+
+        
+        if (showPhoneNumberDialog) {
+            AlertDialog(
+                onDismissRequest = { showPhoneNumberDialog = false },
+                title = {
+                    Text(
+                        stringResource(
+                            when (currentContactField) {
+                                ContactField.CALLER_ID -> R.string.pick_caller_id_number
+                                ContactField.RECIPIENT -> R.string.pick_recipient_number
+                                else -> R.string.choose_phone_number
+                            }
+                        )
+                    )
+                },
+                text = {
+                    LazyColumn {
+                        items(phoneNumbers) { number ->
+                            TextButton(onClick = {
+                                when (currentContactField) {
+                                    ContactField.CALLER_ID -> viewModel.updateCallerId(number)
+                                    ContactField.RECIPIENT -> viewModel.updateRecipient(number)
+                                    else -> {}
+                                }
+                                showPhoneNumberDialog = false
+                            }) {
+                                Text(number)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showPhoneNumberDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
     }
 }

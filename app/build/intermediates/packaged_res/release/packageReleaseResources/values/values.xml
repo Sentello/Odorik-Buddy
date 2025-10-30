@@ -19,6 +19,8 @@
     <string name="caller_id_label">Caller ID:</string>
     <string name="caller_id_label_settings">Caller ID:</string>
     <string name="calls">Calls</string>
+    <string name="cancel">Cancel</string>
+    <string name="choose_phone_number">Choose Phone Number</string>
     <string name="cost_label">Cost:</string>
     <string name="currency_format">%.2f Kč</string>
     <string name="czech">Čeština</string>
@@ -55,8 +57,10 @@
     <string name="password_label_settings">Password:</string>
     <string name="phone_label">Phone:</string>
     <string name="pick_caller_id">Pick Caller ID</string>
+    <string name="pick_caller_id_number">Choose Caller</string>
     <string name="pick_contact">Pick Contact</string>
     <string name="pick_recipient">Pick Recipient</string>
+    <string name="pick_recipient_number">Choose Recipient</string>
     <string name="recipient">Recipient</string>
     <string name="remember_me">Remember me</string>
     <string name="result">Result: %s</string>

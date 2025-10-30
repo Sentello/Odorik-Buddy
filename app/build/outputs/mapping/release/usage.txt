@@ -35863,25 +35863,11 @@ com.odorik.odorikbuddy.domain.usecase.GetSmsListUseCase
 com.odorik.odorikbuddy.domain.usecase.GetSmsListUseCase_Factory
 com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase_Factory
 com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase_Factory
-com.odorik.odorikbuddy.model.HistoryItem:
-    public static final int $stable
-    public void <init>(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer,double,java.lang.String)
-    public final java.lang.String component1()
-    public final java.lang.String component2()
-    public final java.lang.String component3()
-    public final java.lang.String component4()
-    public final java.lang.String component5()
-    public final java.lang.Integer component6()
-    public final double component7()
-    public final java.lang.String component8()
-    public final com.odorik.odorikbuddy.model.HistoryItem copy(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer,double,java.lang.String)
-    public static synthetic com.odorik.odorikbuddy.model.HistoryItem copy$default(com.odorik.odorikbuddy.model.HistoryItem,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer,double,java.lang.String,int,java.lang.Object)
-    public final java.lang.String getDirection()
-    public final java.lang.String getId()
-    public final java.lang.String getStatus()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$invoke$$inlined$items$default$2
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1$invoke$$inlined$items$default$2
 com.odorik.odorikbuddy.ui.calls.CallViewModel:
     public final kotlinx.coroutines.flow.StateFlow getError()
+    public final void handleContactSelection(android.content.ContentResolver,android.net.Uri,kotlin.jvm.functions.Function1)
 com.odorik.odorikbuddy.ui.calls.CallViewModel_Factory
 com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules$BindsModule
 com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules$KeyModule:
@@ -35893,6 +35879,8 @@ com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules_KeyModule_ProvideFacto
     public static com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules_KeyModule_ProvideFactory create()
     public synthetic bridge java.lang.Object get()
     public java.lang.String get()
+com.odorik.odorikbuddy.ui.calls.ContactField:
+    public static kotlin.enums.EnumEntries getEntries()
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_Factory
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules$BindsModule
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules$KeyModule:
@@ -35978,6 +35966,9 @@ com.odorik.odorikbuddy.ui.settings.SettingsViewModel_HiltModules_KeyModule_Provi
     public static com.odorik.odorikbuddy.ui.settings.SettingsViewModel_HiltModules_KeyModule_ProvideFactory create()
     public synthetic bridge java.lang.Object get()
     public java.lang.String get()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1$invoke$$inlined$items$default$2
+com.odorik.odorikbuddy.ui.sms.SmsViewModel:
+    public final void handleContactSelection(android.content.ContentResolver,android.net.Uri,kotlin.jvm.functions.Function1)
 com.odorik.odorikbuddy.ui.sms.SmsViewModel_Factory
 com.odorik.odorikbuddy.ui.sms.SmsViewModel_HiltModules$BindsModule
 com.odorik.odorikbuddy.ui.sms.SmsViewModel_HiltModules$KeyModule:
@@ -49648,7 +49639,6 @@ androidx.compose.material.icons.filled.ArrowDropDownKt:
     static void <clinit>()
 androidx.compose.material.icons.filled.CallKt:
     static void <clinit>()
-    public static final androidx.compose.ui.graphics.vector.ImageVector getCall()
 androidx.compose.material.icons.filled.ContactsKt:
     static void <clinit>()
 androidx.compose.material.icons.filled.DashboardKt:
@@ -61983,20 +61973,7 @@ com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase:
     public final com.odorik.odorikbuddy.data.repository.UserRepository userRepository
     static void <clinit>()
 com.odorik.odorikbuddy.model.HistoryItem:
-    public final java.lang.String date
-    public final java.lang.String destination_number
-    public final java.lang.String direction
-    public final java.lang.String id
-    public final java.lang.Integer length
-    public final double price
-    public final java.lang.String source_number
-    public final java.lang.String status
     static void <clinit>()
-    public static java.lang.String getDate()
-    public static java.lang.String getDestination_number()
-    public static java.lang.Integer getLength()
-    public static double getPrice()
-    public static java.lang.String getSource_number()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$1:
     public int label
     public final java.lang.Object invoke$3()
@@ -62043,32 +62020,58 @@ com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1$invoke$$inlined$
     public final void invoke$15()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$1$8$1:
     public final void invoke$76()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$2$1:
+    public final void invoke$1()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$3$1$1:
+    public final void invoke$1()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$3:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$4:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1$1$1$1:
+    public final void invoke$1()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1$1$2:
+    public final void invoke$29()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1$invoke$$inlined$items$default$1:
+    public final java.lang.Void invoke$1()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1$invoke$$inlined$items$default$3:
+    public final java.lang.Object invoke$12()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1$invoke$$inlined$items$default$4:
+    public final void invoke$15()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5$1$1:
+    public final void invoke$76()
+com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3$5:
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$3:
     public final void invoke$77()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$4:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$callerIdLauncher$1$1$1:
-    public final void invoke$73()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$callerIdLauncher$1:
     public final void invoke$78()
-com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$recipientLauncher$1$1$1:
-    public final void invoke$73()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$recipientLauncher$1:
     public final void invoke$78()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt$CallScreen$requestPermissionLauncher$1:
     public final void invoke$24()
 com.odorik.odorikbuddy.ui.calls.CallScreenKt:
-    public static final java.util.List CallScreen$lambda$0()
-    public static final boolean CallScreen$lambda$11()
-    public static final void CallScreen$lambda$12()
-    public static final java.lang.String CallScreen$lambda$2()
-    public static final void CallScreen$lambda$3()
-    public static final java.lang.String CallScreen$lambda$5()
-    public static final void CallScreen$lambda$6()
-    public static final java.lang.String CallScreen$lambda$8()
-    public static final void CallScreen$lambda$9()
-    public static final boolean access$CallScreen$lambda$11(androidx.compose.runtime.MutableState)
-    public static final void access$CallScreen$lambda$12(androidx.compose.runtime.MutableState,boolean)
+    public static final java.lang.String CallScreen$lambda$10()
+    public static final void CallScreen$lambda$11()
+    public static final boolean CallScreen$lambda$13()
+    public static final void CallScreen$lambda$14()
+    public static final boolean CallScreen$lambda$16()
+    public static final void CallScreen$lambda$17()
+    public static final java.util.List CallScreen$lambda$19()
+    public static final java.util.List CallScreen$lambda$2()
+    public static final void CallScreen$lambda$20()
+    public static final com.odorik.odorikbuddy.ui.calls.ContactField CallScreen$lambda$22()
+    public static final void CallScreen$lambda$23()
+    public static final java.lang.String CallScreen$lambda$4()
+    public static final void CallScreen$lambda$5()
+    public static final java.lang.String CallScreen$lambda$7()
+    public static final void CallScreen$lambda$8()
+    public static final boolean access$CallScreen$lambda$13(androidx.compose.runtime.MutableState)
+    public static final void access$CallScreen$lambda$14(androidx.compose.runtime.MutableState,boolean)
+    public static final void access$CallScreen$lambda$17(androidx.compose.runtime.MutableState,boolean)
+    public static final java.util.List getPhoneNumbersFromContact()
 com.odorik.odorikbuddy.ui.calls.CallViewModel$getLines$1:
     public final java.lang.Object invoke$3()
 com.odorik.odorikbuddy.ui.calls.CallViewModel$makeCall$1:
@@ -62089,6 +62092,8 @@ com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules$KeyModule
 com.odorik.odorikbuddy.ui.calls.CallViewModel_HiltModules_KeyModule_ProvideFactory
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-1$1:
     public final void invoke$2()
+com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-10$1:
+    public final void invoke$29()
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-2$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-3$1:
@@ -62103,9 +62108,12 @@ com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-7$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-8$1:
     public final void invoke$29()
+com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt$lambda-9$1:
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt:
     public static final com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt INSTANCE
     public static kotlin.jvm.functions.Function2 getLambda-1$app_release()
+    public static kotlin.jvm.functions.Function3 getLambda-10$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-2$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-3$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-4$app_release()
@@ -62113,6 +62121,9 @@ com.odorik.odorikbuddy.ui.calls.ComposableSingletons$CallScreenKt:
     public static kotlin.jvm.functions.Function2 getLambda-6$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-7$app_release()
     public static kotlin.jvm.functions.Function3 getLambda-8$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-9$app_release()
+com.odorik.odorikbuddy.ui.calls.ContactField:
+    public static final synthetic kotlin.enums.EnumEntriesList $ENTRIES
 com.odorik.odorikbuddy.ui.dashboard.ComposableSingletons$DashboardScreenKt$lambda-1$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.dashboard.ComposableSingletons$DashboardScreenKt$lambda-2$1:
@@ -62180,7 +62191,7 @@ com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel:
     public static kotlinx.coroutines.flow.StateFlow getWeeklySpending()
     public static boolean isSameMonth()
     public static void loadData()
-    public static java.util.Date parseIsoDate()
+    public static java.util.Date parseIsoDate(java.lang.String)
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules$KeyModule
 com.odorik.odorikbuddy.ui.dashboard.DashboardViewModel_HiltModules_KeyModule_ProvideFactory
 com.odorik.odorikbuddy.ui.history.ComposableSingletons$HistoryScreenKt$lambda-1$1:
@@ -62433,6 +62444,10 @@ com.odorik.odorikbuddy.ui.settings.SettingsViewModel_HiltModules$KeyModule
 com.odorik.odorikbuddy.ui.settings.SettingsViewModel_HiltModules_KeyModule_ProvideFactory
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-1$1:
     public final void invoke$2()
+com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-10$1:
+    public final void invoke$29()
+com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-11$1:
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-2$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-3$1:
@@ -62447,9 +62462,13 @@ com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-7$1:
     public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-8$1:
     public final void invoke$29()
+com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt$lambda-9$1:
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt:
     public static final com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt INSTANCE
     public static kotlin.jvm.functions.Function2 getLambda-1$app_release()
+    public static kotlin.jvm.functions.Function3 getLambda-10$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-11$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-2$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-3$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-4$app_release()
@@ -62457,6 +62476,7 @@ com.odorik.odorikbuddy.ui.sms.ComposableSingletons$SmsScreenKt:
     public static kotlin.jvm.functions.Function2 getLambda-6$app_release()
     public static kotlin.jvm.functions.Function2 getLambda-7$app_release()
     public static kotlin.jvm.functions.Function3 getLambda-8$app_release()
+    public static kotlin.jvm.functions.Function2 getLambda-9$app_release()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$1:
     public int label
     public final java.lang.Object invoke$3()
@@ -62488,32 +62508,56 @@ com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$6$1:
     public final void invoke$73()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$1$7:
     public final void invoke$1()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$2$1:
+    public final void invoke$1()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$3$1$1:
+    public final void invoke$1()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$3:
+    public final void invoke$2()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1$1$1$1:
+    public final void invoke$1()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1$1$2:
+    public final void invoke$29()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1$invoke$$inlined$items$default$1:
+    public final java.lang.Void invoke$1()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1$invoke$$inlined$items$default$3:
+    public final java.lang.Object invoke$12()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1$invoke$$inlined$items$default$4:
+    public final void invoke$15()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4$1$1:
+    public final void invoke$76()
+com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2$4:
+    public final void invoke$2()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$2:
     public final void invoke$77()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$3:
     public final void invoke$2()
-com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$launcher$1$1$1:
-    public final void invoke$73()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$launcher$1:
     public final void invoke$78()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt$SmsScreen$requestPermissionLauncher$1:
     public final void invoke$24()
 com.odorik.odorikbuddy.ui.sms.SmsScreenKt:
-    public static final java.util.List SmsScreen$lambda$0()
-    public static final java.lang.String SmsScreen$lambda$1()
-    public static final java.lang.String SmsScreen$lambda$10()
-    public static final void SmsScreen$lambda$11()
-    public static final java.lang.String SmsScreen$lambda$13()
-    public static final void SmsScreen$lambda$14()
-    public static final boolean SmsScreen$lambda$16()
-    public static final void SmsScreen$lambda$17()
-    public static final java.lang.String SmsScreen$lambda$2()
+    public static final void SmsScreen$lambda$10()
+    public static final java.lang.String SmsScreen$lambda$12()
+    public static final void SmsScreen$lambda$13()
+    public static final java.lang.String SmsScreen$lambda$15()
+    public static final void SmsScreen$lambda$16()
+    public static final boolean SmsScreen$lambda$18()
+    public static final void SmsScreen$lambda$19()
+    public static final java.util.List SmsScreen$lambda$2()
+    public static final boolean SmsScreen$lambda$21()
+    public static final void SmsScreen$lambda$22()
+    public static final java.util.List SmsScreen$lambda$24()
+    public static final void SmsScreen$lambda$25()
+    public static final java.lang.String SmsScreen$lambda$3()
     public static final java.lang.String SmsScreen$lambda$4()
-    public static final void SmsScreen$lambda$5()
-    public static final java.lang.String SmsScreen$lambda$7()
-    public static final void SmsScreen$lambda$8()
-    public static final boolean access$SmsScreen$lambda$16(androidx.compose.runtime.MutableState)
-    public static final void access$SmsScreen$lambda$17(androidx.compose.runtime.MutableState,boolean)
+    public static final java.lang.String SmsScreen$lambda$6()
+    public static final void SmsScreen$lambda$7()
+    public static final java.lang.String SmsScreen$lambda$9()
+    public static final boolean access$SmsScreen$lambda$18(androidx.compose.runtime.MutableState)
+    public static final void access$SmsScreen$lambda$19(androidx.compose.runtime.MutableState,boolean)
+    public static final void access$SmsScreen$lambda$22(androidx.compose.runtime.MutableState,boolean)
+    public static final java.util.List getPhoneNumbersFromContact()
 com.odorik.odorikbuddy.ui.sms.SmsViewModel$fetchAllowedSenders$1:
     public final java.lang.Object invoke$3()
 com.odorik.odorikbuddy.ui.sms.SmsViewModel$sendSms$1:
@@ -62528,7 +62572,6 @@ com.odorik.odorikbuddy.ui.sms.SmsViewModel:
     public static kotlinx.coroutines.flow.StateFlow getAllowedSenders()
     public final kotlinx.coroutines.flow.StateFlow getError()
     public static kotlinx.coroutines.flow.StateFlow getSendResult()
-    public final void handleContactSelection(android.content.ContentResolver,android.net.Uri,kotlin.jvm.functions.Function1)
     public static kotlinx.coroutines.Job sendSms()
 com.odorik.odorikbuddy.ui.sms.SmsViewModel_HiltModules$KeyModule
 com.odorik.odorikbuddy.ui.sms.SmsViewModel_HiltModules_KeyModule_ProvideFactory

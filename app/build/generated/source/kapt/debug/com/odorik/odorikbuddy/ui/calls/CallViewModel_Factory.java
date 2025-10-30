@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.calls;
 
+import com.odorik.odorikbuddy.data.local.SecurePreferences;
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetCallListUseCase;
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase;
@@ -30,28 +31,32 @@ public final class CallViewModel_Factory implements Factory<CallViewModel> {
 
   private final Provider<CallUseCase> callUseCaseProvider;
 
+  private final Provider<SecurePreferences> securePreferencesProvider;
+
   public CallViewModel_Factory(Provider<GetCallListUseCase> getCallListUseCaseProvider,
-      Provider<GetLinesUseCase> getLinesUseCaseProvider,
-      Provider<CallUseCase> callUseCaseProvider) {
+      Provider<GetLinesUseCase> getLinesUseCaseProvider, Provider<CallUseCase> callUseCaseProvider,
+      Provider<SecurePreferences> securePreferencesProvider) {
     this.getCallListUseCaseProvider = getCallListUseCaseProvider;
     this.getLinesUseCaseProvider = getLinesUseCaseProvider;
     this.callUseCaseProvider = callUseCaseProvider;
+    this.securePreferencesProvider = securePreferencesProvider;
   }
 
   @Override
   public CallViewModel get() {
-    return newInstance(getCallListUseCaseProvider.get(), getLinesUseCaseProvider.get(), callUseCaseProvider.get());
+    return newInstance(getCallListUseCaseProvider.get(), getLinesUseCaseProvider.get(), callUseCaseProvider.get(), securePreferencesProvider.get());
   }
 
   public static CallViewModel_Factory create(
       Provider<GetCallListUseCase> getCallListUseCaseProvider,
-      Provider<GetLinesUseCase> getLinesUseCaseProvider,
-      Provider<CallUseCase> callUseCaseProvider) {
-    return new CallViewModel_Factory(getCallListUseCaseProvider, getLinesUseCaseProvider, callUseCaseProvider);
+      Provider<GetLinesUseCase> getLinesUseCaseProvider, Provider<CallUseCase> callUseCaseProvider,
+      Provider<SecurePreferences> securePreferencesProvider) {
+    return new CallViewModel_Factory(getCallListUseCaseProvider, getLinesUseCaseProvider, callUseCaseProvider, securePreferencesProvider);
   }
 
   public static CallViewModel newInstance(GetCallListUseCase getCallListUseCase,
-      GetLinesUseCase getLinesUseCase, CallUseCase callUseCase) {
-    return new CallViewModel(getCallListUseCase, getLinesUseCase, callUseCase);
+      GetLinesUseCase getLinesUseCase, CallUseCase callUseCase,
+      SecurePreferences securePreferences) {
+    return new CallViewModel(getCallListUseCase, getLinesUseCase, callUseCase, securePreferences);
   }
 }

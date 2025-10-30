@@ -120,6 +120,10 @@
 
 # Keep your API models for Gson deserialization (adjust package if needed)
 -keep class com.odorik.odorikbuddy.data.model.** { *; }
+-keepclassmembers class com.odorik.odorikbuddy.data.model.UserInfo { <fields>; <methods>; }
+-keep class com.odorik.odorikbuddy.model.HistoryItem { *; }
+-keepclassmembers class com.odorik.odorikbuddy.model.HistoryItem { <fields>; <methods>; }
+-keepclassmembers class * { @com.google.gson.annotations.SerializedName <fields>; }
 
 # Optional: Ignore warnings for dependencies
 -dontwarn org.codehaus.mojo.animal_sniffer.*

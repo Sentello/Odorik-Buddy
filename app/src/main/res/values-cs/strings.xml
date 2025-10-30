@@ -2,7 +2,7 @@
     <string name="app_name">Odorik Buddy</string>
     <string name="user_id">Uživatelské ID</string>
     <string name="password">Heslo</string>
-    <string name="remember_me">Zapamatovat si mě</string>
+    <string name="remember_me">Zapamatuj si mě</string>
     <string name="login">Přihlásit se</string>
     <string name="logging_in">Přihlašování...</string>
     <string name="balance">Zůstatek</string>
@@ -65,10 +65,15 @@
     <string name="user_or_password_not_set">Uživatel nebo heslo není nastaveno</string>
     <string name="history">Historie</string>
     <string name="history_title">Historie volání a SMS</string>
+    <string name="number_coppied">Zkopírováno %s do schránky</string>
     <string name="callback_title">Zpětné volání</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Přehled útraty</string>
     <string name="todays_spending">Dnešní útrata:</string>
     <string name="this_months_spending">Měsíční útrata:</string>
     <string name="last_7_days">Posledních 7 dní</string>
+    <string name="pick_caller_id_number">Vyber číslo volajícího</string>
+    <string name="pick_recipient_number">Vyber číslo volaného</string>
+    <string name="choose_phone_number">Vyber telefonní číslo</string>
+    <string name="cancel">Zrušit</string>
 </resources>

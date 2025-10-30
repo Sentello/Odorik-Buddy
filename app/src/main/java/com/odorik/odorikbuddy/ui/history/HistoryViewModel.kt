@@ -23,18 +23,23 @@ class HistoryViewModel @Inject constructor(
     private val _history = MutableStateFlow<List<HistoryItem>>(emptyList())
     val history: StateFlow<List<HistoryItem>> = _history
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
     init {
         fetchHistory()
     }
 
-    private fun fetchHistory() {
+    fun fetchHistory() {
         viewModelScope.launch {
+            _isRefreshing.value = true
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
                 
                 
+                _isRefreshing.value = false
                 return@launch
             }
 
@@ -51,6 +56,8 @@ class HistoryViewModel @Inject constructor(
             } catch (e: Exception) {
                 
                 e.printStackTrace()
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }

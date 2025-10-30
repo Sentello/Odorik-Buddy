@@ -1,10 +1,15 @@
 package com.odorik.odorikbuddy.ui.sms
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material3.*
@@ -19,6 +24,34 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 
+private fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
+    val numbers = mutableListOf<String>()
+    contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
+        if (contactCursor.moveToFirst()) {
+            val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
+            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
+            val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            contentResolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                phoneProjection,
+                phoneSelection,
+                phoneSelectionArgs,
+                null
+            )?.use { phoneCursor ->
+                while (phoneCursor.moveToNext()) {
+                    var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                    number = number.replace(Regex("[^0-9+]"), "") 
+                    if (number.isNotBlank()) {
+                        numbers.add(number)
+                    }
+                }
+            }
+        }
+    }
+    return numbers
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
@@ -32,14 +65,23 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     var delayed by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
+    
+    var showPhoneNumberDialog by remember { mutableStateOf(false) }
+    var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
+
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
             contactUri?.let {
-                viewModel.handleContactSelection(context.contentResolver, it) { phoneNumber ->
-                    recipient = phoneNumber
+                val numbers = getPhoneNumbersFromContact(context.contentResolver, it)
+                if (numbers.size == 1) {
+                    recipient = numbers.first()
+                } else if (numbers.size > 1) {
+                    phoneNumbers = numbers
+                    showPhoneNumberDialog = true
                 }
+                
             }
         }
     )
@@ -144,6 +186,32 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             ) { Text(stringResource(R.string.send_sms)) }
             if (error != null) Text(stringResource(R.string.error, error!!), color = Color.Red)
             if (sendResult != null) Text(stringResource(R.string.result, sendResult!!), color = Color.Green)
+        }
+
+        
+        if (showPhoneNumberDialog) {
+            AlertDialog(
+                onDismissRequest = { showPhoneNumberDialog = false },
+                title = { Text(stringResource(R.string.choose_phone_number)) },
+                text = {
+                    LazyColumn {
+                        items(phoneNumbers) {
+                            TextButton(onClick = {
+                                recipient = it
+                                showPhoneNumberDialog = false
+                            }) {
+                                Text(it)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showPhoneNumberDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
     }
 }

@@ -11,6 +11,8 @@
     <string name="caller_id_label">ID Volajícího:</string>
     <string name="caller_id_label_settings">ID volajícího:</string>
     <string name="calls">Volání</string>
+    <string name="cancel">Zrušit</string>
+    <string name="choose_phone_number">Vyber telefonní číslo</string>
     <string name="cost_label">Cena:</string>
     <string name="currency_format">%.2f Kč</string>
     <string name="czech">Čeština</string>
@@ -47,10 +49,12 @@
     <string name="password_label_settings">Heslo:</string>
     <string name="phone_label">Telefon:</string>
     <string name="pick_caller_id">Vybrat volajícího</string>
+    <string name="pick_caller_id_number">Vyber číslo volajícího</string>
     <string name="pick_contact">Vybrat kontakt</string>
     <string name="pick_recipient">Vybrat příjemce</string>
+    <string name="pick_recipient_number">Vyber číslo volaného</string>
     <string name="recipient">Příjemce</string>
-    <string name="remember_me">Zapamatovat si mě</string>
+    <string name="remember_me">Zapamatuj si mě</string>
     <string name="result">Výsledek: %s</string>
     <string name="select_line">Vybrat linku</string>
     <string name="select_sender">Odesílatel</string>
