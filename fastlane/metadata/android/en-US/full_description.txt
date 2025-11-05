@@ -1,1 +1,15 @@
+Odorik Buddy is a modern Android application for interacting with the ODORIK.CZ API. It allows you to manage your account, make calls, send SMS, and more, all from a clean and intuitive interface.
 
+Features:
+• Dashboard: View your account balance, recent calls, and current settings
+• Call Management: Initiate calls through the ODORIK.CZ API
+• SMS Management: Send and receive SMS messages
+• Call Forwarding: Configure your call forwarding settings
+• Billing History: View your call history and billing information
+• Secure Login: Securely log in to your ODORIK.CZ account
+• Modern UI: A beautiful and responsive UI built with Material 3
+• Dark/Light Mode: The app adapts to your system's theme
+
+Built with modern Android technologies including Kotlin, Jetpack Compose, Material 3, MVVM Architecture, Retrofit for API calls, Coroutines & Flow for asynchronous operations, Hilt for dependency injection, Room for local data storage, and Jetpack Security for secure storage of API keys.
+
+This open-source application provides a native and user-friendly way to manage your ODORIK services directly from your Android device.

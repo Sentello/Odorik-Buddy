@@ -38,6 +38,8 @@ android {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
             }
+            // For F-Droid build, if no keystore.properties file exists, 
+            // the signing config will be incomplete but that's handled by build types below
         }
     }
 
@@ -48,8 +50,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // **New: Attach signing config**
-            signingConfig = signingConfigs.getByName("release")
+            // Only apply signing if keystore properties exist
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         // **Optional: For debug, it's auto-signed, but you can customize if needed**
         debug {
