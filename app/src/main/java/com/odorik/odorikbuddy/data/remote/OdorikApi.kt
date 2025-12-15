@@ -55,12 +55,7 @@ interface OdorikApi {
         @Query("password") password: String
     ): Response<List<Line>>
 
-    @GET("line_info.json")
-    suspend fun getLineInfo(
-        @Query("user") user: String,
-        @Query("password") password: String,
-        @Query("line") line: String
-    ): Response<LineInfo>
+
 
     @GET("calls.json")
     suspend fun getCallHistory(
@@ -104,7 +99,7 @@ interface OdorikApi {
         @Path("number") number: String,
         @Field("source_number") sourceNumber: String,
         @Field("ringing_number") ringingNumber: String,
-        @Field("replace_by_source_number") replaceBySource: String? = null,
+        @Query("replace_by_source_number") replaceBySource: String? = null,
         @Query("user") user: String,
         @Query("password") password: String
     ): Response<String>

@@ -48,6 +48,9 @@
     <string name="line_name_label">Název linky:</string>
     <string name="caller_id_label_settings">ID volajícího:</string>
     <string name="password_label_settings">Heslo:</string>
+    <string name="public_number_label">Veřejné číslo:</string>
+    <string name="connected_devices_label">Připojená zařízení</string>
+    <string name="none">Žádné</string>
     <string name="call_history">Hovor</string>
     <string name="sms_history">SMS</string>
     <string name="from_history">Od:</string>
@@ -122,6 +125,10 @@
     <string name="argument_line">Linka</string>
     <string name="argument_unknown">Neznámé pole</string>
     <string name="section_routing">Pravidla směrování</string>
+    <string name="section_data">Data</string>
+    <string name="section_app">Aplikace</string>
+    <string name="version_label">Verze</string>
+    <string name="routing_description">Spravovat pravidla pro sdílená a vlastní čísla</string>
     <string name="shared_number">Sdílená telefonní čísla</string>
     <string name="add_rule">Přidat pravidlo</string>
     <string name="delete_rule">Smazat pravidlo</string>

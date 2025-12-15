@@ -3,27 +3,24 @@ package com.odorik.odorikbuddy.ui.routes
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.ContactsContract
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.DeleteRouteUseCase
-import com.odorik.odorikbuddy.domain.usecase.GetRoutesForNumberUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetPublicNumbersUseCase
-import com.odorik.odorikbuddy.model.Route
+import com.odorik.odorikbuddy.domain.usecase.GetRoutesForNumberUseCase
 import com.odorik.odorikbuddy.model.PublicNumber
+import com.odorik.odorikbuddy.model.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-import kotlinx.coroutines.delay
-
-import com.odorik.odorikbuddy.R
 
 @HiltViewModel
 class OwnNumbersViewModel @Inject constructor(

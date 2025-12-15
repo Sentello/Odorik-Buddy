@@ -62,7 +62,7 @@ class RoutingRepository @Inject constructor(
                 number = publicNumber,
                 sourceNumber = sourceNumber,
                 ringingNumber = ringingNumber,
-                replaceBySource = if (replaceBySource) "1" else "0",
+                replaceBySource = if (replaceBySource) "true" else null,
                 user = userRepository.getUserId()!!,
                 password = userRepository.getPassword()!!
             )

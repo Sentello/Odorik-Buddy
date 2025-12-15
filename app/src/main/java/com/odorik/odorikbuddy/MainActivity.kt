@@ -2,31 +2,22 @@ package com.odorik.odorikbuddy
 
 import android.content.res.Configuration
 import android.os.Bundle
-import java.util.Locale
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import dagger.hilt.android.AndroidEntryPoint
-
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
+import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.local.ThemeManager
+import com.odorik.odorikbuddy.ui.calls.CallViewModel
 import com.odorik.odorikbuddy.ui.navigation.AppNavigation
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
-import com.odorik.odorikbuddy.ui.calls.CallViewModel
-import androidx.activity.viewModels
-
-import com.odorik.odorikbuddy.data.local.ThemeManager
-import com.odorik.odorikbuddy.data.local.LocaleManager
-import com.odorik.odorikbuddy.data.local.LanguagePreferences
+import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint

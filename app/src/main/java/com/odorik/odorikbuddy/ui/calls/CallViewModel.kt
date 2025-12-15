@@ -44,13 +44,13 @@ class CallViewModel @Inject constructor(
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
 
-    private val _selectedLine = MutableStateFlow<String?>(null)
-    val selectedLine: StateFlow<String?> = _selectedLine
+    private val _selectedLine = MutableStateFlow<Int?>(null)
+    val selectedLine: StateFlow<Int?> = _selectedLine
 
     init {
         _callerId.value = securePreferences.getString("caller_id", "") ?: ""
         _recipient.value = securePreferences.getString("recipient", "") ?: ""
-        _selectedLine.value = securePreferences.getString("selected_line", null)
+        _selectedLine.value = securePreferences.getString("selected_line", null)?.toIntOrNull()
     }
 
     fun updateCallerId(newCallerId: String) {
@@ -63,9 +63,9 @@ class CallViewModel @Inject constructor(
         securePreferences.saveString("recipient", newRecipient)
     }
 
-    fun updateSelectedLine(newLine: String?) {
+    fun updateSelectedLine(newLine: Int?) {
         _selectedLine.value = newLine
-        securePreferences.saveString("selected_line", newLine ?: "")
+        securePreferences.saveString("selected_line", newLine?.toString() ?: "")
     }
 
     fun getCallList() {

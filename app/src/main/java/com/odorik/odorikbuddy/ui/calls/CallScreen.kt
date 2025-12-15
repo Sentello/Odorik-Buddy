@@ -215,7 +215,7 @@ fun CallScreen(
             Button(
                 onClick = {
                     selectedLine?.let { lineId ->
-                        viewModel.makeCall(callerId, recipient, lineId)
+                        viewModel.makeCall(callerId, recipient, lineId.toString())
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

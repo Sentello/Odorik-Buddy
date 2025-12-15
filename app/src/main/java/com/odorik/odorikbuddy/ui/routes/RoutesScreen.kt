@@ -219,25 +219,19 @@ fun RoutesScreen(
                                                             
                                                             val sourceName = viewModel.getContactName(route.sourceNumber)
                                                             val ringingName = viewModel.getContactName(route.ringingNumber)
-                                                            
-                                                            Row(
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .padding(vertical = 4.dp),
-                                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                                verticalAlignment = Alignment.CenterVertically
-                                                            ) {
-                                                                Text(
-                                                                    
-                                                                    text = "$sourceName -> $ringingName",
-                                                                    style = MaterialTheme.typography.bodyMedium
-                                                                )
-                                                                IconButton(onClick = {
-                                                                    viewModel.deleteRoute(number.publicNumber, route.id)
-                                                                }) {
-                                                                    Icon(Icons.Default.Delete, contentDescription = "Delete route")
+
+                                                            ListItem(
+                                                                headlineContent = { Text(sourceName) },
+                                                                supportingContent = { Text("→ $ringingName") },
+                                                                trailingContent = {
+                                                                    IconButton(onClick = {
+                                                                        viewModel.deleteRoute(number.publicNumber, route.id)
+                                                                    }) {
+                                                                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_rule))
+                                                                    }
                                                                 }
-                                                            }
+                                                            )
+                                                            HorizontalDivider()
                                                         }
                                                     }
                                                 }
