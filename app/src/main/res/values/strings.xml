@@ -76,4 +76,23 @@
     <string name="pick_recipient_number">Choose Recipient</string>
     <string name="choose_phone_number">Choose Phone Number</string>
     <string name="cancel">Cancel</string>
+    <string name="sms_successfully_sent">SMS sent successfully. Your credit is %s.</string>
+    <string name="sms_successfully_enqueued">SMS successfully enqueued.</string>
+    <string name="sms_error_missing_argument">Error: Missing argument(s): %s.</string>
+    <string name="sms_error_empty_message">Error: The message is empty.</string>
+    <string name="sms_error_forbidden_sender">Error: The sender is forbidden.</string>
+    <string name="sms_error_unsupported_recipient">Error: The recipient is unsupported.</string>
+    <string name="sms_error_low_balance">Error: Low balance.</string>
+    <string name="sms_error_gateway_failed">Error: The gateway has failed.</string>
+    <string name="sms_error_invalid_delay_format">Error: Invalid delay format.</string>
+    <string name="sms_error_delayed_into_past">Error: The SMS is delayed into the past.</string>
+    <string name="sms_unknown_error">An unknown error has occurred.</string>
+    <string name="call_callback_ordered">Callback successfully ordered.</string>
+    <string name="call_successfully_enqueued">Call successfully enqueued.</string>
+    <string name="call_error_callback_failed">Error: Callback failed. The request could not be passed to the Odorik.cz exchange.</string>
+    <string name="call_error_missing_argument">Error: Missing argument(s): %s.</string>
+    <string name="call_error_invalid_delay_format">Error: Invalid delay format.</string>
+    <string name="call_error_delayed_into_past">Error: The call is delayed into the past.</string>
+    <string name="call_error_invalid_line">Error: Invalid line.</string>
+    <string name="call_unknown_error">An unknown error has occurred.</string>
 </resources>

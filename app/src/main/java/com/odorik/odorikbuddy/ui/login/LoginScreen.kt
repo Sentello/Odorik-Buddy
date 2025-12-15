@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.odorik.odorikbuddy.R
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +49,20 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            modifier = Modifier.padding(bottom = 32.dp)
+        Image(
+            painter = painterResource(id = R.drawable.ic_odorik_logo),
+            contentDescription = "Odorik Logo",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .padding(bottom = 16.dp)
         )
+
+
+
+
+
+
         OutlinedTextField(
             value = userId,
             onValueChange = { userId = it },

@@ -17,7 +17,7 @@ android {
         minSdk = 24
         targetSdk = 34
                 versionCode = 2
-        versionName = "1.1.0"
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -38,18 +38,9 @@ android {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
             }
-            // For F-Droid build, if no keystore.properties file exists, 
-            // the signing config will be incomplete but that's handled by build types below
         }
     }
 
-    dependenciesInfo {
-        // Disables dependency metadata when building APKs.
-        includeInApk = false
-        // Disables dependency metadata when building Android App Bundles.
-        includeInBundle = false
-    }
-    
     buildTypes {
         release {
             isMinifyEnabled = true // You can set to true later for obfuscation
@@ -57,11 +48,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Only apply signing if keystore properties exist
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            // **New: Attach signing config**
+            signingConfig = signingConfigs.getByName("release")
         }
         // **Optional: For debug, it's auto-signed, but you can customize if needed**
         debug {

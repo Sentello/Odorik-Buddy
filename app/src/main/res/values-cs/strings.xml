@@ -76,4 +76,23 @@
     <string name="pick_recipient_number">Vyber číslo volaného</string>
     <string name="choose_phone_number">Vyber telefonní číslo</string>
     <string name="cancel">Zrušit</string>
+    <string name="sms_successfully_sent">SMS byla úspěšně odeslána. Váš kredit je %s.</string>
+    <string name="sms_successfully_enqueued">SMS byla úspěšně zařazena do fronty.</string>
+    <string name="sms_error_missing_argument">Chyba: Chybí argument(y): %s.</string>
+    <string name="sms_error_empty_message">Chyba: Zpráva je prázdná.</string>
+    <string name="sms_error_forbidden_sender">Chyba: Odesílatel je zakázán.</string>
+    <string name="sms_error_unsupported_recipient">Chyba: Příjemce není podporován.</string>
+    <string name="sms_error_low_balance">Chyba: Nedostatek kreditu.</string>
+    <string name="sms_error_gateway_failed">Chyba: Brána selhala.</string>
+    <string name="sms_error_invalid_delay_format">Chyba: Neplatný formát zpoždění.</string>
+    <string name="sms_error_delayed_into_past">Chyba: SMS je zdržena do minulosti.</string>
+    <string name="sms_unknown_error">Vyskytla se neznámá chyba.</string>
+    <string name="call_callback_ordered">Zpětné volání bylo úspěšně objednáno.</string>
+    <string name="call_successfully_enqueued">Hovor byl úspěšně zařazen do fronty.</string>
+    <string name="call_error_callback_failed">Chyba: Zpětné volání selhalo. Požadavek se nepodařilo předat ústředně Odorik.cz.</string>
+    <string name="call_error_missing_argument">Chyba: Chybí argument(y): %s.</string>
+    <string name="call_error_invalid_delay_format">Chyba: Neplatný formát zpoždění.</string>
+    <string name="call_error_delayed_into_past">Chyba: Hovor je zdržen do minulosti.</string>
+    <string name="call_error_invalid_line">Chyba: Neplatná linka.</string>
+    <string name="call_unknown_error">Vyskytla se neznámá chyba.</string>
 </resources>

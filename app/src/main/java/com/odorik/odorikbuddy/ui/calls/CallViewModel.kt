@@ -82,10 +82,10 @@ class CallViewModel @Inject constructor(
         viewModelScope.launch {
             val result = callUseCase.execute(callerId, recipient, line)
             result.onSuccess {
-                _callResult.value = "Call initiated successfully"
+                _callResult.value = it
                 getCallList()
             }.onFailure {
-                _callResult.value = "Error: ${it.message}"
+                _callResult.value = it.message ?: ""
             }
         }
     }

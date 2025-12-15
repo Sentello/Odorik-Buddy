@@ -24,6 +24,30 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 
+@Composable
+private fun ApiMessage(response: String) {
+    val message = when {
+        response.startsWith("successfully_sent") -> {
+            val credit = response.substringAfter("successfully_sent ").trim()
+            stringResource(R.string.sms_successfully_sent, credit)
+        }
+        response == "successfully_enqueued" -> stringResource(R.string.sms_successfully_enqueued)
+        response.startsWith("error missing_argument") -> {
+            val args = response.substringAfter("error missing_argument ").trim()
+            stringResource(R.string.sms_error_missing_argument, args)
+        }
+        response == "error empty_message" -> stringResource(R.string.sms_error_empty_message)
+        response == "error forbidden_sender" -> stringResource(R.string.sms_error_forbidden_sender)
+        response == "error unsupported_recipient" -> stringResource(R.string.sms_error_unsupported_recipient)
+        response == "error low_balance" -> stringResource(R.string.sms_error_low_balance)
+        response == "error gateway_failed" -> stringResource(R.string.sms_error_gateway_failed)
+        response == "error invalid_delay_format" -> stringResource(R.string.sms_error_invalid_delay_format)
+        response == "error delayed_into_past" -> stringResource(R.string.sms_error_delayed_into_past)
+        else -> stringResource(R.string.sms_unknown_error)
+    }
+    Text(text = message, color = if (message.startsWith("Error") || message.startsWith("Chyba")) Color.Red else Color.Green)
+}
+
 private fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
     val numbers = mutableListOf<String>()
     contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
@@ -184,8 +208,8 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 onClick = { viewModel.sendSms(recipient, message, selectedSender, delayed.takeIf { it.isNotBlank() }) },
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.send_sms)) }
-            if (error != null) Text(stringResource(R.string.error, error!!), color = Color.Red)
-            if (sendResult != null) Text(stringResource(R.string.result, sendResult!!), color = Color.Green)
+            if (error != null) ApiMessage(response = error!!)
+            if (sendResult != null) ApiMessage(response = sendResult!!)
         }
 
         

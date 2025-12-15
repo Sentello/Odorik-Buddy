@@ -24,6 +24,26 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 
+@Composable
+private fun CallApiMessage(response: String) {
+    val message = when {
+        response == "callback_ordered" -> stringResource(R.string.call_callback_ordered)
+        response == "successfully_enqueued" -> stringResource(R.string.call_successfully_enqueued)
+        response == "error callback_failed" -> stringResource(R.string.call_error_callback_failed)
+        response.startsWith("error missing_argument") -> {
+            val args = response.substringAfter("error missing_argument ").trim()
+            stringResource(R.string.call_error_missing_argument, args)
+        }
+        response == "error invalid_delay_format" -> stringResource(R.string.call_error_invalid_delay_format)
+        response == "error delayed_into_past" -> stringResource(R.string.call_error_delayed_into_past)
+        response == "error invalid_line" -> stringResource(R.string.call_error_invalid_line)
+        else -> if (response.isNotEmpty()) stringResource(R.string.call_unknown_error) else ""
+    }
+    if (message.isNotEmpty()) {
+        Text(text = message, color = if (message.startsWith("Error") || message.startsWith("Chyba")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+    }
+}
+
 private fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
     val numbers = mutableListOf<String>()
     contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
@@ -232,7 +252,7 @@ fun CallScreen(
                 Text(stringResource(R.string.call))
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = callResult.value)
+            CallApiMessage(response = callResult.value)
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn {
                 items(callList.value) { call ->
