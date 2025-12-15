@@ -26,7 +26,9 @@ import com.odorik.odorikbuddy.ui.calls.CallScreen
 import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.history.HistoryScreen
+import com.odorik.odorikbuddy.ui.routes.OwnNumbersScreen
 import com.odorik.odorikbuddy.ui.routes.RoutesScreen
+import com.odorik.odorikbuddy.ui.settings.RoutingOptionsScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
 
@@ -93,6 +95,10 @@ fun MainScreen(navController: NavController) {
                     SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)
                 }
                 composable(SettingsRoutes.ROUTES_SCREEN) { RoutesScreen() }
+                composable(SettingsRoutes.OWN_NUMBERS_SCREEN) { OwnNumbersScreen() }
+                composable(SettingsRoutes.ROUTING_OPTIONS_SCREEN) {
+                    RoutingOptionsScreen(internalNavController = bottomNavController)
+                }
             }
         }
     }

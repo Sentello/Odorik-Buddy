@@ -26,6 +26,7 @@ import com.google.gson.FieldNamingPolicy
 
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.local.OdorikDatabase
+import com.odorik.odorikbuddy.data.repository.RoutingRepository
 import androidx.room.Room
 
 @Module
@@ -87,6 +88,12 @@ object AppModule {
 
     @Provides
     fun provideHistoryDao(db: OdorikDatabase): HistoryDao = db.historyDao()
+
+    @Provides
+    @Singleton
+    fun provideRoutingRepository(odorikApi: OdorikApi, userRepository: UserRepository): RoutingRepository {
+        return RoutingRepository(odorikApi, userRepository)
+    }
 
     @Provides
     @Singleton

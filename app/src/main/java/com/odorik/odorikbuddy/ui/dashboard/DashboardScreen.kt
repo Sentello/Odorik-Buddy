@@ -46,11 +46,28 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
+import java.text.DecimalFormat
 import com.odorik.odorikbuddy.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.material3.ExtendedFloatingActionButton
+
+class TwoDecimalValueFormatter : ValueFormatter() {
+    
+    private val format = DecimalFormat("0.00")
+
+    override fun getFormattedValue(value: Float): String {
+        
+        
+        return if (value > 0) {
+            format.format(value)
+        } else {
+            "" 
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable

@@ -34,15 +34,14 @@ import com.odorik.odorikbuddy.R
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun RoutesScreen(
-    viewModel: RoutesViewModel = hiltViewModel()
+fun OwnNumbersScreen(
+    viewModel: OwnNumbersViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val routesMap by viewModel.routesMap.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    
     var selectedPublicNumber by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -53,35 +52,26 @@ fun RoutesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    
-
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                
                 viewModel.loadContacts(context.contentResolver)
             }
         }
     )
 
-    
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
-                
                 viewModel.loadContacts(context.contentResolver)
             }
             else -> {
-                
                 readContactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
         }
     }
-    
 
-
-    
     var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
@@ -118,7 +108,6 @@ fun RoutesScreen(
             contactPickerLauncher.launch(null)
         } else {
             launcherToTrigger = { contactPickerLauncher.launch(null) }
-            
             requestPermissionLauncherForPicker.launch(Manifest.permission.READ_CONTACTS)
         }
     }
@@ -138,14 +127,14 @@ fun RoutesScreen(
                 contentPadding = PaddingValues(16.dp)
             ) {
                 when (val currentState = uiState) {
-                    is RoutesViewModel.UiState.Loading -> {
+                    is OwnNumbersViewModel.UiState.Loading -> {
                         item {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
                             }
                         }
                     }
-                    is RoutesViewModel.UiState.Error -> {
+                    is OwnNumbersViewModel.UiState.Error -> {
                         item {
                             Text(
                                 text = stringResource(id = currentState.messageResId),
@@ -154,11 +143,10 @@ fun RoutesScreen(
                             )
                         }
                     }
-                    is RoutesViewModel.UiState.Success -> {
+                    is OwnNumbersViewModel.UiState.Success -> {
                         items(currentState.data) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
-                            
                             
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
@@ -178,7 +166,6 @@ fun RoutesScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            
                                             text = publicNumberDisplayName,
                                             style = MaterialTheme.typography.titleMedium
                                         )
@@ -216,7 +203,6 @@ fun RoutesScreen(
                                                     val routes = routesMap[number.publicNumber] ?: emptyList()
                                                     LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                                                         items(routes) { route ->
-                                                            
                                                             val sourceName = viewModel.getContactName(route.sourceNumber)
                                                             val ringingName = viewModel.getContactName(route.ringingNumber)
                                                             
@@ -228,7 +214,6 @@ fun RoutesScreen(
                                                                 verticalAlignment = Alignment.CenterVertically
                                                             ) {
                                                                 Text(
-                                                                    
                                                                     text = "$sourceName -> $ringingName",
                                                                     style = MaterialTheme.typography.bodyMedium
                                                                 )
@@ -271,7 +256,6 @@ fun RoutesScreen(
         }
     }
 
-    
     if (showAddDialog && selectedPublicNumber != null) {
         AlertDialog(
             onDismissRequest = {
@@ -282,9 +266,7 @@ fun RoutesScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val dialogSourceNumber by viewModel.dialogSourceNumber.collectAsState()
                     val dialogRingingNumber by viewModel.dialogRingingNumber.collectAsState()
-                    val dialogReplaceBySource by viewModel.dialogReplaceBySource.collectAsState()
                     val dialogUseCallerIdPrefix by viewModel.dialogUseCallerIdPrefix.collectAsState()
-
 
                     OutlinedTextField(
                         value = dialogSourceNumber,
@@ -309,15 +291,9 @@ fun RoutesScreen(
                         }
                     )
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = dialogReplaceBySource, onCheckedChange = viewModel::onReplaceBySourceChange)
-                        Text(stringResource(R.string.replace_by_source_number))
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = dialogUseCallerIdPrefix, onCheckedChange = viewModel::onUseCallerIdPrefixChange)
                         Text(stringResource(R.string.use_line_number_as_caller_id))
                     }
-
-
                 }
             },
             confirmButton = {

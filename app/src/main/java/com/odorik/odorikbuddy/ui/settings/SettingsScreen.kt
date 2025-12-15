@@ -344,7 +344,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { internalNavController.navigate(SettingsRoutes.ROUTES_SCREEN) }
+                            .clickable { internalNavController.navigate(SettingsRoutes.ROUTING_OPTIONS_SCREEN) }
                             .padding(16.dp)
                     ) {
                         Icon(

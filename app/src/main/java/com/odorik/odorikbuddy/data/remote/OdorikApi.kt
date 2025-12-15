@@ -4,6 +4,7 @@ import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.model.LineInfo
 import com.odorik.odorikbuddy.model.HistoryItem
 import com.odorik.odorikbuddy.model.PublicNumber
+import com.odorik.odorikbuddy.model.SharedPublicNumber
 import com.odorik.odorikbuddy.model.Route
 import retrofit2.Response
 import retrofit2.http.DELETE
@@ -78,10 +79,16 @@ interface OdorikApi {
     ): List<HistoryItem>
 
     @GET("public_numbers.json")
-    suspend fun getPublicNumbers(
+    suspend fun getSharedPublicNumbers(
         @Query("user") user: String,
         @Query("password") password: String,
         @Query("include_shared_numbers") includeShared: String = "true"
+    ): Response<List<SharedPublicNumber>>
+
+    @GET("public_numbers.json")
+    suspend fun getPublicNumbers(
+        @Query("user") user: String,
+        @Query("password") password: String
     ): Response<List<PublicNumber>>
 
     @GET("public_numbers/{number}/routes.json")
