@@ -16,4 +16,24 @@ class CreateRouteUseCase @Inject constructor(
         val finalRingingNumber = if (useCallerIdPrefix) "*087$ringingNumber" else ringingNumber
         return routingRepository.createRoute(publicNumber, sourceNumber, finalRingingNumber, replaceBySource)
     }
+    
+    suspend fun executeWithLineCredentials(
+        publicNumber: String,
+        sourceNumber: String,
+        ringingNumber: String,
+        replaceBySource: Boolean,
+        useCallerIdPrefix: Boolean,
+        lineId: String,
+        sipPassword: String
+    ): Result<String> {
+        val finalRingingNumber = if (useCallerIdPrefix) "*087$ringingNumber" else ringingNumber
+        return routingRepository.createRouteWithLineCredentials(
+            publicNumber, 
+            sourceNumber, 
+            finalRingingNumber, 
+            replaceBySource,
+            lineId,
+            sipPassword
+        )
+    }
 }

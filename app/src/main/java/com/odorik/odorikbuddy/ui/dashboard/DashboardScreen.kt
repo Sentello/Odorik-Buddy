@@ -335,6 +335,7 @@ fun SpendingChart(
     val context = LocalContext.current
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
     val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface.toArgb()
     val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer.toArgb()
     val averageText = stringResource(R.string.weekly_average, spendingChartAverage)
 
@@ -425,11 +426,14 @@ fun SpendingChart(
                                 }
                             },
                             update = { chart ->
+                                chart.xAxis.textColor = onSurfaceColor
+                                chart.axisLeft.textColor = onSurfaceColor
                                 val barEntries = spendingChartData.mapIndexed { index, day ->
                                     BarEntry(index.toFloat(), day.spending.toFloat())
                                 }
                                 val spendingLabel = chart.context.getString(R.string.chart_spending)
                                 val barDataSet = BarDataSet(barEntries, spendingLabel).apply {
+                                    color = primaryColor
                                     setGradientColor(primaryColor, primaryContainerColor)
                                     valueTypeface = Typeface.DEFAULT_BOLD
                                     valueTextSize = 12f

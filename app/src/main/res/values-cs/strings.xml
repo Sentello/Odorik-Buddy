@@ -129,6 +129,10 @@
     <string name="section_app">Aplikace</string>
     <string name="version_label">Verze</string>
     <string name="routing_description">Spravovat pravidla pro sdílená a vlastní čísla</string>
+    <string name="section_personal">Osobní</string>
+    <string name="personal_phone_number">Osobní telefonní číslo</string>
+    <string name="personal_phone_number_description">Zadejte své osobní telefonní číslo v mezinárodním formátu (např. 00420601123123 nebo +420601123123)</string>
+    <string name="oneshot_call">Jednorázové volání</string>
     <string name="shared_number">Sdílená telefonní čísla</string>
     <string name="add_rule">Přidat pravidlo</string>
     <string name="delete_rule">Smazat pravidlo</string>
@@ -157,13 +161,25 @@
     </plurals>
     <string name="error_loading_history">Chyba při načítání historie</string>
     <string name="retry">Zkusit znovu</string>
+    <string name="redirected_to">Přesměrováno na:</string>
     <string name="use_line_number_as_caller_id">Použít číslo linky jako ID volajícího</string>
+    <string name="filter_history">Filtrovat historii</string>
+    <string name="apply_filters">Použít filtry</string>
+    <string name="line_filter">Filtr linek</string>
+    <string name="all_lines">Všechny linky</string>
+    <string name="number_filter">Filtr čísel</string>
     <!-- Error Messages -->
     <string name="error_loading_shared_numbers">Selhání načítání sdílených čísel</string>
     <string name="error_loading_routes_for_numbers">Selhání načítání detailů rout</string>
     <string name="error_creating_route">Selhání vytvoření routy</string>
     <string name="error_deleting_route">Selhání smazání routy</string>
     <string name="error_unknown">Došlo k neznámé chybě</string>
+    <string name="oneshot_error_no_shared_numbers_found">Nebyly nalezeny žádné sdílené čísla</string>
+    <string name="oneshot_error_no_source_number_configured">Není nakonfigurováno žádné zdrojové číslo. Prosím nastavte své telefonní číslo v nastavení.</string>
+    <string name="oneshot_error_getting_public_numbers">Chyba při získávání veřejných čísel: %s</string>
+    <string name="oneshot_error_creating_route">Chyba při vytváření jednorázové trasy: %s</string>
+    <string name="oneshot_error_during_setup">Chyba při nastavování jednorázového volání: %s</string>
+    <string name="oneshot_error_no_shared_numbers_available">Nejsou dostupná žádná sdílená veřejná čísla</string>
     <string name="shared_numbers">Sdílená čísla</string>
     <string name="own_numbers">Vlastní čísla</string>
     <string name="own_numbers_description">Čísla, která jsou ve vašem vlastnictví</string>
@@ -181,4 +197,5 @@
     <string name="custom_period">Vlastní období</string>
     <string name="spending_for_date">Útrata za %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
+
 </resources>

@@ -28,6 +28,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -87,6 +88,8 @@ fun SettingsScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showHistoryPeriodDialog by remember { mutableStateOf(false) }
+    var showPhoneNumberDialog by remember { mutableStateOf(false) }
+    val currentPhoneNumber by viewModel.phoneNumber.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getLines()
@@ -149,115 +152,20 @@ fun SettingsScreen(
                 )
             }
 
-            item { SettingsHeader(stringResource(R.string.section_account)) }
-            items(lines) { line ->
-                ListItem(
-                    headlineContent = { Text(line.caller_id) },
-                    supportingContent = { Text(stringResource(R.string.line_id_label) + " " + line.id.toString()) },
-                    leadingContent = { Icon(Icons.Default.VpnKey, contentDescription = null) },
-                    modifier = Modifier.clickable { viewModel.onLineSelected(line) }
-                )
-            }
+            item { SettingsHeader(stringResource(R.string.section_personal)) }
             item {
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.section_routing)) },
-                    supportingContent = { Text(stringResource(R.string.routing_description)) },
-                    leadingContent = { Icon(Icons.Default.Route, contentDescription = null) },
+                    headlineContent = { Text(stringResource(R.string.personal_phone_number)) },
+                    supportingContent = { 
+                        Text(
+                            if (currentPhoneNumber.isNotEmpty()) currentPhoneNumber 
+                            else stringResource(R.string.personal_phone_number_description)
+                        ) 
+                    },
+                    leadingContent = { Icon(Icons.Default.VpnKey, contentDescription = null) },
                     trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
                     modifier = Modifier.clickable {
-                        internalNavController.navigate(SettingsRoutes.ROUTING_OPTIONS_SCREEN)
-                    }
-                )
-            }
-
-            item { SettingsHeader(stringResource(R.string.section_app)) }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.logout), color = MaterialTheme.colorScheme.error) },
-                    leadingContent = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                    modifier = Modifier.clickable { showLogoutDialog = true }
-                )
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.version_label)) },
-                    supportingContent = { Text(BuildConfig.VERSION_NAME) },
-                    leadingContent = { Icon(Icons.Default.Info, contentDescription = null) }
-                )
-            }
-        }
-    }
-
-    
-
-    selectedLine?.let {
-        LineInfoDialog(line = it, onDismiss = { viewModel.onDismissLineDialog() })
-    }
-
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = { Text(stringResource(R.string.confirm_logout_title)) },
-            text = { Text(stringResource(R.string.confirm_logout_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.logout()
-                        outerNavController.navigate(NavigationRoutes.LOGIN) {
-                            popUpTo(NavigationRoutes.MAIN) { inclusive = true }
-                        }
-                        showLogoutDialog = false
-                    }
-                ) { Text(stringResource(R.string.yes)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
-    }
-
-    if (showLanguageDialog) {
-        LanguageSelectionDialog(
-            currentLanguage = language,
-            onLanguageSelected = {
-                viewModel.setLanguage(it)
-                (context as? MainActivity)?.updateLocale(it)
-            },
-            onDismiss = { showLanguageDialog = false }
-        )
-    }
-
-    if (showHistoryPeriodDialog) {
-        HistoryPeriodSelectionDialog(
-            currentPeriod = historyPeriod,
-            onPeriodSelected = { viewModel.setHistoryPeriod(it) },
-            onDismiss = { showHistoryPeriodDialog = false }
-        )
-    }
-}
-
-@Composable
-private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.line_info_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("${stringResource(R.string.line_name_label)} ${line.name}", style = MaterialTheme.typography.bodyLarge)
-                Text("${stringResource(R.string.caller_id_label_settings)} ${line.caller_id}", style = MaterialTheme.typography.bodyMedium)
-                line.public_number?.let {
-                    Text("${stringResource(R.string.public_number_label)} ${it}", style = MaterialTheme.typography.bodyMedium)
-                }
-                Text("${stringResource(R.string.password_label_settings)} ${line.sip_password}", style = MaterialTheme.typography.bodyMedium)
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text(stringResource(R.string.connected_devices_label), style = MaterialTheme.typography.titleMedium)
-                if (line.connected_devices.isEmpty()) {
-                    Text(stringResource(R.string.none), style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        line.connected_devices.forEach { device ->
-                            val ipAddress = device.publicSocket.substringBefore(':')
+                        
                             Column {
                                 Text("• ${device.userAgent}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                                 Text("  IP: $ipAddress", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -269,6 +177,47 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) }
+        }
+    )
+}
+
+@Composable
+fun PhoneNumberInputDialog(
+    currentNumber: String,
+    onNumberSaved: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var phoneNumberInput by remember { mutableStateOf(currentNumber) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.personal_phone_number)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.personal_phone_number_description),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                OutlinedTextField(
+                    value = phoneNumberInput,
+                    onValueChange = { phoneNumberInput = it },
+                    label = { Text(stringResource(R.string.personal_phone_number)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onNumberSaved(phoneNumberInput) }
+            ) {
+                Text(stringResource(R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
         }
     )
 }

@@ -30,5 +30,7 @@ data class HistoryItem(
     @SerializedName("destination_name")
     val destination_name: String?,
     @SerializedName("redirection_parent_id")
-    val redirection_parent_id: String?
+    val redirection_parent_id: String?,
+    @SerializedName("line")
+    val line: Int? 
 )

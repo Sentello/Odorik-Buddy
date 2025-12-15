@@ -1,14 +1,19 @@
 package com.odorik.odorikbuddy.ui.history
 
+import android.content.ContentResolver
 import android.content.SharedPreferences
+import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.SecurePreferences
+import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
+import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -19,7 +24,8 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val repository: HistoryRepository,
     private val securePreferences: SecurePreferences,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val getLinesUseCase: GetLinesUseCase
 ) : ViewModel() {
 
     data class HistoryDisplayItem(
@@ -30,14 +36,31 @@ class HistoryViewModel @Inject constructor(
     private val _history = MutableStateFlow<List<HistoryDisplayItem>>(emptyList())
     val history: StateFlow<List<HistoryDisplayItem>> = _history
 
+    private val _filteredHistory = MutableStateFlow<List<HistoryDisplayItem>>(emptyList())
+    val filteredHistory: StateFlow<List<HistoryDisplayItem>> = _filteredHistory
+
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _lines = MutableStateFlow<List<Line>>(emptyList())
+    val lines: StateFlow<List<Line>> = _lines
+
+    private val _selectedLine = MutableStateFlow<Line?>(null)
+    val selectedLine: StateFlow<Line?> = _selectedLine
+
+    private val _filterNumber = MutableStateFlow<String>("")
+    val filterNumber: StateFlow<String> = _filterNumber
+
+    
+    private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
+    val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
+
     init {
         fetchHistory()
+        fetchLines()
     }
 
     fun fetchHistory() {
@@ -79,6 +102,7 @@ class HistoryViewModel @Inject constructor(
                     displayItems.add(HistoryDisplayItem(standalone, false))
                 }
                 _history.value = displayItems
+                applyFilters()
             } catch (e: Exception) {
                 _error.value = e.message ?: "An unknown error occurred."
                 e.printStackTrace()
@@ -87,4 +111,92 @@ class HistoryViewModel @Inject constructor(
             }
         }
     }
+
+    fun fetchLines() {
+        viewModelScope.launch {
+            val result = getLinesUseCase.execute()
+            result.onSuccess {
+                _lines.value = it
+                
+                if (_selectedLine.value == null && it.isNotEmpty()) {
+                    _selectedLine.value = it.first()
+                    applyFilters()
+                }
+            }.onFailure {
+                _error.value = it.message ?: "Failed to fetch lines"
+            }
+        }
+    }
+
+    fun setSelectedLine(line: Line?) {
+        _selectedLine.value = line
+        applyFilters()
+    }
+
+    fun setFilterNumber(number: String) {
+        _filterNumber.value = number
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        val lineFilter = _selectedLine.value
+        val numberFilter = _filterNumber.value
+
+        val filtered = if (lineFilter == null && numberFilter.isBlank()) {
+            
+            _history.value
+        } else {
+            _history.value.filter { displayItem ->
+                val item = displayItem.item
+                
+                
+                val lineMatch = lineFilter?.let { 
+                    item.line == it.id 
+                } ?: true
+                
+                
+                val numberMatch = if (numberFilter.isBlank()) {
+                    true
+                } else {
+                    item.source_number.contains(numberFilter) || item.destination_number.contains(numberFilter)
+                }
+                
+                lineMatch && numberMatch
+            }
+        }
+        
+        _filteredHistory.value = filtered
+    }
+
+    
+
+    
+    fun getContactName(number: String): String {
+        val prefix = "*087"
+        var numberToLookup = number
+        var detectedPrefix = ""
+
+        
+        if (number.startsWith(prefix)) {
+            detectedPrefix = prefix
+            numberToLookup = number.substring(prefix.length)
+        }
+
+        
+        val normalizedNumber = normalizePhoneNumber(numberToLookup)
+        val contactName = _contactsMap.value[normalizedNumber]
+
+        
+        return if (contactName != null) {
+            
+            
+            "$detectedPrefix $contactName".trim()
+        } else {
+            
+            
+            number
+        }
+    }
+
+    
 }

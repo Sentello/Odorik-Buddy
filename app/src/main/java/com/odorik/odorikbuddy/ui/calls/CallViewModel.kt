@@ -10,8 +10,10 @@ import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.model.CallInfo
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
+import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetCallListUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
+import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +25,8 @@ class CallViewModel @Inject constructor(
     private val getCallListUseCase: GetCallListUseCase,
     private val getLinesUseCase: GetLinesUseCase,
     private val callUseCase: CallUseCase,
+    private val createRouteUseCase: CreateRouteUseCase,
+    private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
     private val securePreferences: SecurePreferences
 ) : ViewModel() {
 
@@ -46,6 +50,22 @@ class CallViewModel @Inject constructor(
 
     private val _selectedLine = MutableStateFlow<Int?>(null)
     val selectedLine: StateFlow<Int?> = _selectedLine
+
+    private val _oneShotCallResult = MutableStateFlow<String>("")
+    val oneShotCallResult: StateFlow<String> = _oneShotCallResult
+
+    private val _oneShotCallError = MutableStateFlow<String?>("")
+    val oneShotCallError: StateFlow<String?> = _oneShotCallError
+
+    private val _isOneShotCallLoading = MutableStateFlow(false)
+    val isOneShotCallLoading: StateFlow<Boolean> = _isOneShotCallLoading
+
+    private val _phoneNumber = MutableStateFlow(getPhoneNumber())
+    val phoneNumber: StateFlow<String> = _phoneNumber
+
+    private fun getPhoneNumber(): String {
+        return securePreferences.getString("phone_number", "") ?: ""
+    }
 
     init {
         _callerId.value = securePreferences.getString("caller_id", "") ?: ""
@@ -131,4 +151,96 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
     }
     return numbers
 }
+
+    fun makeOneShotCall(targetRecipient: String, useLineAsCallerId: Boolean) {
+        viewModelScope.launch {
+            _oneShotCallError.value = null
+            _oneShotCallResult.value = ""  
+            _isOneShotCallLoading.value = true
+            
+            try {
+                
+                val currentPhoneNumber = securePreferences.getString("phone_number", "") ?: ""
+                _phoneNumber.value = currentPhoneNumber
+                
+                
+                val publicNumbersResult = getSharedPublicNumbersUseCase.execute()
+                if (publicNumbersResult.isFailure) {
+                    _oneShotCallError.value = "Error getting public numbers: ${publicNumbersResult.exceptionOrNull()?.message}"
+                    _isOneShotCallLoading.value = false
+                    return@launch
+                }
+                
+                val publicNumbers = publicNumbersResult.getOrNull()
+                if (publicNumbers.isNullOrEmpty()) {
+                    _oneShotCallError.value = "No shared public numbers available"
+                    _isOneShotCallLoading.value = false
+                    return@launch
+                }
+                
+                
+                val lastSharedNumber = publicNumbers.lastOrNull { it.type == "shared" }?.publicNumber
+                if (lastSharedNumber == null) {
+                    _oneShotCallError.value = "No shared numbers found"
+                    _isOneShotCallLoading.value = false
+                    return@launch
+                }
+                
+                
+                
+                val sourceNumber = currentPhoneNumber
+                
+                
+                val selectedLineInfo = _selectedLine.value?.let { selectedLineId ->
+                    _lines.value.find { it.id == selectedLineId }
+                }
+                
+                if (sourceNumber.isNullOrEmpty()) {
+                    _oneShotCallError.value = "No source number configured. Please set your phone number in settings."
+                    _isOneShotCallLoading.value = false
+                    return@launch
+                }
+                
+                
+                val routeResult = if (selectedLineInfo != null) {
+                    
+                    createRouteUseCase.executeWithLineCredentials(
+                        publicNumber = lastSharedNumber,
+                        sourceNumber = sourceNumber,
+                        ringingNumber = targetRecipient,
+                        replaceBySource = true, 
+                        useCallerIdPrefix = useLineAsCallerId,
+                        lineId = selectedLineInfo.id.toString(),
+                        sipPassword = selectedLineInfo.sip_password
+                    )
+                } else {
+                    
+                    createRouteUseCase.execute(
+                        publicNumber = lastSharedNumber,
+                        sourceNumber = sourceNumber,
+                        ringingNumber = targetRecipient,
+                        replaceBySource = true, 
+                        useCallerIdPrefix = useLineAsCallerId
+                    )
+                }
+                
+                if (routeResult.isFailure) {
+                    _oneShotCallError.value = "Error creating route: ${routeResult.exceptionOrNull()?.message}"
+                    _isOneShotCallLoading.value = false
+                    return@launch
+                }
+                
+                
+                _oneShotCallResult.value = lastSharedNumber
+            } catch (e: Exception) {
+                _oneShotCallError.value = "Error during One Shot Call setup: ${e.message}"
+            } finally {
+                _isOneShotCallLoading.value = false
+            }
+        }
+    }
+    
+    fun resetOneShotCallResult() {
+        _oneShotCallResult.value = ""
+    }
 }

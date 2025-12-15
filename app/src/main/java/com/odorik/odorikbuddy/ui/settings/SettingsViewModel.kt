@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.repository.UserRepository
@@ -22,7 +23,8 @@ class SettingsViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val themeManager: ThemeManager,
     private val localeManager: LocaleManager,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val securePreferences: SecurePreferences
 ) : ViewModel() {
 
     val isDarkMode: State<Boolean> = themeManager.isDarkMode
@@ -51,13 +53,31 @@ class SettingsViewModel @Inject constructor(
     private val _historyPeriod = MutableStateFlow(getHistoryPeriod())
     val historyPeriod: StateFlow<Int> = _historyPeriod.asStateFlow()
 
+    private val _phoneNumber = MutableStateFlow(getPhoneNumber())
+    val phoneNumber: StateFlow<String> = _phoneNumber.asStateFlow()
+
     private fun getHistoryPeriod(): Int {
         return sharedPreferences.getInt("history_period_days", 90)
+    }
+
+    private fun getPhoneNumber(): String {
+        return securePreferences.getString("phone_number", "") ?: ""
     }
 
     fun setHistoryPeriod(days: Int) {
         sharedPreferences.edit().putInt("history_period_days", days).apply()
         _historyPeriod.value = days
+    }
+
+    fun setPhoneNumber(number: String) {
+        
+        val formattedNumber = if (number.startsWith("+")) {
+            number.replace("+", "00")
+        } else {
+            number
+        }
+        securePreferences.saveString("phone_number", formattedNumber)
+        _phoneNumber.value = formattedNumber
     }
 
     fun getLines() {

@@ -129,6 +129,10 @@
     <string name="section_app">Application</string>
     <string name="version_label">Version</string>
     <string name="routing_description">Manage shared and own number routes</string>
+    <string name="section_personal">Personal</string>
+    <string name="personal_phone_number">Personal Phone Number</string>
+    <string name="personal_phone_number_description">Enter your personal phone number in international format (e.g. 00420601123123 or +420601123123)</string>
+    <string name="oneshot_call">One Shot Call</string>
     <string name="shared_number">Shared phone numbers</string>
     <string name="add_rule">Add Rule</string>
     <string name="delete_rule">Delete Rule</string>
@@ -155,13 +159,25 @@
     </plurals>
     <string name="error_loading_history">Error loading history</string>
     <string name="retry">Retry</string>
+    <string name="redirected_to">Redirected to:</string>
     <string name="use_line_number_as_caller_id">Use line number as caller ID</string>
+    <string name="filter_history">Filter History</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="line_filter">Line Filter</string>
+    <string name="all_lines">All Lines</string>
+    <string name="number_filter">Number Filter</string>
     <!-- Error Messages -->
     <string name="error_loading_shared_numbers">Failed to load shared numbers</string>
     <string name="error_loading_routes_for_numbers">Failed to load route details</string>
     <string name="error_creating_route">Failed to create route</string>
     <string name="error_deleting_route">Failed to delete route</string>
     <string name="error_unknown">An unknown error occurred</string>
+    <string name="oneshot_error_no_shared_numbers_found">No shared numbers found</string>
+    <string name="oneshot_error_no_source_number_configured">No source number configured. Please set your phone number in settings.</string>
+    <string name="oneshot_error_getting_public_numbers">Error getting public numbers: %s</string>
+    <string name="oneshot_error_creating_route">Error creating one-shot route: %s</string>
+    <string name="oneshot_error_during_setup">Error during One Shot Call setup: %s</string>
+    <string name="oneshot_error_no_shared_numbers_available">No shared public numbers available</string>
     <string name="shared_numbers">Shared Numbers</string>
     <string name="own_numbers">Own Numbers</string>
     <string name="own_numbers_description">Numbers that are owned by you</string>
@@ -179,4 +195,5 @@
     <string name="custom_period">Custom Period</string>
     <string name="spending_for_date">Spending for %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">End date cannot be before start date.</string>
+
 </resources>

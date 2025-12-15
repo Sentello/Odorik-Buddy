@@ -8,6 +8,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,17 +22,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -60,7 +64,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -93,7 +99,30 @@ private fun ApiMessage(response: String, isError: Boolean) {
         response == "error delayed_into_past" -> stringResource(R.string.sms_error_delayed_into_past)
         else -> stringResource(R.string.sms_unknown_error)
     }
-    Text(text = message, color = if (isError) Color.Red else Color.Green)
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = if (isError) {
+            MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+        } else {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        }
+    ) {
+        Text(
+            text = message,
+            color = if (isError) 
+                MaterialTheme.colorScheme.error 
+            else 
+                MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
 
@@ -190,186 +219,267 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
+                .padding(padding),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedTextField(
-                value = recipient,
-                onValueChange = { recipient = it },
-                label = { Text(stringResource(R.string.recipient)) },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    IconButton(onClick = {
-                        when (PackageManager.PERMISSION_GRANTED) {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_CONTACTS
-                            ) -> {
-                                launcher.launch(null)
-                            }
-                            else -> {
-                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact))
-                    }
-                }
-            )
-            Spacer(Modifier.height(8.dp))
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedTextField(
-                    value = selectedSender ?: stringResource(R.string.select_sender),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.sender)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    allowedSenders.forEach { sender ->
-                        DropdownMenuItem(text = { Text(sender) }, onClick = {
-                            selectedSender = sender
-                            expanded = false
-                        })
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            val charCount = message.length
-            val segments = calculateSmsSegments(message)
-            val countColor = when {
-                segments <= 1 -> Color.Green
-                segments <= 3 -> Color(0xFFFFA500) 
-                else -> Color.Red
-            }
-            val isMultipart = segments > 1
-
-            OutlinedTextField(
-                value = message,
-                onValueChange = { newValue ->
-                    if (newValue.length <= 765) {
-                        message = newValue
-                    }
-                },
-                label = { Text(stringResource(R.string.message)) },
+            
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
-                supportingText = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "$charCount / 765${if (isMultipart) " ($segments messages)" else ""}",
-                            color = countColor,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier
-                                .semantics {
-                                    contentDescription = "$charCount characters, ${if (isMultipart) "$segments messages" else "1 message"}"
-                                }
-                                .animateContentSize()
-                        )
-                        if (isMultipart) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Multipart SMS info",
-                                tint = countColor,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable { showMultipartInfo = true }
-                            )
-                        }
-                    }
-                }
-            )
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                SingleChoiceSegmentedButtonRow( 
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp) 
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    SegmentedButton(
-                        selected = delayMode == "minutes",
-                        onClick = { delayMode = "minutes"; viewModel.onMinutesDelayedInputChange("") },
-                        shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
-                        modifier = Modifier.semantics { contentDescription = "Switch to minutes delay" }
-                    ) {
-                        Text(stringResource(R.string.sms_minutes))
-                    }
-                    SegmentedButton(
-                        selected = delayMode == "datetime",
-                        onClick = { delayMode = "datetime"; viewModel.setDateTimeDelayed("") },
-                        shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp),
-                        modifier = Modifier.semantics { contentDescription = "Switch to specific time" }
-                    ) {
-                        Text(stringResource(R.string.sms_specific_time))
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-
-            
-            val selectDateTimeText = stringResource(R.string.sms_select_date_time)
-            val displayDelayed = remember(delayed) {
-                if (delayed.isBlank()) {
-                    selectDateTimeText
-                } else {
-                    try {
-                        val instant = Instant.parse(delayed)
-                        instant.atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'"))
-                    } catch (e: Exception) {
-                        delayed
-                    }
-                }
-            }
-
-            if (delayMode == "minutes") {
-                OutlinedTextField(
-                    value = delayed,
-                    onValueChange = { newValue ->
-                        viewModel.onMinutesDelayedInputChange(newValue)
-                    },
-                    label = { Text(stringResource(R.string.sms_delay_minutes)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = delayedError != null,
-                    supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            } else { 
-                OutlinedTextField(
-                    value = displayDelayed,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.sms_scheduled_time_utc)) },
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(Icons.Default.CalendarToday, contentDescription = "Select date and time")
+                    OutlinedTextField(
+                        value = recipient,
+                        onValueChange = { recipient = it },
+                        label = { 
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Contacts,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.padding(start = 4.dp))
+                                Text(stringResource(R.string.recipient))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                when (PackageManager.PERMISSION_GRANTED) {
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.READ_CONTACTS
+                                    ) -> {
+                                        launcher.launch(null)
+                                    }
+                                    else -> {
+                                        requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                                    }
+                                }
+                            }) {
+                                Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact))
+                            }
                         }
-                    },
-                    isError = delayedError != null,
-                    supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = selectedSender ?: stringResource(R.string.select_sender),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { 
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Message,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.padding(start = 4.dp))
+                                    Text(stringResource(R.string.sender))
+                                }
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            allowedSenders.forEach { sender ->
+                                DropdownMenuItem(text = { Text(sender) }, onClick = {
+                                    selectedSender = sender
+                                    expanded = false
+                                })
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    val charCount = message.length
+                    val segments = calculateSmsSegments(message)
+                    val countColor = when {
+                        segments <= 1 -> Color.Green
+                        segments <= 3 -> Color(0xFFFFA500) 
+                        else -> Color.Red
+                    }
+                    val isMultipart = segments > 1
+
+                    OutlinedTextField(
+                        value = message,
+                        onValueChange = { newValue ->
+                            if (newValue.length <= 765) {
+                                message = newValue
+                            }
+                        },
+                        label = { 
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Message,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.padding(start = 4.dp))
+                                Text(stringResource(R.string.message))
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        supportingText = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "$charCount / 765${if (isMultipart) " ($segments messages)" else ""}",
+                                    color = countColor,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier
+                                        .semantics {
+                                            contentDescription = "$charCount characters, ${if (isMultipart) "$segments messages" else "1 message"}"
+                                        }
+                                        .animateContentSize()
+                                )
+                                if (isMultipart) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Multipart SMS info",
+                                        tint = countColor,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable { showMultipartInfo = true }
+                                    )
+                                }
+                            }
+                        }
+                    )
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        SingleChoiceSegmentedButtonRow( 
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp) 
+                        ) {
+                            SegmentedButton(
+                                selected = delayMode == "minutes",
+                                onClick = { delayMode = "minutes"; viewModel.onMinutesDelayedInputChange("") },
+                                shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
+                                modifier = Modifier.semantics { contentDescription = "Switch to minutes delay" }
+                            ) {
+                                Text(stringResource(R.string.sms_minutes))
+                            }
+                            SegmentedButton(
+                                selected = delayMode == "datetime",
+                                onClick = { delayMode = "datetime"; viewModel.setDateTimeDelayed("") },
+                                shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp),
+                                modifier = Modifier.semantics { contentDescription = "Switch to specific time" }
+                            ) {
+                                Text(stringResource(R.string.sms_specific_time))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+
+                    
+                    val selectDateTimeText = stringResource(R.string.sms_select_date_time)
+                    val displayDelayed = remember(delayed) {
+                        if (delayed.isBlank()) {
+                            selectDateTimeText
+                        } else {
+                            try {
+                                val instant = Instant.parse(delayed)
+                                instant.atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'"))
+                            } catch (e: Exception) {
+                                delayed
+                            }
+                        }
+                    }
+
+                    if (delayMode == "minutes") {
+                        OutlinedTextField(
+                            value = delayed,
+                            onValueChange = { newValue ->
+                                viewModel.onMinutesDelayedInputChange(newValue)
+                            },
+                            label = { 
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Message,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.padding(start = 4.dp))
+                                    Text(stringResource(R.string.sms_delay_minutes))
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            isError = delayedError != null,
+                            supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else { 
+                        OutlinedTextField(
+                            value = displayDelayed,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { 
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarToday,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.padding(start = 4.dp))
+                                    Text(stringResource(R.string.sms_scheduled_time_utc))
+                                }
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { showDatePicker = true }) {
+                                    Icon(Icons.Default.CalendarToday, contentDescription = "Select date and time")
+                                }
+                            },
+                            isError = delayedError != null,
+                            supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    FilledTonalButton(
+                        onClick = { viewModel.sendSms(recipient, message, selectedSender) },
+                        
+                        enabled = recipient.isNotBlank() && message.isNotBlank() && delayedError == null,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(vertical = 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(start = 8.dp))
+                        Text(
+                            text = stringResource(R.string.send_sms),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    if (error != null) ApiMessage(response = error!!, isError = true)
+                    if (sendResult != null) ApiMessage(response = sendResult!!, isError = false)
+                }
             }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { viewModel.sendSms(recipient, message, selectedSender) },
-                
-                enabled = recipient.isNotBlank() && message.isNotBlank() && delayedError == null,
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(R.string.send_sms)) }
-            if (error != null) ApiMessage(response = error!!, isError = true)
-            if (sendResult != null) ApiMessage(response = sendResult!!, isError = false)
         }
 
         

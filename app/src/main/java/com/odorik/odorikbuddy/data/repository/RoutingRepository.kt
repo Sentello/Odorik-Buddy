@@ -76,6 +76,33 @@ class RoutingRepository @Inject constructor(
         }
     }
 
+    suspend fun createRouteWithLineCredentials(
+        publicNumber: String,
+        sourceNumber: String,
+        ringingNumber: String,
+        replaceBySource: Boolean,
+        lineId: String,
+        sipPassword: String
+    ): Result<String> {
+        return try {
+            val response = odorikApi.createRouteWithLineCredentials(
+                number = publicNumber,
+                sourceNumber = sourceNumber,
+                ringingNumber = ringingNumber,
+                replaceBySource = if (replaceBySource) "true" else null,
+                user = lineId,
+                password = sipPassword
+            )
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: "")
+            } else {
+                Result.failure(Exception(response.errorBody()?.string()))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun deleteRoute(publicNumber: String, routeId: Long): Result<String> {
         return try {
             val response = odorikApi.deleteRoute(publicNumber, routeId, userRepository.getUserId()!!, userRepository.getPassword()!!)

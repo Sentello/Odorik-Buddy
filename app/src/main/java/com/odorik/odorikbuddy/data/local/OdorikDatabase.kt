@@ -8,7 +8,7 @@ import com.odorik.odorikbuddy.model.HistoryItem
 
 @Database(
     entities = [HistoryItem::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class OdorikDatabase : RoomDatabase() {
@@ -20,6 +20,12 @@ abstract class OdorikDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE history ADD COLUMN ringing_length INTEGER")
                 db.execSQL("ALTER TABLE history ADD COLUMN destination_name TEXT")
                 db.execSQL("ALTER TABLE history ADD COLUMN redirection_parent_id TEXT")
+            }
+        }
+        
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE history ADD COLUMN line INTEGER")
             }
         }
     }
