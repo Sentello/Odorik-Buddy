@@ -1,7 +1,10 @@
 package com.odorik.odorikbuddy.di
 
 import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import com.odorik.odorikbuddy.BuildConfig  
+import com.odorik.odorikbuddy.data.local.HistoryDao
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import dagger.Module
@@ -20,6 +23,8 @@ import com.odorik.odorikbuddy.data.local.LocaleManager
 import retrofit2.converter.gson.GsonConverterFactory
 
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
+import com.odorik.odorikbuddy.data.local.OdorikDatabase
+import androidx.room.Room
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -73,4 +78,21 @@ object AppModule {
     fun provideSecurePreferences(application: Application): com.odorik.odorikbuddy.data.local.SecurePreferences {
         return com.odorik.odorikbuddy.data.local.SecurePreferences(application)
     }
+
+    @Provides
+    @Singleton
+    fun provideOdorikDatabase(app: Application): OdorikDatabase {
+        return Room.databaseBuilder(
+            app,
+            OdorikDatabase::class.java,
+            "odorik_database"
+        ).addMigrations(OdorikDatabase.MIGRATION_1_2).build()
+    }
+
+    @Provides
+    fun provideHistoryDao(db: OdorikDatabase): HistoryDao = db.historyDao()
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(app: Application): SharedPreferences = app.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 }

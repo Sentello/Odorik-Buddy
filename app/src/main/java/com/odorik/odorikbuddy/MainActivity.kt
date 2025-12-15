@@ -48,13 +48,12 @@ class MainActivity : ComponentActivity() {
         val locale = Locale(lang)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
+        @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
         android.util.Log.d("MainActivity", "Current locale after explicit update: ${resources.configuration.locales[0].language}")
 
         setContent {
-            val isDarkMode = themeManager.isDarkMode.value
-
-            OdorikBuddyTheme(darkTheme = isDarkMode) {
+            OdorikBuddyTheme(themeManager = themeManager) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     Column {
                         AppNavigation()
@@ -83,6 +82,7 @@ class MainActivity : ComponentActivity() {
         val locale = Locale(lang)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
+        @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
         recreate()
     }

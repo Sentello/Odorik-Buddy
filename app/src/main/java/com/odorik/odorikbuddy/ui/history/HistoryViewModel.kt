@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.history
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
@@ -17,11 +18,17 @@ import com.odorik.odorikbuddy.data.local.SecurePreferences
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val repository: HistoryRepository,
-    private val securePreferences: SecurePreferences
+    private val securePreferences: SecurePreferences,
+    private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
-    private val _history = MutableStateFlow<List<HistoryItem>>(emptyList())
-    val history: StateFlow<List<HistoryItem>> = _history
+    data class HistoryDisplayItem(
+        val item: HistoryItem,
+        val isChild: Boolean = false
+    )
+    
+    private val _history = MutableStateFlow<List<HistoryDisplayItem>>(emptyList())
+    val history: StateFlow<List<HistoryDisplayItem>> = _history
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing
@@ -44,15 +51,31 @@ class HistoryViewModel @Inject constructor(
             }
 
             
+            val days = sharedPreferences.getInt("history_period_days", 90)
             val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
             val now = Calendar.getInstance()
             val to = isoFormat.format(now.time)
-            now.add(Calendar.DAY_OF_YEAR, -30)
+            now.add(Calendar.DAY_OF_YEAR, -days)
             val from = isoFormat.format(now.time)
 
             try {
                 val result = repository.getCombinedHistory(user, password, from, to)
-                _history.value = result
+                val grouped = result.groupBy { it.redirection_parent_id }
+                val parents = grouped[null] ?: emptyList()
+                val displayItems = mutableListOf<HistoryDisplayItem>()
+                parents.sortedByDescending { it.date }.forEach { parent ->
+                    displayItems.add(HistoryDisplayItem(parent, false))
+                    val children = grouped[parent.id] ?: emptyList()
+                    children.sortedByDescending { it.date }.forEach { child ->
+                        displayItems.add(HistoryDisplayItem(child, true))
+                    }
+                }
+                
+                val standalones = result.filter { it.redirection_parent_id == null && !parents.contains(it) }
+                standalones.sortedByDescending { it.date }.forEach { standalone ->
+                    displayItems.add(HistoryDisplayItem(standalone, false))
+                }
+                _history.value = displayItems
             } catch (e: Exception) {
                 
                 e.printStackTrace()

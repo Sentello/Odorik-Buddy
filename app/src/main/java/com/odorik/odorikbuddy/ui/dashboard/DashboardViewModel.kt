@@ -31,11 +31,17 @@ class DashboardViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _credit = MutableStateFlow<Double?>(null)
-    val credit: StateFlow<Double?> = _credit
+    sealed class UiState<out T> {
+        object Loading : UiState<Nothing>()
+        data class Success<T>(val data: T) : UiState<T>()
+        data class Error(val message: String) : UiState<Nothing>()
+    }
 
-    private val _userInfo = MutableStateFlow<UserInfo?>(null)
-    val userInfo: StateFlow<UserInfo?> = _userInfo
+    private val _credit = MutableStateFlow<UiState<Double>>(UiState.Loading)
+    val credit: StateFlow<UiState<Double>> = _credit
+
+    private val _userInfo = MutableStateFlow<UiState<UserInfo>>(UiState.Loading)
+    val userInfo: StateFlow<UiState<UserInfo>> = _userInfo
 
     private val _todaysSpending = MutableStateFlow(0.0)
     val todaysSpending: StateFlow<Double> = _todaysSpending
@@ -48,57 +54,111 @@ class DashboardViewModel @Inject constructor(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+    
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+    
+    private val _isInitialLoading = MutableStateFlow(false)
+    val isInitialLoading: StateFlow<Boolean> = _isInitialLoading
 
-    fun loadData() {
-        getCredit()
-        getUserInfo()
-        fetchSpendingData()
-    }
-
-    private fun getCredit() {
+    fun loadData(isInitialLoad: Boolean) {
         viewModelScope.launch {
-            val result = getCreditUseCase.execute()
-            result.onSuccess {
-                _credit.value = it
-            }.onFailure {
-                _credit.value = null
+            if (isInitialLoad) {
+                _isInitialLoading.value = true
+            } else {
+                _isRefreshing.value = true
+            }
+            try {
+                _credit.value = UiState.Loading
+                _userInfo.value = UiState.Loading
+                getCredit()
+                getUserInfo()
+                fetchSpendingData()
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Unknown error"
+                android.util.Log.e("DashboardViewModel", "Error loading data", e)
+            } finally {
+                if (isInitialLoad) {
+                    _isInitialLoading.value = false
+                } else {
+                    _isRefreshing.value = false
+                }
             }
         }
     }
 
-    private fun getUserInfo() {
-        
-        
+    fun refresh() {
+        loadData(false)
     }
 
-    private fun fetchSpendingData() {
-        viewModelScope.launch {
-            val user = securePreferences.getUser()
-            val password = securePreferences.getPassword()
+    private suspend fun getCredit() {
+        val result = getCreditUseCase.execute()
+        result.onSuccess {
+            _credit.value = UiState.Success(it)
+        }.onFailure {
+            _credit.value = UiState.Error(it.message ?: "Failed to load credit")
+        }
+    }
 
-            if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-                Log.e("DashboardViewModel", "User or password is not set.")
-                _error.value = context.getString(R.string.user_or_password_not_set)
-                return@launch
-            }
+    private suspend fun getUserInfo() {
+        val result = getUserInfoUseCase.execute()
+        result.onSuccess {
+            _userInfo.value = UiState.Success(it)
+        }.onFailure {
+            _userInfo.value = UiState.Error(it.message ?: "Failed to load user info")
+            Log.e("DashboardViewModel", "Error fetching user info", it)
+            
+        }
+    }
 
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
-            val now = Calendar.getInstance()
-            val to = isoFormat.format(now.time)
-            now.add(Calendar.DAY_OF_YEAR, -30)
-            val from = isoFormat.format(now.time)
-
+    private suspend fun fetchSpendingData() {
+        val user = securePreferences.getUser()
+        val password = securePreferences.getPassword()
+    
+        if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
+            android.util.Log.e("DashboardViewModel", "User or password is not set.")
+            _error.value = context.getString(R.string.user_or_password_not_set)
+            return
+        }
+    
+        val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
+        val now = Calendar.getInstance()
+        val to = isoFormat.format(now.time)
+        now.set(Calendar.DAY_OF_MONTH, 1) 
+        now.set(Calendar.HOUR_OF_DAY, 0)
+        now.set(Calendar.MINUTE, 0)
+        now.set(Calendar.SECOND, 0)
+        now.set(Calendar.MILLISECOND, 0)
+        val from = isoFormat.format(now.time)
+    
+        try {
+            android.util.Log.d("DashboardViewModel", "Fetching history from $from to $to")
+            val history = historyRepository.getCombinedHistory(user, password, from, to)
+            android.util.Log.d("DashboardViewModel", "History size: ${history.size}")
+            
+            historyRepository.insertHistory(history)
+            calculateTodaysSpending(history)
+            calculateThisMonthsSpending(history)
+            calculateWeeklySpending(history)
+            _error.value = null
+        } catch (e: Exception) {
+            android.util.Log.e("DashboardViewModel", "Error fetching history: ${e.message}")
+            _error.value = e.message
+            
             try {
-                Log.d("DashboardViewModel", "Fetching history from $from to $to")
-                val history = historyRepository.getCombinedHistory(user, password, from, to)
-                Log.d("DashboardViewModel", "History size: ${history.size}")
-                calculateTodaysSpending(history)
-                calculateThisMonthsSpending(history)
-                calculateWeeklySpending(history)
-                _error.value = null
-            } catch (e: Exception) {
-                Log.e("DashboardViewModel", "Error fetching history: ${e.message}")
-                _error.value = e.message
+                val cachedHistory = historyRepository.getCachedHistory()
+                android.util.Log.d("DashboardViewModel", "Using cached history, size: ${cachedHistory.size}")
+                if (cachedHistory.isNotEmpty()) {
+                    calculateTodaysSpending(cachedHistory)
+                    calculateThisMonthsSpending(cachedHistory)
+                    calculateWeeklySpending(cachedHistory)
+                    _error.value = "${e.message} (using cached data)"
+                } else {
+                    _error.value = "${e.message} (no cached data available)"
+                }
+            } catch (cacheError: Exception) {
+                android.util.Log.e("DashboardViewModel", "Error loading cached history: ${cacheError.message}")
+                _error.value = "${e.message} (cache also unavailable)"
             }
         }
     }

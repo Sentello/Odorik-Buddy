@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.ContentResolver
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.provider.ContactsContract
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +23,16 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 
+private fun mapApiArgumentToStringId(apiArgument: String): Int {
+    return when (apiArgument) {
+        "caller" -> R.string.argument_caller
+        "recipient" -> R.string.argument_recipient
+        "line" -> R.string.argument_line
+        
+        else -> R.string.argument_unknown
+    }
+}
+
 @Composable
 private fun CallApiMessage(response: String) {
     val message = when {
@@ -31,8 +40,23 @@ private fun CallApiMessage(response: String) {
         response == "successfully_enqueued" -> stringResource(R.string.call_successfully_enqueued)
         response == "error callback_failed" -> stringResource(R.string.call_error_callback_failed)
         response.startsWith("error missing_argument") -> {
-            val args = response.substringAfter("error missing_argument ").trim()
-            stringResource(R.string.call_error_missing_argument, args)
+            
+            val rawArgsString = response.substringAfter("error missing_argument ").trim()
+
+            
+            val rawArgsList = rawArgsString.split(',').map { it.trim() }
+
+            
+            val translatedArgs = rawArgsList.map { rawArg ->
+                val stringId = mapApiArgumentToStringId(rawArg)
+                stringResource(id = stringId)
+            }
+
+            
+            val finalArgsString = translatedArgs.joinToString(", ")
+
+            
+            stringResource(R.string.call_error_missing_argument, finalArgsString)
         }
         response == "error invalid_delay_format" -> stringResource(R.string.call_error_invalid_delay_format)
         response == "error delayed_into_past" -> stringResource(R.string.call_error_delayed_into_past)
@@ -44,33 +68,6 @@ private fun CallApiMessage(response: String) {
     }
 }
 
-private fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-    val numbers = mutableListOf<String>()
-    contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
-        if (contactCursor.moveToFirst()) {
-            val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
-            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
-            val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-            contentResolver.query(
-                ContactsContract.Data.CONTENT_URI,
-                phoneProjection,
-                phoneSelection,
-                phoneSelectionArgs,
-                null
-            )?.use { phoneCursor ->
-                while (phoneCursor.moveToNext()) {
-                    var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    number = number.replace(Regex("[^0-9+]"), "") 
-                    if (number.isNotBlank()) {
-                        numbers.add(number)
-                    }
-                }
-            }
-        }
-    }
-    return numbers
-}
 
 enum class ContactField {
     CALLER_ID, RECIPIENT
@@ -86,42 +83,32 @@ fun CallScreen(
     val lines by viewModel.lines.collectAsState()
     val callerId by viewModel.callerId.collectAsState()
     val recipient by viewModel.recipient.collectAsState()
-    var selectedLine by remember { mutableStateOf<String?>(null) }
+    val error by viewModel.error.collectAsState()
+    val selectedLine by viewModel.selectedLine.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
     
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
     var currentContactField by remember { mutableStateOf<ContactField?>(null) }
+    var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val context = LocalContext.current
 
-    val callerIdLauncher = rememberLauncherForActivityResult(
+    val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
             contactUri?.let {
-                val numbers = getPhoneNumbersFromContact(context.contentResolver, it)
+                val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, it)
                 if (numbers.size == 1) {
-                    viewModel.updateCallerId(numbers.first())
+                    val number = numbers.first()
+                    when (currentContactField) {
+                        ContactField.CALLER_ID -> viewModel.updateCallerId(number)
+                        ContactField.RECIPIENT -> viewModel.updateRecipient(number)
+                        null -> {}
+                    }
                 } else if (numbers.size > 1) {
                     phoneNumbers = numbers
-                    currentContactField = ContactField.CALLER_ID
-                    showPhoneNumberDialog = true
-                }
-            }
-        }
-    )
-
-    val recipientLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickContact(),
-        onResult = { contactUri ->
-            contactUri?.let {
-                val numbers = getPhoneNumbersFromContact(context.contentResolver, it)
-                if (numbers.size == 1) {
-                    viewModel.updateRecipient(numbers.first())
-                } else if (numbers.size > 1) {
-                    phoneNumbers = numbers
-                    currentContactField = ContactField.RECIPIENT
                     showPhoneNumberDialog = true
                 }
             }
@@ -133,24 +120,32 @@ fun CallScreen(
         onResult = { isGranted ->
             if (isGranted) {
                 
-            }
-            else {
-                
+                launcherToTrigger?.invoke()
+                launcherToTrigger = null 
+            } else {
+                Log.w("CallScreen", "Permission denied for contacts")
             }
         }
     )
 
+    
+    fun pickContact(field: ContactField) {
+        currentContactField = field 
+        
+        val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            contactPickerLauncher.launch(null)
+        } else {
+            launcherToTrigger = { contactPickerLauncher.launch(null) }
+            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
+    
     LaunchedEffect(Unit) {
         viewModel.getCallList()
         viewModel.getLines()
     }
 
-    LaunchedEffect(lines) {
-        Log.d("CallScreen", "Lines updated: $lines")
-        if (selectedLine == null && lines.isNotEmpty()) {
-            selectedLine = lines.first().id
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -173,19 +168,7 @@ fun CallScreen(
                 label = { Text(stringResource(R.string.caller_id)) },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = {
-                        when (PackageManager.PERMISSION_GRANTED) {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_CONTACTS
-                            ) -> {
-                                callerIdLauncher.launch(null)
-                            }
-                            else -> {
-                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                            }
-                        }
-                    }) {
+                    IconButton(onClick = { pickContact(ContactField.CALLER_ID) }) {
                         Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_caller_id))
                     }
                 }
@@ -197,20 +180,8 @@ fun CallScreen(
                 label = { Text(stringResource(R.string.called_number)) },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = {
-                        when (PackageManager.PERMISSION_GRANTED) {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_CONTACTS
-                            ) -> {
-                                recipientLauncher.launch(null)
-                            }
-                            else -> {
-                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Default.Contacts, contentDescription = "Pick Recipient")
+                    IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
+                        Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_recipient))
                     }
                 }
             )
@@ -234,7 +205,7 @@ fun CallScreen(
                 ) {
                     lines.forEach { line ->
                         DropdownMenuItem(text = { Text(line.caller_id) }, onClick = {
-                            selectedLine = line.id
+                            viewModel.updateSelectedLine(line.id)
                             expanded = false
                         })
                     }
@@ -243,8 +214,8 @@ fun CallScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
-                    if (selectedLine != null) {
-                        viewModel.makeCall(callerId, recipient, selectedLine!!)
+                    selectedLine?.let { lineId ->
+                        viewModel.makeCall(callerId, recipient, lineId)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -253,6 +224,16 @@ fun CallScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
             CallApiMessage(response = callResult.value)
+            error?.let { errorText ->
+                Log.e("CallScreen", "Displaying error: $errorText")
+                Text(
+                    text = errorText,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn {
                 items(callList.value) { call ->

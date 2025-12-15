@@ -44,9 +44,13 @@ class CallViewModel @Inject constructor(
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
 
+    private val _selectedLine = MutableStateFlow<String?>(null)
+    val selectedLine: StateFlow<String?> = _selectedLine
+
     init {
         _callerId.value = securePreferences.getString("caller_id", "") ?: ""
         _recipient.value = securePreferences.getString("recipient", "") ?: ""
+        _selectedLine.value = securePreferences.getString("selected_line", null)
     }
 
     fun updateCallerId(newCallerId: String) {
@@ -57,6 +61,11 @@ class CallViewModel @Inject constructor(
     fun updateRecipient(newRecipient: String) {
         _recipient.value = newRecipient
         securePreferences.saveString("recipient", newRecipient)
+    }
+
+    fun updateSelectedLine(newLine: String?) {
+        _selectedLine.value = newLine
+        securePreferences.saveString("selected_line", newLine ?: "")
     }
 
     fun getCallList() {
@@ -71,6 +80,9 @@ class CallViewModel @Inject constructor(
             result.onSuccess {
                 Log.d("CallViewModel", "Lines fetched successfully: $it")
                 _lines.value = it
+                if (_selectedLine.value == null && it.isNotEmpty()) {
+                    _selectedLine.value = it.first().id
+                }
             }.onFailure {
                 Log.e("CallViewModel", "Error fetching lines: ${it.message}")
                 _error.value = it.message
@@ -80,6 +92,8 @@ class CallViewModel @Inject constructor(
 
     fun makeCall(callerId: String, recipient: String, line: String) {
         viewModelScope.launch {
+            _error.value = null 
+            _callResult.value = "" 
             val result = callUseCase.execute(callerId, recipient, line)
             result.onSuccess {
                 _callResult.value = it
@@ -90,39 +104,31 @@ class CallViewModel @Inject constructor(
         }
     }
 
-    fun handleContactSelection(contentResolver: ContentResolver, contactUri: Uri, onPhoneNumberSelected: (String) -> Unit) {
-        
-        val contactProjection = arrayOf(ContactsContract.Contacts._ID)
-        contentResolver.query(contactUri, contactProjection, null, null, null)?.use { contactCursor ->
-            if (contactCursor.moveToFirst()) {
-                val contactIdIndex = contactCursor.getColumnIndex(ContactsContract.Contacts._ID)
-                if (contactIdIndex != -1) {
-                    val contactId = contactCursor.getString(contactIdIndex)
-
-                    
-                    val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
-                    val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                    contentResolver.query(
-                        ContactsContract.Data.CONTENT_URI,
-                        phoneProjection,
-                        phoneSelection,
-                        phoneSelectionArgs,
-                        null
-                    )?.use { phoneCursor ->
-                        if (phoneCursor.moveToFirst()) {
-                            val numberIndex = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                            if (numberIndex != -1) {
-                                var number = phoneCursor.getString(numberIndex)
-                                
-                                number = number.replace(Regex("[^0-9+]"), "")
-                                onPhoneNumberSelected(number)
-                            }
-                        }
-                        
+fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
+    val numbers = mutableListOf<String>()
+    contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
+        if (contactCursor.moveToFirst()) {
+            val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
+            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
+            val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            contentResolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                phoneProjection,
+                phoneSelection,
+                phoneSelectionArgs,
+                null
+            )?.use { phoneCursor ->
+                while (phoneCursor.moveToNext()) {
+                    var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                    number = number.replace(Regex("[^0-9+]"), "") 
+                    if (number.isNotBlank()) {
+                        numbers.add(number)
                     }
                 }
             }
         }
     }
+    return numbers
+}
 }

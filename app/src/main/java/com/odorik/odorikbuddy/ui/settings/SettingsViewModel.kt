@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.settings
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
@@ -23,7 +24,8 @@ class SettingsViewModel @Inject constructor(
     private val getLineInfoUseCase: GetLineInfoUseCase,
     private val userRepository: UserRepository,
     private val themeManager: ThemeManager, 
-    private val localeManager: LocaleManager
+    private val localeManager: LocaleManager,
+    private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
     val isDarkMode: State<Boolean> = themeManager.isDarkMode 
@@ -48,6 +50,18 @@ class SettingsViewModel @Inject constructor(
 
     private val _logoutEvent = MutableStateFlow(false)
     val logoutEvent: StateFlow<Boolean> = _logoutEvent
+
+    private val _historyPeriod = MutableStateFlow(getHistoryPeriod())
+    val historyPeriod: StateFlow<Int> = _historyPeriod.asStateFlow()
+
+    private fun getHistoryPeriod(): Int {
+        return sharedPreferences.getInt("history_period_days", 90) 
+    }
+
+    fun setHistoryPeriod(days: Int) {
+        sharedPreferences.edit().putInt("history_period_days", days).apply()
+        _historyPeriod.value = days
+    }
 
     fun getLines() {
         viewModelScope.launch {

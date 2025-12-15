@@ -1,6 +1,7 @@
 package com.odorik.odorikbuddy.ui.main
 
 import android.annotation.SuppressLint
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -10,6 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,6 +26,8 @@ import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
 import com.odorik.odorikbuddy.ui.history.HistoryScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
+
+import androidx.compose.foundation.layout.padding
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +48,15 @@ fun MainScreen(navController: NavController) {
                     BottomNavItem.Settings
                 )
                 items.forEach { screen ->
+                    val label = stringResource(screen.titleRes)
                     NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { Text(stringResource(screen.titleRes)) },
+                        icon = {
+                            Icon(
+                                screen.icon,
+                                contentDescription = label 
+                            )
+                        },
+                        label = { Text(label) },
                         selected = currentDestination?.route == screen.route,
                         onClick = {
                             bottomNavController.navigate(screen.route) {
@@ -53,13 +66,21 @@ fun MainScreen(navController: NavController) {
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        },
+                        modifier = Modifier.semantics {
+                            role = Role.Tab
+                            contentDescription = "Navigate to $label tab"
                         }
                     )
                 }
             }
         }
-    ) { 
-        NavHost(bottomNavController, startDestination = BottomNavItem.Dashboard.route) {
+    ) { innerPadding ->
+        NavHost(
+            bottomNavController,
+            startDestination = BottomNavItem.Dashboard.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen() }
             composable(BottomNavItem.Calls.route) { CallScreen() }
             composable(BottomNavItem.Sms.route) { SmsScreen() }

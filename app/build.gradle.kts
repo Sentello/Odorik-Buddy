@@ -17,7 +17,7 @@ android {
         minSdk = 24
         targetSdk = 34
                 versionCode = 2
-        versionName = "1.1.1"
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -130,5 +130,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
 

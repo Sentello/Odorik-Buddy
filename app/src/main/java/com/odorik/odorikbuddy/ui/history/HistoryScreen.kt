@@ -8,10 +8,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PhoneCallback
-import androidx.compose.material.icons.filled.PhoneForwarded
-import androidx.compose.material.icons.filled.PhoneMissed
+import androidx.compose.material.icons.automirrored.filled.PhoneCallback
+import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
+import androidx.compose.material.icons.automirrored.filled.PhoneMissed
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Sms
+import com.odorik.odorikbuddy.ui.history.HistoryViewModel.HistoryDisplayItem
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -70,10 +73,11 @@ fun HistoryScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(historyItems) { item ->
-                        HistoryListItem(item = item)
+                    items(historyItems) { displayItem ->
+                        HistoryListItem(displayItem = displayItem)
                         HorizontalDivider()
                     }
                 }
@@ -89,7 +93,8 @@ fun HistoryScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HistoryListItem(item: HistoryItem) {
+fun HistoryListItem(displayItem: HistoryDisplayItem) {
+    val item = displayItem.item
     val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
     inputFormat.timeZone = TimeZone.getTimeZone("UTC")
     val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
@@ -104,16 +109,21 @@ fun HistoryListItem(item: HistoryItem) {
     }
 
     Row(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier
+            .padding(
+                start = if (displayItem.isChild) 48.dp else 16.dp,
+                end = 16.dp
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val isCall = item.length != null
         if (isCall) {
             val icon = when {
-                item.status == "missed" -> Icons.Default.PhoneMissed
-                item.direction == "in" -> Icons.Default.PhoneCallback
-                item.direction == "out" -> Icons.Default.PhoneForwarded
-                else -> Icons.Default.PhoneCallback 
+                item.status == "missed" -> Icons.AutoMirrored.Filled.PhoneMissed
+                item.direction == "in" -> Icons.AutoMirrored.Filled.PhoneCallback
+                item.direction == "redirected" -> Icons.AutoMirrored.Filled.PhoneForwarded
+                item.direction == "out" -> Icons.Filled.Call
+                else -> Icons.AutoMirrored.Filled.PhoneCallback 
             }
             Icon(
                 imageVector = icon,
@@ -141,7 +151,16 @@ fun HistoryListItem(item: HistoryItem) {
                 )
             )
             Text(
-                text = "${stringResource(R.string.to_history)} ${item.destination_number}",
+                text = buildString {
+                    append(stringResource(R.string.to_history))
+                    append(" ")
+                    append(item.destination_number)
+                    item.destination_name?.let { name ->
+                        append(" (")
+                        append(name)
+                        append(")")
+                    }
+                },
                 modifier = Modifier.combinedClickable(
                     onClick = {},
                     onLongClick = {
@@ -152,11 +171,19 @@ fun HistoryListItem(item: HistoryItem) {
             )
             Row {
                 Text(text = formattedDate, style = MaterialTheme.typography.bodySmall)
-                item.length?.let {
-                    if (it > 0) {
+                when {
+                    item.length != null && item.length > 0 -> {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = formatDuration(it),
+                            text = formatDuration(item.length),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    item.ringing_length != null && item.ringing_length > 0 && item.status == "missed" -> {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.rang_duration, item.ringing_length),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )

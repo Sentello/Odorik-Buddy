@@ -10,9 +10,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlin.math.ceil
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,8 +30,33 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeParseException
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+
 @Composable
-private fun ApiMessage(response: String) {
+private fun ApiMessage(response: String, isError: Boolean) {
     val message = when {
         response.startsWith("successfully_sent") -> {
             val credit = response.substringAfter("successfully_sent ").trim()
@@ -45,35 +76,21 @@ private fun ApiMessage(response: String) {
         response == "error delayed_into_past" -> stringResource(R.string.sms_error_delayed_into_past)
         else -> stringResource(R.string.sms_unknown_error)
     }
-    Text(text = message, color = if (message.startsWith("Error") || message.startsWith("Chyba")) Color.Red else Color.Green)
+    Text(text = message, color = if (isError) Color.Red else Color.Green)
 }
 
-private fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-    val numbers = mutableListOf<String>()
-    contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
-        if (contactCursor.moveToFirst()) {
-            val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
-            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
-            val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-            contentResolver.query(
-                ContactsContract.Data.CONTENT_URI,
-                phoneProjection,
-                phoneSelection,
-                phoneSelectionArgs,
-                null
-            )?.use { phoneCursor ->
-                while (phoneCursor.moveToNext()) {
-                    var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    number = number.replace(Regex("[^0-9+]"), "") 
-                    if (number.isNotBlank()) {
-                        numbers.add(number)
-                    }
-                }
-            }
-        }
+
+private fun calculateSmsSegments(message: String): Int {
+    val isUnicode = message.any { it.code > 127 } 
+    val singleLimit = if (isUnicode) 70 else 160
+    val multiLimit = if (isUnicode) 67 else 153
+    val charCount = message.length
+    if (charCount == 0) return 0
+    return if (charCount <= singleLimit) {
+        1
+    } else {
+        ceil(charCount.toDouble() / multiLimit).toInt()
     }
-    return numbers
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,19 +103,36 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     var recipient by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var selectedSender by remember { mutableStateOf<String?>(null) }
-    var delayed by remember { mutableStateOf("") }
+    val delayed by viewModel.delayed.collectAsState()
     var expanded by remember { mutableStateOf(false) }
+    var delayMode by remember { mutableStateOf("minutes") } 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = System.currentTimeMillis() + 86400000L,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis >= System.currentTimeMillis()
+            }
+        }
+    )
+    val timePickerState = rememberTimePickerState(initialHour = 0, initialMinute = 0, is24Hour = true) 
 
     
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
+    var showMultipartInfo by remember { mutableStateOf(false) }
+
+    val delayedError by viewModel.delayedError.collectAsState()
 
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
             contactUri?.let {
-                val numbers = getPhoneNumbersFromContact(context.contentResolver, it)
+                val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, it)
                 if (numbers.size == 1) {
                     recipient = numbers.first()
                 } else if (numbers.size > 1) {
@@ -122,6 +156,12 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     )
 
     LaunchedEffect(Unit) { viewModel.fetchAllowedSenders() }
+
+    LaunchedEffect(allowedSenders) {
+        if (allowedSenders.size == 1 && selectedSender == null) {
+            selectedSender = allowedSenders.first()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -188,28 +228,131 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 }
             }
             Spacer(Modifier.height(8.dp))
+            val charCount = message.length
+            val segments = calculateSmsSegments(message)
+            val countColor = when {
+                segments <= 1 -> Color.Green
+                segments <= 3 -> Color(0xFFFFA500) 
+                else -> Color.Red
+            }
+            val isMultipart = segments > 1
+
             OutlinedTextField(
                 value = message,
-                onValueChange = { message = it },
+                onValueChange = { newValue ->
+                    if (newValue.length <= 765) {
+                        message = newValue
+                    }
+                },
                 label = { Text(stringResource(R.string.message)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(200.dp),
+                supportingText = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "$charCount / 765${if (isMultipart) " ($segments messages)" else ""}",
+                            color = countColor,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .semantics {
+                                    contentDescription = "$charCount characters, ${if (isMultipart) "$segments messages" else "1 message"}"
+                                }
+                                .animateContentSize()
+                        )
+                        if (isMultipart) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Multipart SMS info",
+                                tint = countColor,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable { showMultipartInfo = true }
+                            )
+                        }
+                    }
+                }
             )
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                SingleChoiceSegmentedButtonRow( 
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp) 
+                ) {
+                    SegmentedButton(
+                        selected = delayMode == "minutes",
+                        onClick = { delayMode = "minutes"; viewModel.onMinutesDelayedInputChange("") },
+                        shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
+                        modifier = Modifier.semantics { contentDescription = "Switch to minutes delay" }
+                    ) {
+                        Text(stringResource(R.string.sms_minutes))
+                    }
+                    SegmentedButton(
+                        selected = delayMode == "datetime",
+                        onClick = { delayMode = "datetime"; viewModel.setDateTimeDelayed("") },
+                        shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp),
+                        modifier = Modifier.semantics { contentDescription = "Switch to specific time" }
+                    ) {
+                        Text(stringResource(R.string.sms_specific_time))
+                    }
+                }
+            }
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = delayed,
-                onValueChange = { delayed = it },
-                label = { Text(stringResource(R.string.delayed)) },
-                modifier = Modifier.fillMaxWidth()
-            )
+
+            
+            val selectDateTimeText = stringResource(R.string.sms_select_date_time)
+            val displayDelayed = remember(delayed) {
+                if (delayed.isBlank()) {
+                    selectDateTimeText
+                } else {
+                    try {
+                        val instant = Instant.parse(delayed)
+                        instant.atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'"))
+                    } catch (e: Exception) {
+                        delayed
+                    }
+                }
+            }
+
+            if (delayMode == "minutes") {
+                OutlinedTextField(
+                    value = delayed,
+                    onValueChange = { newValue ->
+                        viewModel.onMinutesDelayedInputChange(newValue)
+                    },
+                    label = { Text(stringResource(R.string.sms_delay_minutes)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = delayedError != null,
+                    supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else { 
+                OutlinedTextField(
+                    value = displayDelayed,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.sms_scheduled_time_utc)) },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.CalendarToday, contentDescription = "Select date and time")
+                        }
+                    },
+                    isError = delayedError != null,
+                    supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             Spacer(Modifier.height(16.dp))
             Button(
-                onClick = { viewModel.sendSms(recipient, message, selectedSender, delayed.takeIf { it.isNotBlank() }) },
+                onClick = { viewModel.sendSms(recipient, message, selectedSender) },
+                
+                enabled = recipient.isNotBlank() && message.isNotBlank() && delayedError == null,
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.send_sms)) }
-            if (error != null) ApiMessage(response = error!!)
-            if (sendResult != null) ApiMessage(response = sendResult!!)
+            if (error != null) ApiMessage(response = error!!, isError = true)
+            if (sendResult != null) ApiMessage(response = sendResult!!, isError = false)
         }
 
         
@@ -234,6 +377,63 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     TextButton(onClick = { showPhoneNumberDialog = false }) {
                         Text(stringResource(R.string.cancel))
                     }
+                }
+            )
+        }
+
+        if (showMultipartInfo) {
+            AlertDialog(
+                onDismissRequest = { showMultipartInfo = false },
+                title = { Text(stringResource(R.string.multipart_sms_title)) },
+                text = { Text(stringResource(R.string.multipart_sms_message)) },
+                confirmButton = {
+                    TextButton(onClick = { showMultipartInfo = false }) {
+                        Text(stringResource(R.string.ok))
+                    }
+                }
+            )
+        }
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDatePicker = false
+                        showTimePicker = true 
+                    }) { Text(stringResource(R.string.sms_next)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+
+        if (showTimePicker) {
+            AlertDialog(
+                onDismissRequest = { showTimePicker = false },
+                title = { Text(stringResource(R.string.sms_select_time)) },
+                text = {
+                    TimePicker(state = timePickerState)
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showTimePicker = false
+                        
+                        val selectedDateMillis = datePickerState.selectedDateMillis ?: return@TextButton
+                        val selectedDate = Instant.ofEpochMilli(selectedDateMillis)
+                            .atZone(ZoneId.systemDefault()).toLocalDate()
+                        val selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                        val localDateTime = LocalDateTime.of(selectedDate, selectedTime)
+                        val zonedUtc = localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC"))
+
+                        viewModel.setDateTimeDelayed(zonedUtc.format(DateTimeFormatter.ISO_INSTANT)) 
+                    }) { Text(stringResource(R.string.ok)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) }
                 }
             )
         }

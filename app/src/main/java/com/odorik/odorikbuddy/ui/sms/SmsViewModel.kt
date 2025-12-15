@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.odorik.odorikbuddy.data.local.SecurePreferences
+import java.time.Instant
+import java.time.format.DateTimeParseException
 
 @HiltViewModel
 class SmsViewModel @Inject constructor(
@@ -37,7 +39,14 @@ class SmsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _delayed = MutableStateFlow("")
+    val delayed: StateFlow<String> = _delayed
+
+    private val _delayedError = MutableStateFlow<Int?>(null)
+    val delayedError: StateFlow<Int?> = _delayedError
+
     fun fetchAllowedSenders() = viewModelScope.launch {
+        _error.value = null 
         try {
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
@@ -65,7 +74,9 @@ class SmsViewModel @Inject constructor(
         }
     }
 
-    fun sendSms(recipient: String, message: String, sender: String?, delayed: String?) = viewModelScope.launch {
+    fun sendSms(recipient: String, message: String, sender: String?) = viewModelScope.launch {
+        _sendResult.value = null 
+        _error.value = null      
         try {
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
@@ -75,7 +86,7 @@ class SmsViewModel @Inject constructor(
                 return@launch
             }
 
-            val response = api.sendSms(user, password, recipient, message, sender, delayed)
+            val response = api.sendSms(user, password, recipient, message, sender, _delayed.value.takeIf { it.isNotBlank() })
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.startsWith("error") == true) {
@@ -91,39 +102,65 @@ class SmsViewModel @Inject constructor(
         }
     }
 
-    fun handleContactSelection(contentResolver: ContentResolver, contactUri: Uri, onPhoneNumberSelected: (String) -> Unit) {
-        
-        val contactProjection = arrayOf(ContactsContract.Contacts._ID)
-        contentResolver.query(contactUri, contactProjection, null, null, null)?.use { contactCursor ->
+    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
+        val numbers = mutableListOf<String>()
+        contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
             if (contactCursor.moveToFirst()) {
-                val contactIdIndex = contactCursor.getColumnIndex(ContactsContract.Contacts._ID)
-                if (contactIdIndex != -1) {
-                    val contactId = contactCursor.getString(contactIdIndex)
-
-                    
-                    val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
-                    val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                    contentResolver.query(
-                        ContactsContract.Data.CONTENT_URI,
-                        phoneProjection,
-                        phoneSelection,
-                        phoneSelectionArgs,
-                        null
-                    )?.use { phoneCursor ->
-                        if (phoneCursor.moveToFirst()) {
-                            val numberIndex = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                            if (numberIndex != -1) {
-                                var number = phoneCursor.getString(numberIndex)
-                                
-                                number = number.replace(Regex("[^0-9+]"), "")
-                                onPhoneNumberSelected(number)
-                            }
+                val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
+                val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
+                val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                contentResolver.query(
+                    ContactsContract.Data.CONTENT_URI,
+                    phoneProjection,
+                    phoneSelection,
+                    phoneSelectionArgs,
+                    null
+                )?.use { phoneCursor ->
+                    while (phoneCursor.moveToNext()) {
+                        var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                        number = number.replace(Regex("[^0-9+]"), "") 
+                        if (number.isNotBlank()) {
+                            numbers.add(number)
                         }
-                        
                     }
                 }
             }
         }
+        return numbers
+    }
+
+    fun onMinutesDelayedInputChange(newValue: String) {
+        if (newValue.all { it.isDigit() }) {
+            _delayed.value = newValue
+            validateDelayedInput(newValue)
+        }
+    }
+
+    fun validateDelayedInput(delayed: String) {
+        if (delayed.isBlank()) {
+            _delayedError.value = null
+            return
+        }
+
+        
+        try {
+            val minutes = delayed.toInt()
+            _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
+        } catch (e: NumberFormatException) {
+            
+            try {
+                val scheduled = Instant.parse(delayed)
+                val now = Instant.now()
+                _delayedError.value = if (scheduled.isAfter(now)) null else R.string.sms_error_delayed_past_client
+            } catch (e: DateTimeParseException) {
+                _delayedError.value = R.string.sms_error_invalid_delay_format_client
+            }
+        }
+    }
+
+    fun setDateTimeDelayed(newValue: String) {
+        _delayed.value = newValue
+        validateDelayedInput(newValue)
     }
 }
