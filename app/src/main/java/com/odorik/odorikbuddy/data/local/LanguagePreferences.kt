@@ -1,7 +1,6 @@
 package com.odorik.odorikbuddy.data.local
 
 import android.content.Context
-import android.content.SharedPreferences
 
 object LanguagePreferences {
 

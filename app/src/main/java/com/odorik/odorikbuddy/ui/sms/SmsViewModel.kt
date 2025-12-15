@@ -7,6 +7,7 @@ import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
@@ -16,10 +17,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import com.odorik.odorikbuddy.data.local.SecurePreferences
 import java.time.Instant
 import java.time.format.DateTimeParseException
+import javax.inject.Inject
 
 @HiltViewModel
 class SmsViewModel @Inject constructor(

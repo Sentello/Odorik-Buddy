@@ -3,31 +3,27 @@ package com.odorik.odorikbuddy.di
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import com.odorik.odorikbuddy.BuildConfig  
+import androidx.room.Room
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
+import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.data.local.HistoryDao
+import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.local.OdorikDatabase
+import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.remote.OdorikApi
+import com.odorik.odorikbuddy.data.repository.RoutingRepository
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import javax.inject.Singleton
-import com.odorik.odorikbuddy.data.local.ThemeManager 
-import com.odorik.odorikbuddy.data.local.SecurePreferences
-import com.odorik.odorikbuddy.data.local.LocaleManager
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
-import com.google.gson.GsonBuilder
-import com.google.gson.FieldNamingPolicy
-
-import com.odorik.odorikbuddy.data.local.LanguagePreferences
-import com.odorik.odorikbuddy.data.local.OdorikDatabase
-import com.odorik.odorikbuddy.data.repository.RoutingRepository
-import androidx.room.Room
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)

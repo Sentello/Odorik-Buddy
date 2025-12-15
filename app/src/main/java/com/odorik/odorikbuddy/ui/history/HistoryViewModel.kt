@@ -3,6 +3,7 @@ package com.odorik.odorikbuddy.ui.history
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.model.HistoryItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
-import com.odorik.odorikbuddy.data.local.SecurePreferences
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(

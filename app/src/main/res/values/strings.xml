@@ -68,8 +68,8 @@
     <string name="callback_title">Callback</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Spending Summary</string>
-    <string name="todays_spending">"Today's Spending:"</string>
-    <string name="this_months_spending">"This Month's Spending:"</string>
+    <string name="todays_spending">Today\'s Spending</string>
+    <string name="this_months_spending">This Month\'s Spending</string>
     <string name="last_7_days">Last 7 Days</string>
     <string name="pick_caller_id_number">Choose Caller</string>
     <string name="pick_recipient_number">Choose Recipient</string>
@@ -165,4 +165,18 @@
     <string name="shared_numbers">Shared Numbers</string>
     <string name="own_numbers">Own Numbers</string>
     <string name="own_numbers_description">Numbers that are owned by you</string>
+    <string name="no_spending_data_available">No spending data available</string>
+    <string name="no_data_available">No data available</string>
+    <string name="no_weekly_spending_data_available">No weekly spending data available</string>
+    <string name="weekly_average">Average: %.2f Kč</string>
+    <string name="chart_spending">Spending</string>
+    <string name="chart_average">Average</string>
+    <string name="select_date_range">Select Date Range</string>
+    <string name="start_date">Start Date: %s</string>
+    <string name="end_date">End Date: %s</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    <string name="custom_period">Custom Period</string>
+    <string name="spending_for_date">Spending for %1$s: %2$.2f Kč</string>
+    <string name="end_date_before_start_date">End date cannot be before start date.</string>
 </resources>

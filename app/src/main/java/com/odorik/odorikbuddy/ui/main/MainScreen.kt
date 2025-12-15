@@ -1,7 +1,7 @@
 package com.odorik.odorikbuddy.ui.main
 
 import android.annotation.SuppressLint
-import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -10,29 +10,29 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavController
 import androidx.navigation.navigation
 import com.odorik.odorikbuddy.ui.calls.CallScreen
 import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
-import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
+import com.odorik.odorikbuddy.ui.dashboard.DateRangePickerScreen
 import com.odorik.odorikbuddy.ui.history.HistoryScreen
+import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.routes.OwnNumbersScreen
 import com.odorik.odorikbuddy.ui.routes.RoutesScreen
 import com.odorik.odorikbuddy.ui.settings.RoutingOptionsScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
-
-import androidx.compose.foundation.layout.padding
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,10 +86,11 @@ fun MainScreen(navController: NavController) {
             startDestination = BottomNavItem.Dashboard.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(BottomNavItem.Dashboard.route) { DashboardScreen() }
+            composable(BottomNavItem.Dashboard.route) { DashboardScreen(navController = bottomNavController) }
             composable(BottomNavItem.Calls.route) { CallScreen() }
             composable(BottomNavItem.Sms.route) { SmsScreen() }
             composable(BottomNavItem.History.route) { HistoryScreen() }
+            composable("date_range_picker") { DateRangePickerScreen(navController = bottomNavController) }
             navigation(startDestination = SettingsRoutes.SETTINGS_HOME, route = BottomNavItem.Settings.route) {
                 composable(SettingsRoutes.SETTINGS_HOME) {
                     SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)

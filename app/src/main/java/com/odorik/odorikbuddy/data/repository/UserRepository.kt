@@ -1,8 +1,8 @@
 package com.odorik.odorikbuddy.data.repository
 
 import android.app.Application
+import com.odorik.odorikbuddy.data.local.SecurePreferences
 import javax.inject.Inject
-import com.odorik.odorikbuddy.data.local.SecurePreferences 
 
 class UserRepository @Inject constructor(
     private val application: Application,

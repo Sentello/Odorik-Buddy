@@ -1,70 +1,96 @@
 package com.odorik.odorikbuddy.ui.dashboard
 
+import android.graphics.Typeface
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.*
-import androidx.navigation.NavController
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.graphics.toArgb
-import android.graphics.Typeface
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import com.github.mikephil.charting.charts.BarChart
+import androidx.navigation.NavController
+import com.github.mikephil.charting.charts.CombinedChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.CombinedData
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
-import java.text.DecimalFormat
 import com.odorik.odorikbuddy.R
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import androidx.compose.material3.ExtendedFloatingActionButton
+
 
 class TwoDecimalValueFormatter : ValueFormatter() {
-    
-    private val format = DecimalFormat("0.00")
+    private val symbols = java.text.DecimalFormatSymbols(java.util.Locale("cs", "CZ"))
+    private val format = java.text.DecimalFormat("0.00", symbols)
 
     override fun getFormattedValue(value: Float): String {
-        
-        
         return if (value > 0) {
             format.format(value)
         } else {
-            "" 
+            ""
         }
     }
 }
@@ -72,32 +98,42 @@ class TwoDecimalValueFormatter : ValueFormatter() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun DashboardScreen(
+    navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val creditState by viewModel.credit.collectAsState()
     val todaysSpending by viewModel.todaysSpending.collectAsState()
     val thisMonthsSpending by viewModel.thisMonthsSpending.collectAsState()
-    val weeklySpending by viewModel.weeklySpending.collectAsState()
+    val spendingChartData by viewModel.spendingChartData.collectAsState()
+    val spendingChartAverage by viewModel.spendingChartAverage.collectAsState()
+    val startDate by viewModel.startDate.collectAsState()
+    val endDate by viewModel.endDate.collectAsState()
     val error by viewModel.error.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
 
-    
     val snackbarHostState = remember { SnackbarHostState() }
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.refresh() })
 
     LaunchedEffect(Unit) {
-        viewModel.loadData(true) 
+        viewModel.loadData(true)
     }
 
-    
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<Long>("startDate")?.observeForever {
+            val newStartDate = java.time.LocalDate.ofEpochDay(it)
+            val newEndDate = java.time.LocalDate.ofEpochDay(navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate") ?: newStartDate.toEpochDay())
+            viewModel.updateDateRange(newStartDate, newEndDate)
+        }
+    }
+
     LaunchedEffect(error) {
         error?.let {
             snackbarHostState.showSnackbar(
                 message = it,
                 actionLabel = "Dismiss"
             )
-            viewModel.clearError() 
+            viewModel.clearError()
         }
     }
 
@@ -108,7 +144,6 @@ fun DashboardScreen(
                 windowInsets = WindowInsets.statusBars
             )
         },
-        
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
@@ -124,8 +159,351 @@ fun DashboardScreen(
                 else -> 24.dp
             }
 
+            val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
+
+            if (isInitialLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (isCriticalError) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        Icons.Default.Error,
+                        contentDescription = "Error icon",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = (creditState as DashboardViewModel.UiState.Error).message,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.loadData(true) }) { 
+                        Text("Retry")
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = horizontalPadding, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        val currentCreditState = creditState
+                        if (currentCreditState is DashboardViewModel.UiState.Success) {
+                            val balance = currentCreditState.data
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { it })
+                            ) {
+                                Card(modifier = Modifier.fillMaxWidth()) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                Icons.Default.AccountBalanceWallet,
+                                                contentDescription = "Balance icon",
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = stringResource(R.string.balance),
+                                                style = MaterialTheme.typography.titleLarge
+                                            )
+                                        }
+                                        val czechFormat = NumberFormat.getNumberInstance(java.util.Locale("cs", "CZ"))
+                                        czechFormat.maximumFractionDigits = 2
+                                        val formattedBalance = czechFormat.format(balance)
+                                        Text(
+                                            text = "$formattedBalance Kč",
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.semantics {
+                                                contentDescription = "Current balance: $formattedBalance Kč"
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SpendingSummary(todaysSpending, thisMonthsSpending)
+                    }
+                    
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel)
+                    }
+                }
+            }
             
-            
+            PullRefreshIndicator(
+                refreshing = isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
+    }
+}
+
+@Composable
+fun SpendingSummary(todaysSpending: Double, thisMonthsSpending: Double) {
+    val czechFormat = NumberFormat.getNumberInstance(java.util.Locale("cs", "CZ"))
+    czechFormat.maximumFractionDigits = 2
+    val todaysLabel = "${czechFormat.format(todaysSpending)} Kč"
+    val monthsLabel = "${czechFormat.format(thisMonthsSpending)} Kč"
+    val summaryDesc = "Spending summary: Today's $todaysLabel, this month's $monthsLabel"
+    val todaysDesc = "Today's spending: $todaysLabel"
+    val monthsDesc = "This month's spending: $monthsLabel"
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = summaryDesc
+                heading()
+            }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.BarChart,
+                    contentDescription = "Spending summary icon",
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.spending_summary),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics {
+                        contentDescription = todaysDesc
+                    },
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = stringResource(R.string.todays_spending))
+                Text(
+                    text = todaysLabel,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics {
+                        contentDescription = monthsDesc
+                    },
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = stringResource(R.string.this_months_spending))
+                Text(
+                    text = monthsLabel,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SpendingChart(
+    spendingChartData: List<DashboardViewModel.ChartDay>,
+    spendingChartAverage: Double,
+    startDate: java.time.LocalDate,
+    endDate: java.time.LocalDate,
+    navController: NavController,
+    viewModel: DashboardViewModel
+) {
+    val context = LocalContext.current
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
+    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer.toArgb()
+    val averageText = stringResource(R.string.weekly_average, spendingChartAverage)
+
+    val isDefaultRange = startDate.toEpochDay() == java.time.LocalDate.now().minusDays(6).toEpochDay() && endDate.toEpochDay() == java.time.LocalDate.now().toEpochDay()
+
+    val title = if (isDefaultRange) {
+        stringResource(R.string.last_7_days)
+    } else {
+        stringResource(R.string.custom_period)
+    }
+
+    val currentLocale = context.resources.configuration.locales[0]
+    val dayFormat = SimpleDateFormat("EEE", currentLocale)
+    val dateFormat = SimpleDateFormat("d.M.", currentLocale)
+    val days = mutableListOf<String>()
+    var currentDate = startDate
+    while (!currentDate.isAfter(endDate)) {
+        val date = java.util.Date.from(currentDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant())
+        if (isDefaultRange) {
+            days.add(dayFormat.format(date))
+        } else {
+            days.add(dateFormat.format(date))
+        }
+        currentDate = currentDate.plusDays(1)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                val valuesDesc = spendingChartData.joinToString(", ") { "${it.date}: %.2f Kč".format(it.spending) }
+                contentDescription = "Weekly spending chart for last 7 days. $valuesDesc. Average: %.2f Kč".format(spendingChartAverage)
+                heading()
+            }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(
+                    Icons.Default.CalendarToday,
+                    contentDescription = "Weekly spending chart icon",
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                if (!isDefaultRange) {
+                    IconButton(onClick = { viewModel.resetDateRange() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset))
+                    }
+                }
+                IconButton(onClick = { navController.navigate("date_range_picker") }) {
+                    Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.select_date_range))
+                }
+            }
+            Text(
+                text = averageText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            if (spendingChartData.isNotEmpty()) {
+                val maxSpending = spendingChartData.maxOfOrNull { it.spending } ?: 0.0
+                if (maxSpending > 0) {
+                    val chartHeight = (200 + (maxSpending * 5).coerceAtMost(100.0)).dp
+                    val chartKey = listOf(startDate, endDate, spendingChartData.size)
+                    key(chartKey) {
+                        AndroidView(
+                            factory = { ctx ->
+                                CombinedChart(ctx).apply {
+                                    xAxis.position = XAxis.XAxisPosition.BOTTOM
+                                    xAxis.granularity = 1f
+                                    xAxis.isGranularityEnabled = true
+                                    axisRight.isEnabled = false
+                                    description.isEnabled = false
+                                    legend.isEnabled = true
+                                    legend.textColor = secondaryColor
+                                    setTouchEnabled(true)
+                                    isDragEnabled = true
+                                    setScaleEnabled(true)
+                                    setPinchZoom(true)
+                                    isHighlightPerTapEnabled = true
+                                    isHighlightPerDragEnabled = true
+                                    animateY(1000)
+                                    setMaxHighlightDistance(Float.MAX_VALUE)
+                                }
+                            },
+                            update = { chart ->
+                                val barEntries = spendingChartData.mapIndexed { index, day ->
+                                    BarEntry(index.toFloat(), day.spending.toFloat())
+                                }
+                                val spendingLabel = chart.context.getString(R.string.chart_spending)
+                                val barDataSet = BarDataSet(barEntries, spendingLabel).apply {
+                                    setGradientColor(primaryColor, primaryContainerColor)
+                                    valueTypeface = Typeface.DEFAULT_BOLD
+                                    valueTextSize = 12f
+                                    valueTextColor = primaryColor
+                                    valueFormatter = TwoDecimalValueFormatter()
+                                    setDrawValues(true)
+                                }
+                                val barData = BarData(barDataSet)
+
+                                val lineEntries = listOf(
+                                    Entry(-0.5f, spendingChartAverage.toFloat()), 
+                                    *(0 until spendingChartData.size).map { index ->
+                                        Entry(index.toFloat(), spendingChartAverage.toFloat())
+                                    }.toTypedArray(),
+                                    Entry((spendingChartData.size - 0.5f).toFloat(), spendingChartAverage.toFloat()) 
+                                )
+                                val averageLabel = chart.context.getString(R.string.chart_average)
+                                val lineDataSet = LineDataSet(lineEntries, averageLabel).apply {
+                                    color = secondaryColor
+                                    lineWidth = 2f
+                                    setDrawCircles(false)
+                                    setDrawValues(false)
+                                    setDrawFilled(false)
+                                    mode = LineDataSet.Mode.LINEAR
+                                    isHighlightEnabled = false
+                                }
+                                val lineData = LineData(lineDataSet)
+
+                                val combinedData = CombinedData()
+                                combinedData.setData(barData)
+                                combinedData.setData(lineData)
+                                chart.data = combinedData
+
+                                chart.xAxis.valueFormatter = IndexAxisValueFormatter(days)
+                                chart.axisLeft.setAxisMaximum((maxSpending * 1.1).toFloat())
+                                chart.axisLeft.setAxisMinimum(0f)
+
+                                
+                                chart.xAxis.axisMinimum = -0.5f
+                                chart.xAxis.axisMaximum = (spendingChartData.size - 1).toFloat()
+
+                                val marker = CustomMarkerView(chart.context, R.layout.chart_marker_view, days, spendingChartData)
+                                chart.marker = marker
+
+                                chart.invalidate()
+
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(chartHeight)
+                                .semantics {
+                                    role = Role.Image
+                                    contentDescription = "Interactive bar chart of weekly spending with average line. Tap bars for details."
+                                }
+                        )
+                    }
+                } else {
+                    val noSpendingDataText = stringResource(R.string.no_spending_data_available)
+                    Text(
+                        text = noSpendingDataText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.semantics {
+                            contentDescription = noSpendingDataText
+                        }
+                    )
+                }
+            } else {
+                val noDataText = stringResource(R.string.no_data_available)
+                val noWeeklySpendingText = stringResource(R.string.no_weekly_spending_data_available)
+                Text(
+                    text = noDataText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.semantics {
+                        contentDescription = noWeeklySpendingText
                     }
                 )
             }

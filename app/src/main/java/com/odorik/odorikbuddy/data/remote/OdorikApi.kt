@@ -1,11 +1,10 @@
 package com.odorik.odorikbuddy.data.remote
 
 import com.odorik.odorikbuddy.data.model.Line
-import com.odorik.odorikbuddy.data.model.LineInfo
 import com.odorik.odorikbuddy.model.HistoryItem
 import com.odorik.odorikbuddy.model.PublicNumber
-import com.odorik.odorikbuddy.model.SharedPublicNumber
 import com.odorik.odorikbuddy.model.Route
+import com.odorik.odorikbuddy.model.SharedPublicNumber
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.Field

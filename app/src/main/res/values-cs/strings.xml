@@ -68,8 +68,8 @@
     <string name="callback_title">Zpětné volání</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Přehled útraty</string>
-    <string name="todays_spending">Dnešní útrata:</string>
-    <string name="this_months_spending">Měsíční útrata:</string>
+    <string name="todays_spending">Dnešní útrata</string>
+    <string name="this_months_spending">Měsíční útrata</string>
     <string name="last_7_days">Posledních 7 dní</string>
     <string name="pick_caller_id_number">Vyber číslo volajícího</string>
     <string name="pick_recipient_number">Vyber číslo volaného</string>
@@ -146,16 +146,15 @@
     <string name="error_invalid_source_number">Neplatné zdrojové číslo</string>
     <string name="error_redirection_loop">Smyčka přesměrování</string>
     <string name="error_route_generic">Operace s pravidlem selhala</string>
-
+    <string name="navigate_to_routing_settings">Přejít na nastavení směrování</string>
+    <string name="no_history_found">Žádná historie nenalezena</string>
+    <string name="pull_to_refresh_or_change_period_in_settings">Potáhněte pro obnovení nebo změňte období v nastavení</string>
     <plurals name="route_rules_count">
         <item quantity="one">%d pravidlo</item>
         <item quantity="few">%d pravidla</item>
         <item quantity="many">%d pravidel</item>
         <item quantity="other">%d pravidel</item>
     </plurals>
-    <string name="navigate_to_routing_settings">Přejít na nastavení směrování</string>
-    <string name="no_history_found">Žádná historie nenalezena</string>
-    <string name="pull_to_refresh_or_change_period_in_settings">Potáhněte pro obnovení nebo změňte období v nastavení</string>
     <string name="error_loading_history">Chyba při načítání historie</string>
     <string name="retry">Zkusit znovu</string>
     <string name="use_line_number_as_caller_id">Použít číslo linky jako ID volajícího</string>
@@ -168,4 +167,18 @@
     <string name="shared_numbers">Sdílená čísla</string>
     <string name="own_numbers">Vlastní čísla</string>
     <string name="own_numbers_description">Čísla, která jsou ve vašem vlastnictví</string>
+    <string name="no_spending_data_available">Nejsou k dispozici žádné údaje o útratě</string>
+    <string name="no_data_available">Nejsou k dispozici žádná data</string>
+    <string name="no_weekly_spending_data_available">Nejsou k dispozici žádné týdenní údaje o útratě</string>
+    <string name="weekly_average">Průměr: %.2f Kč</string>
+    <string name="chart_spending">Útrata</string>
+    <string name="chart_average">Průměr</string>
+    <string name="select_date_range">Vyberte časové období</string>
+    <string name="start_date">Počáteční datum: %s</string>
+    <string name="end_date">Koncové datum: %s</string>
+    <string name="apply">Použít</string>
+    <string name="reset">Reset</string>
+    <string name="custom_period">Vlastní období</string>
+    <string name="spending_for_date">Útrata za %1$s: %2$.2f Kč</string>
+    <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
 </resources>

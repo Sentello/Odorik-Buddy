@@ -4,12 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.odorik.odorikbuddy.data.repository.UserRepository
+import com.odorik.odorikbuddy.ui.history.HistoryScreen
 import com.odorik.odorikbuddy.ui.login.LoginScreen
 import com.odorik.odorikbuddy.ui.main.MainScreen
-import com.odorik.odorikbuddy.data.repository.UserRepository
-
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
-import com.odorik.odorikbuddy.ui.history.HistoryScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController, userRepository: UserRepository) {

@@ -3,12 +3,9 @@ package com.odorik.odorikbuddy
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import dagger.hilt.android.HiltAndroidApp
 import java.util.Locale
-
-import com.odorik.odorikbuddy.data.local.LanguagePreferences
 
 @HiltAndroidApp
 class OdorikBuddyApplication : Application() {
