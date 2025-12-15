@@ -56,7 +56,7 @@ fun MainScreen(navController: NavController) {
                         icon = {
                             Icon(
                                 screen.icon,
-                                contentDescription = label // Accessibility: Spoken label for icon
+                                contentDescription = label 
                             )
                         },
                         label = { Text(label) },

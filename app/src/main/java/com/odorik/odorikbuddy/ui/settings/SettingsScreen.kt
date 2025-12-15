@@ -71,17 +71,17 @@ import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     outerNavController: NavController,
-    internalNavController: NavHostController // Use NavHostController for nested navigation
+    internalNavController: NavHostController 
 ) {
     val lines = viewModel.lines.collectAsState()
     val lineInfo = viewModel.lineInfo.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    // Observe the dark mode state from ViewModel
+    
     val isDarkMode by viewModel.isDarkMode
     val language by viewModel.language.collectAsState()
 
-    // Remove showRoutes; use navigation instead
+    
 
     LaunchedEffect(Unit) {
         viewModel.getLines()
@@ -100,7 +100,7 @@ fun SettingsScreen(
                 .padding(padding),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            // Display Section
+            
             item {
                 Card(
                     modifier = Modifier
@@ -131,7 +131,7 @@ fun SettingsScreen(
             item {
                 val configuration = LocalConfiguration.current
                 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-                // Theme selection
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,7 +146,7 @@ fun SettingsScreen(
                     )
                     Switch(
                         checked = isDarkMode,
-                        onCheckedChange = { viewModel.setDarkMode(it) }, // Call ViewModel's setDarkMode
+                        onCheckedChange = { viewModel.setDarkMode(it) }, 
                         modifier = Modifier.semantics { contentDescription = a11yDarkMode },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.primary,
@@ -157,7 +157,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            // Language selection (label on left, selector on right)
+            
             item {
                 val context = LocalContext.current
                 val configuration = LocalConfiguration.current
@@ -167,7 +167,7 @@ fun SettingsScreen(
                     stringResource(R.string.lang_english) to "en",
                     stringResource(R.string.lang_czech) to "cs"
                 )
-                val currentLangCode = language // Sync with ViewModel state
+                val currentLangCode = language 
                 val selectedLang = languages.find { it.second == currentLangCode }?.first ?: stringResource(R.string.lang_english)
                 
                 Row(
@@ -196,7 +196,7 @@ fun SettingsScreen(
                                 .menuAnchor()
                                 .wrapContentWidth()
                                 .widthIn(max = if (isLandscape) 120.dp else 150.dp),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() // Optional: for consistency
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() 
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
@@ -216,7 +216,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            // History Period selection
+            
             item {
                 val configuration = LocalConfiguration.current
                 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -273,7 +273,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            // Account Section
+            
             item {
                 Card(
                     modifier = Modifier
@@ -332,7 +332,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            // Routing Section
+            
             item {
                 Card(
                     modifier = Modifier
@@ -369,7 +369,7 @@ fun SettingsScreen(
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
             item {
-                // Logout Button
+                
                 Button(
                     onClick = { showLogoutDialog = true },
                     modifier = Modifier
@@ -380,7 +380,7 @@ fun SettingsScreen(
                     Text(stringResource(R.string.logout))
                 }
             }
-            // Version info
+            
             item {
                 Text(
                     text = stringResource(R.string.version, BuildConfig.VERSION_NAME),
@@ -388,7 +388,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant // Subtle color for info text
+                    color = MaterialTheme.colorScheme.onSurfaceVariant 
                 )
             }
         }

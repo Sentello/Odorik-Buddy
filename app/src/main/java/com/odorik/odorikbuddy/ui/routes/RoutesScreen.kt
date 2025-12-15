@@ -42,7 +42,7 @@ fun RoutesScreen(
     val routesMap by viewModel.routesMap.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // UI-only state
+    
     var selectedPublicNumber by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -53,35 +53,35 @@ fun RoutesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    // --- START: PERMISSION LOGIC FOR DISPLAYING CONTACT NAMES ---
+    
 
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                // Permission granted, load the contacts
+                
                 viewModel.loadContacts(context.contentResolver)
             }
         }
     )
 
-    // Check for permission when the screen is first composed
+    
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
-                // Permission is already granted, load contacts
+                
                 viewModel.loadContacts(context.contentResolver)
             }
             else -> {
-                // Permission is not granted, request it
+                
                 readContactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
         }
     }
-    // --- END: PERMISSION LOGIC ---
+    
 
 
-    // --- This section for the contact PICKER remains the same ---
+    
     var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
@@ -118,7 +118,7 @@ fun RoutesScreen(
             contactPickerLauncher.launch(null)
         } else {
             launcherToTrigger = { contactPickerLauncher.launch(null) }
-            // Use the specific launcher for the picker action
+            
             requestPermissionLauncherForPicker.launch(Manifest.permission.READ_CONTACTS)
         }
     }
@@ -159,7 +159,7 @@ fun RoutesScreen(
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
                             
-                            // --- NEW: Get contact name for the public number ---
+                            
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
                             Card(
@@ -178,7 +178,7 @@ fun RoutesScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            // --- USE THE DISPLAY NAME ---
+                                            
                                             text = publicNumberDisplayName,
                                             style = MaterialTheme.typography.titleMedium
                                         )
@@ -216,7 +216,7 @@ fun RoutesScreen(
                                                     val routes = routesMap[number.publicNumber] ?: emptyList()
                                                     LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                                                         items(routes) { route ->
-                                                            // --- NEW: Get contact names for source and ringing numbers ---
+                                                            
                                                             val sourceName = viewModel.getContactName(route.sourceNumber)
                                                             val ringingName = viewModel.getContactName(route.ringingNumber)
                                                             
@@ -228,7 +228,7 @@ fun RoutesScreen(
                                                                 verticalAlignment = Alignment.CenterVertically
                                                             ) {
                                                                 Text(
-                                                                    // --- USE THE DISPLAY NAMES ---
+                                                                    
                                                                     text = "$sourceName -> $ringingName",
                                                                     style = MaterialTheme.typography.bodyMedium
                                                                 )
@@ -271,7 +271,7 @@ fun RoutesScreen(
         }
     }
 
-    // The rest of your dialogs remain unchanged
+    
     if (showAddDialog && selectedPublicNumber != null) {
         AlertDialog(
             onDismissRequest = {

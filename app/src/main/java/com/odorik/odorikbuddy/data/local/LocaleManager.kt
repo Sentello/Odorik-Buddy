@@ -30,7 +30,7 @@ class LocaleManager @Inject constructor(
         return base.createConfigurationContext(config)
     }
 
-    // Extension-like method to update current context (for runtime)
+    
     fun updateLocale(context: Context, lang: String): Context {
         setPreferredLanguage(lang)
         val locale = Locale(lang)
@@ -40,4 +40,3 @@ class LocaleManager @Inject constructor(
     }
 }
 
-// Extension in SecurePreferences for string (since it only has user/password, add general save/getString)

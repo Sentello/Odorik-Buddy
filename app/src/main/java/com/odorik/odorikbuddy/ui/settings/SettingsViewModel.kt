@@ -14,24 +14,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.odorik.odorikbuddy.data.local.ThemeManager // Import ThemeManager
+import com.odorik.odorikbuddy.data.local.ThemeManager 
 import com.odorik.odorikbuddy.data.local.LocaleManager
-import androidx.compose.runtime.State // Import State for isDarkMode
+import androidx.compose.runtime.State 
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val getLinesUseCase: GetLinesUseCase,
     private val getLineInfoUseCase: GetLineInfoUseCase,
     private val userRepository: UserRepository,
-    private val themeManager: ThemeManager, // Inject ThemeManager
+    private val themeManager: ThemeManager, 
     private val localeManager: LocaleManager,
     private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
-    val isDarkMode: State<Boolean> = themeManager.isDarkMode // Expose isDarkMode from ThemeManager
+    val isDarkMode: State<Boolean> = themeManager.isDarkMode 
 
     fun setDarkMode(enabled: Boolean) {
-        themeManager.setDarkMode(enabled) // Expose setDarkMode from ThemeManager
+        themeManager.setDarkMode(enabled) 
     }
 
     private val _language = MutableStateFlow("en")
@@ -55,7 +55,7 @@ class SettingsViewModel @Inject constructor(
     val historyPeriod: StateFlow<Int> = _historyPeriod.asStateFlow()
 
     private fun getHistoryPeriod(): Int {
-        return sharedPreferences.getInt("history_period_days", 90) // Default 90 days
+        return sharedPreferences.getInt("history_period_days", 90) 
     }
 
     fun setHistoryPeriod(days: Int) {

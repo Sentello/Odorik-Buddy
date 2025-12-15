@@ -79,9 +79,9 @@ private fun ApiMessage(response: String, isError: Boolean) {
     Text(text = message, color = if (isError) Color.Red else Color.Green)
 }
 
-// Helper function to calculate SMS segments (GSM-7 vs UCS-2)
+
 private fun calculateSmsSegments(message: String): Int {
-    val isUnicode = message.any { it.code > 127 } // Simple UCS-2 detection
+    val isUnicode = message.any { it.code > 127 } 
     val singleLimit = if (isUnicode) 70 else 160
     val multiLimit = if (isUnicode) 67 else 153
     val charCount = message.length
@@ -105,11 +105,11 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     var selectedSender by remember { mutableStateOf<String?>(null) }
     val delayed by viewModel.delayed.collectAsState()
     var expanded by remember { mutableStateOf(false) }
-    var delayMode by remember { mutableStateOf("minutes") } // "minutes" or "datetime"
+    var delayMode by remember { mutableStateOf("minutes") } 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // For datetime mode: Use states to manage selection
+    
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = System.currentTimeMillis() + 86400000L,
         selectableDates = object : SelectableDates {
@@ -118,9 +118,9 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             }
         }
     )
-    val timePickerState = rememberTimePickerState(initialHour = 0, initialMinute = 0, is24Hour = true) // Default midnight, 24h format
+    val timePickerState = rememberTimePickerState(initialHour = 0, initialMinute = 0, is24Hour = true) 
 
-    // New state variables for phone number selection
+    
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
     var showMultipartInfo by remember { mutableStateOf(false) }
@@ -139,7 +139,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     phoneNumbers = numbers
                     showPhoneNumberDialog = true
                 }
-                // If no numbers, do nothing (could add a toast here)
+                
             }
         }
     )
@@ -150,7 +150,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             if (isGranted) {
                 launcher.launch(null)
             } else {
-                // Handle permission denial
+                
             }
         }
     )
@@ -232,7 +232,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             val segments = calculateSmsSegments(message)
             val countColor = when {
                 segments <= 1 -> Color.Green
-                segments <= 3 -> Color(0xFFFFA500) // Orange
+                segments <= 3 -> Color(0xFFFFA500) 
                 else -> Color.Red
             }
             val isMultipart = segments > 1
@@ -274,12 +274,12 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     }
                 }
             )
-            // Toggle between modes
+            
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                SingleChoiceSegmentedButtonRow( // Or SegmentedButtonRow if using older Material3 version
+                SingleChoiceSegmentedButtonRow( 
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp) // Optional: Add padding for better spacing
+                        .padding(horizontal = 16.dp) 
                 ) {
                     SegmentedButton(
                         selected = delayMode == "minutes",
@@ -301,7 +301,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             }
             Spacer(Modifier.height(8.dp))
 
-            // Conditional input based on mode
+            
             val selectDateTimeText = stringResource(R.string.sms_select_date_time)
             val displayDelayed = remember(delayed) {
                 if (delayed.isBlank()) {
@@ -328,7 +328,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     supportingText = { delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) } },
                     modifier = Modifier.fillMaxWidth()
                 )
-            } else { // datetime mode
+            } else { 
                 OutlinedTextField(
                     value = displayDelayed,
                     onValueChange = {},
@@ -347,7 +347,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             Spacer(Modifier.height(16.dp))
             Button(
                 onClick = { viewModel.sendSms(recipient, message, selectedSender) },
-                //enabled = recipient.isNotBlank() && message.isNotBlank() && selectedSender != null && delayedError == null,
+                
                 enabled = recipient.isNotBlank() && message.isNotBlank() && delayedError == null,
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.send_sms)) }
@@ -355,7 +355,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             if (sendResult != null) ApiMessage(response = sendResult!!, isError = false)
         }
 
-        // Phone number selection dialog
+        
         if (showPhoneNumberDialog) {
             AlertDialog(
                 onDismissRequest = { showPhoneNumberDialog = false },
@@ -400,7 +400,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 confirmButton = {
                     TextButton(onClick = {
                         showDatePicker = false
-                        showTimePicker = true // Chain to time picker
+                        showTimePicker = true 
                     }) { Text(stringResource(R.string.sms_next)) }
                 },
                 dismissButton = {
@@ -421,7 +421,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 confirmButton = {
                     TextButton(onClick = {
                         showTimePicker = false
-                        // Combine date + time into ZonedDateTime (local first, then to UTC)
+                        
                         val selectedDateMillis = datePickerState.selectedDateMillis ?: return@TextButton
                         val selectedDate = Instant.ofEpochMilli(selectedDateMillis)
                             .atZone(ZoneId.systemDefault()).toLocalDate()
@@ -429,7 +429,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                         val localDateTime = LocalDateTime.of(selectedDate, selectedTime)
                         val zonedUtc = localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC"))
 
-                        viewModel.setDateTimeDelayed(zonedUtc.format(DateTimeFormatter.ISO_INSTANT)) // Outputs with 'Z', e.g., "2025-09-22T07:00:00Z"
+                        viewModel.setDateTimeDelayed(zonedUtc.format(DateTimeFormatter.ISO_INSTANT)) 
                     }) { Text(stringResource(R.string.ok)) }
                 },
                 dismissButton = {

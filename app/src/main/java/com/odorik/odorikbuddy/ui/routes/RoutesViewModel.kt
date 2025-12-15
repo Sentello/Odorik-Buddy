@@ -45,7 +45,7 @@ class RoutesViewModel @Inject constructor(
     private val _routesMap = MutableStateFlow<Map<String, List<Route>>>(emptyMap())
     val routesMap: StateFlow<Map<String, List<Route>>> = _routesMap.asStateFlow()
 
-    // --- NEW: STATE FOR CONTACTS MAP ---
+    
     private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
 
@@ -180,95 +180,32 @@ class RoutesViewModel @Inject constructor(
         _error.value = null
     }
 
-    // --- START: NEW AND MODIFIED CONTACTS FUNCTIONS ---
-
-    /**
-     * Normalizes a phone number to a consistent format (+E.164) for reliable matching.
-     * - Replaces leading "00" with "+".
-     * - Ensures a single "+" at the start if it's an international number.
-     * - Removes all non-digit characters except the leading "+".
-     */
-    private fun normalizePhoneNumber(number: String): String {
-        var normalized = number.trim()
-        // Replace leading 00 with +
-        if (normalized.startsWith("00")) {
-            normalized = "+${normalized.substring(2)}"
-        }
-        // Remove all non-numeric characters except the leading '+'
-        return normalized.replace(Regex("[^0-9+]"), "")
-    }
-
-    /**
-     * Fetches all contacts with phone numbers from the device and populates the contactsMap.
-     * This should be called after READ_CONTACTS permission is granted.
-     */
-    fun loadContacts(contentResolver: ContentResolver) {
-        viewModelScope.launch {
-            val projection = arrayOf(
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-            )
-            val contacts = mutableMapOf<String, String>()
-
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-
-                if (numberIndex >= 0 && nameIndex >= 0) {
-                    while (cursor.moveToNext()) {
-                        val number = cursor.getString(numberIndex)
-                        val name = cursor.getString(nameIndex)
-                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
-                            // Use the normalized number as the key for reliable matching
-                            val normalizedNumber = normalizePhoneNumber(number)
-                            // We only add it if it's not already there to prefer the primary display name
-                            if (!contacts.containsKey(normalizedNumber)) {
-                                contacts[normalizedNumber] = name
-                            }
-                        }
-                    }
-                }
-            }
-            _contactsMap.value = contacts
-        }
-    }
     
-    /**
-     * Public function for the UI to get a contact name for a given number.
-     * It is now "prefix-aware" for special codes like "*087".
-     *
-     * It normalizes the number before looking it up in the map.
-     * Returns the original number if no contact is found.
-     */
+
+    
     fun getContactName(number: String): String {
         val prefix = "*087"
         var numberToLookup = number
         var detectedPrefix = ""
 
-        // Step 1: Check for and separate our special prefix
+        
         if (number.startsWith(prefix)) {
             detectedPrefix = prefix
             numberToLookup = number.substring(prefix.length)
         }
 
-        // Step 2: Normalize and look up the *actual* phone number part
+        
         val normalizedNumber = normalizePhoneNumber(numberToLookup)
         val contactName = _contactsMap.value[normalizedNumber]
 
-        // Step 3: Reconstruct the final display string
+        
         return if (contactName != null) {
-            // If a name was found, prepend the prefix to the name
-            // Add a space for better readability
+            
+            
             "$detectedPrefix $contactName".trim()
         } else {
-            // If no name was found, return the original, full string
-            // so the user still sees the prefix information.
+            
+            
             number
         }
     }
@@ -300,8 +237,8 @@ class RoutesViewModel @Inject constructor(
                 if (numberColumnIndex >= 0) {
                     while (phoneCursor.moveToNext()) {
                         val number = phoneCursor.getString(numberColumnIndex)
-                        // Return the raw number here, the dialog will show it as is.
-                        // The normalization happens when setting it as a value or comparing.
+                        
+                        
                         number?.let { numbers.add(it) }
                     }
                 }
@@ -309,7 +246,7 @@ class RoutesViewModel @Inject constructor(
         }
         return numbers.distinct()
     }
-    // --- END: NEW AND MODIFIED CONTACTS FUNCTIONS ---
+    
 
     suspend fun <T> retryWithExponentialBackoff(
         times: Int = 3,

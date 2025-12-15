@@ -65,22 +65,22 @@ fun DashboardScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
 
-    // --- ADD A SNACKBAR HOST STATE ---
+    
     val snackbarHostState = remember { SnackbarHostState() }
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.refresh() })
 
     LaunchedEffect(Unit) {
-        viewModel.loadData(true) // Initial load uses isInitialLoading state
+        viewModel.loadData(true) 
     }
 
-    // --- LAUNCHEDEFFECT TO SHOW SNACKBAR ON ERROR ---
+    
     LaunchedEffect(error) {
         error?.let {
             snackbarHostState.showSnackbar(
                 message = it,
                 actionLabel = "Dismiss"
             )
-            viewModel.clearError() // Acknowledge the error
+            viewModel.clearError() 
         }
     }
 
@@ -91,7 +91,7 @@ fun DashboardScreen(
                 windowInsets = WindowInsets.statusBars
             )
         },
-        // --- ADD SNACKBAR HOST ---
+        
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
@@ -107,275 +107,8 @@ fun DashboardScreen(
                 else -> 24.dp
             }
 
-            // --- DETERMINE IF WE ARE IN A CRITICAL ERROR STATE ---
-            // Critical error = It's not the initial load anymore, AND the primary content (credit) failed.
-            val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
-
-            if (isInitialLoading) {
-                // --- 1. INITIAL LOADING STATE ---
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (isCriticalError) {
-                // --- 2. CRITICAL ERROR STATE (for initial load) ---
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Default.Error,
-                        contentDescription = "Error icon",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        // Get the message from the state
-                        text = (creditState as DashboardViewModel.UiState.Error).message,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadData(true) }) { // Retry initial load
-                        Text("Retry")
-                    }
-                }
-            } else {
-                // --- 3. SUCCESS / PARTIAL DATA STATE ---
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = horizontalPadding, vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Credit Balance Card (can still show loading/error individually if needed)
-                    item {
-                        val currentCreditState = creditState
-                        if (currentCreditState is DashboardViewModel.UiState.Success) {
-                            // Show the success card for credit
-                            val balance = currentCreditState.data
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn() + slideInVertically(initialOffsetY = { it })
-                            ) {
-                                Card(modifier = Modifier.fillMaxWidth()) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Default.AccountBalanceWallet,
-                                                contentDescription = "Balance icon",
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = stringResource(R.string.balance),
-                                                style = MaterialTheme.typography.titleLarge
-                                            )
-                                        }
-                                        Text(
-                                            text = "%.2f Kč".format(balance),
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.semantics {
-                                                contentDescription = "Current balance: %.2f Kč".format(balance)
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        // Note: The main error block above handles the UiState.Error case
-                    }
-                    
-                    // Spending Summary Card
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        // We show spending summary even if there was an error,
-                        // as it might be using cached data. The snackbar will inform the user.
-                        SpendingSummary(todaysSpending, thisMonthsSpending)
-                    }
-                    
-                    // Spending Chart Card
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        SpendingChart(weeklySpending)
-                    }
-
-                    // --- THE SECOND ERROR CARD IS NOW COMPLETELY REMOVED ---
-                    // (error?.let { ... }) block is GONE from here.
-                }
-            }
             
-            // Pull-to-refresh indicator always available at the top
-            PullRefreshIndicator(
-                refreshing = isRefreshing,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-        }
-    }
-}
-
-@Composable
-fun SpendingSummary(todaysSpending: Double, thisMonthsSpending: Double) {
-    val todaysLabel = stringResource(R.string.currency_format, todaysSpending)
-    val monthsLabel = "%.2f Kč".format(thisMonthsSpending)
-    val summaryDesc = "Spending summary: Today's $todaysLabel, this month's $monthsLabel"
-    val todaysDesc = "Today's spending: $todaysLabel"
-    val monthsDesc = "This month's spending: $monthsLabel"
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .semantics {
-                contentDescription = summaryDesc
-                heading()
-            }
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.BarChart,
-                    contentDescription = "Spending summary icon",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.spending_summary),
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = todaysDesc
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(R.string.todays_spending))
-                Text(
-                    text = todaysLabel,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = monthsDesc
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(R.string.this_months_spending))
-                Text(
-                    text = monthsLabel,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SpendingChart(weeklySpending: List<Double>) {
-    val context = LocalContext.current
-    val locale = context.resources.configuration.locales.get(0)
-    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .semantics {
-                contentDescription = "Weekly spending chart for last 7 days. Values: ${weeklySpending.joinToString(", ") { "%.2f Kč".format(it) }} from oldest to newest."
-                heading()
-            }
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.CalendarToday,
-                    contentDescription = "Weekly spending chart icon",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.last_7_days),
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            if (weeklySpending.isNotEmpty()) {
-                val maxSpending = weeklySpending.maxOrNull() ?: 0.0
-                if (maxSpending > 0) {
-                    AndroidView(
-                        factory = { ctx ->
-                            BarChart(ctx).apply {
-                                // Data
-                                val entries = (0 until 7).map { index ->
-                                    val spending = weeklySpending.getOrNull(index) ?: 0.0
-                                    BarEntry(index.toFloat(), spending.toFloat())
-                                }
-                                val dataSet = BarDataSet(entries, "Spending").apply {
-                                    color = primaryColor
-                                    valueTypeface = Typeface.DEFAULT_BOLD
-                                    valueTextSize = 12f
-                                    valueTextColor = primaryColor
-                                }
-                                data = BarData(dataSet)
-
-                                // X Axis labels
-                                val dayFormat = SimpleDateFormat("EEE", locale)
-                                val days = (6 downTo 0).map { i ->
-                                    Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -i) }
-                                }.map { dayFormat.format(it.time) }
-                                xAxis.valueFormatter = IndexAxisValueFormatter(days)
-                                xAxis.position = XAxis.XAxisPosition.BOTTOM
-                                xAxis.granularity = 1f
-                                xAxis.isGranularityEnabled = true
-
-                                // Y Axis
-                                axisLeft.setAxisMaximum(maxSpending.toFloat())
-                                axisLeft.setAxisMinimum(0f)
-                                axisRight.isEnabled = false
-
-                                // Description and legend
-                                description.isEnabled = false
-                                legend.isEnabled = false
-
-                                // Animation
-                                animateY(1000)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .semantics {
-                                role = Role.Image
-                                contentDescription = "Bar chart of weekly spending. Tap for details."
-                            }
-                    )
-                } else {
-                    Text(
-                        text = "No spending data available",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.semantics {
-                            contentDescription = "No spending data available for the week"
-                        }
-                    )
-                }
-            } else {
-                Text(
-                    text = "No data available",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.semantics {
-                        contentDescription = "No weekly spending data available"
+            
                     }
                 )
             }

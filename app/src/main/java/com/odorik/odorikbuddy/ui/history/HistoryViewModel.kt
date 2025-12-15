@@ -43,7 +43,7 @@ class HistoryViewModel @Inject constructor(
     fun fetchHistory() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            _error.value = null // Clear previous errors on a new fetch attempt
+            _error.value = null 
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
 
@@ -53,7 +53,7 @@ class HistoryViewModel @Inject constructor(
                 return@launch
             }
 
-            // Fetch history for the user-selected period (default 90 days)
+            
             val days = sharedPreferences.getInt("history_period_days", 90)
             val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
             val now = Calendar.getInstance()
@@ -73,7 +73,7 @@ class HistoryViewModel @Inject constructor(
                         displayItems.add(HistoryDisplayItem(child, true))
                     }
                 }
-                // Add any standalone items not grouped (though unlikely)
+                
                 val standalones = result.filter { it.redirection_parent_id == null && !parents.contains(it) }
                 standalones.sortedByDescending { it.date }.forEach { standalone ->
                     displayItems.add(HistoryDisplayItem(standalone, false))

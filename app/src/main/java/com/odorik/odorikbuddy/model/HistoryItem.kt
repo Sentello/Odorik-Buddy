@@ -4,8 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
-// Represents a single item in the call or SMS history.
-// Using @SerializedName for robust JSON parsing with Gson.
+
+
 @Entity(tableName = "history")
 data class HistoryItem(
     @PrimaryKey
@@ -20,13 +20,13 @@ data class HistoryItem(
     @SerializedName("destination_number")
     val destination_number: String,
     @SerializedName("length")
-    val length: Int?, // Nullable because SMS records do not have a length
+    val length: Int?, 
     @SerializedName("ringing_length")
     val ringing_length: Int?,
     @SerializedName("price")
     val price: Double,
     @SerializedName("status")
-    val status: String?, // Nullable because SMS records do not have a status
+    val status: String?, 
     @SerializedName("destination_name")
     val destination_name: String?,
     @SerializedName("redirection_parent_id")

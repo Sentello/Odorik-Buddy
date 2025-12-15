@@ -1,6 +1,6 @@
 package com.odorik.odorikbuddy.domain.usecase
 
-import android.util.Log // Added import for logging
+import android.util.Log 
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import javax.inject.Inject
@@ -15,7 +15,7 @@ class GetCreditUseCase @Inject constructor(
         val userId = userRepository.getUserId()
         val password = userRepository.getPassword()
 
-        Log.d("GetCreditUseCase", "User ID: $userId, Password: ${password?.take(3)}...") // Log password partially for security
+        Log.d("GetCreditUseCase", "User ID: $userId, Password: ${password?.take(3)}...") 
 
         if (userId == null || password == null) {
             Log.e("GetCreditUseCase", "User not logged in or credentials missing.")

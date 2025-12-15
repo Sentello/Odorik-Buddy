@@ -66,25 +66,25 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             if (isInitialLoad) _isInitialLoading.value = true else _isRefreshing.value = true
             
-            // Clear previous errors on every new load attempt
+            
             _error.value = null
 
-            // On initial load, reset states to Loading
+            
             if (isInitialLoad) {
                 _credit.value = UiState.Loading
                 _userInfo.value = UiState.Loading
             }
 
             try {
-                // We can run these in parallel for speed
+                
                 val creditJob = launch { getCredit() }
                 val userInfoJob = launch { getUserInfo() }
                 val spendingJob = launch { fetchSpendingData() }
 
-                listOf(creditJob, userInfoJob, spendingJob).joinAll() // Wait for all to finish
+                listOf(creditJob, userInfoJob, spendingJob).joinAll() 
 
             } catch (e: Exception) {
-                // This is a fallback, but individual functions will handle their own errors
+                
                 _error.value = e.message ?: context.getString(R.string.unknown_error)
                 Log.e("DashboardViewModel", "Error loading data", e)
             } finally {
@@ -97,7 +97,7 @@ class DashboardViewModel @Inject constructor(
         loadData(false)
     }
 
-    // --- NEW FUNCTION ---
+    
     fun clearError() {
         _error.value = null
     }
@@ -109,7 +109,7 @@ class DashboardViewModel @Inject constructor(
         }.onFailure {
             val errorMessage = it.message ?: "Failed to load credit"
             _credit.value = UiState.Error(errorMessage)
-            // --- UNIFY ERROR REPORTING ---
+            
             _error.value = errorMessage
         }
     }
@@ -121,7 +121,7 @@ class DashboardViewModel @Inject constructor(
         }.onFailure {
             _userInfo.value = UiState.Error(it.message ?: "Failed to load user info")
             Log.e("DashboardViewModel", "Error fetching user info", it)
-            // Optionally set error, but keep separate from main error for specificity
+            
         }
     }
 
@@ -138,7 +138,7 @@ class DashboardViewModel @Inject constructor(
         val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
         val now = Calendar.getInstance()
         val to = isoFormat.format(now.time)
-        now.set(Calendar.DAY_OF_MONTH, 1) // Start of current month
+        now.set(Calendar.DAY_OF_MONTH, 1) 
         now.set(Calendar.HOUR_OF_DAY, 0)
         now.set(Calendar.MINUTE, 0)
         now.set(Calendar.SECOND, 0)
@@ -149,7 +149,7 @@ class DashboardViewModel @Inject constructor(
             android.util.Log.d("DashboardViewModel", "Fetching history from $from to $to")
             val history = historyRepository.getCombinedHistory(user, password, from, to)
             android.util.Log.d("DashboardViewModel", "History size: ${history.size}")
-            // Cache the fetched history
+            
             historyRepository.insertHistory(history)
             calculateTodaysSpending(history)
             calculateThisMonthsSpending(history)
@@ -158,15 +158,15 @@ class DashboardViewModel @Inject constructor(
         } catch (e: Exception) {
             val errorMessage = e.message ?: context.getString(R.string.unknown_error)
             Log.e("DashboardViewModel", "Error fetching history: $errorMessage")
-            // --- UNIFY ERROR REPORTING ---
+            
             _error.value = errorMessage
             
-            // The fallback to cached data logic is still good, just make sure to update the error message
+            
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
                 Log.d("DashboardViewModel", "Using cached history, size: ${cachedHistory.size}")
                 if (cachedHistory.isNotEmpty()) {
-                    // ... calculate with cached data ...
+                    
                     calculateTodaysSpending(cachedHistory)
                     calculateThisMonthsSpending(cachedHistory)
                     calculateWeeklySpending(cachedHistory)

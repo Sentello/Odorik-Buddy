@@ -3,7 +3,7 @@ package com.odorik.odorikbuddy.di
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import com.odorik.odorikbuddy.BuildConfig  // Add this import for BuildConfig
+import com.odorik.odorikbuddy.BuildConfig  
 import com.odorik.odorikbuddy.data.local.HistoryDao
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
@@ -16,7 +16,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import javax.inject.Singleton
-import com.odorik.odorikbuddy.data.local.ThemeManager // Added import for ThemeManager
+import com.odorik.odorikbuddy.data.local.ThemeManager 
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import retrofit2.converter.gson.GsonConverterFactory
@@ -43,10 +43,10 @@ object AppModule {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://www.odorik.cz/api/v1/") // Changed base URL
+            .baseUrl("https://www.odorik.cz/api/v1/") 
             .client(httpClient)
-            .addConverterFactory(ScalarsConverterFactory.create()) // Added for plain text
-            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create())) // For JSON conversion with snake_case to camelCase conversion
+            .addConverterFactory(ScalarsConverterFactory.create()) 
+            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create())) 
             .build()
             .create(OdorikApi::class.java)
     }

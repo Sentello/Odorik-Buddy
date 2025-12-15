@@ -26,7 +26,7 @@ class GetSharedPublicNumbersUseCase @Inject constructor(
                     ?.map { SharedPublicNumber(it.publicNumber, it.type) } ?: emptyList()
                 Result.success(sharedNumbers)
             } else {
-                // Basic error handling; enhance with specific API error parsing if needed
+                
                 val errorMessage = response.errorBody()?.string() ?: "HTTP error: ${response.code()}"
                 Result.failure(Exception(errorMessage))
             }

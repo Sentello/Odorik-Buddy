@@ -2,7 +2,7 @@ package com.odorik.odorikbuddy.domain.usecase
 
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.model.CallInfo
-// import com.odorik.odorikbuddy.data.model.RpcRequest // Commented out
+
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import javax.inject.Inject
 
@@ -10,26 +10,6 @@ class GetCallListUseCase @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
-    // Commented out the execute method for now
-    /*
-    suspend fun execute(): Result<List<CallInfo>> {
-        val userId = userRepository.getUserId()
-        val password = userRepository.getPassword()
-
-        if (userId == null || password == null) {
-            return Result.failure(Exception("User not logged in"))
-        }
-
-        return try {
-            val response = odorikApi.getCallList(RpcRequest("get_call_list", listOf(userId, password)))
-            if (response.result != null) {
-                Result.success(response.result)
-            } else {
-                Result.failure(Exception(response.error ?: "Unknown error"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    */
+    
+    
 }
