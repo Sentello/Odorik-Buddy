@@ -28,7 +28,7 @@ private fun mapApiArgumentToStringId(apiArgument: String): Int {
         "caller" -> R.string.argument_caller
         "recipient" -> R.string.argument_recipient
         "line" -> R.string.argument_line
-        
+        // Add more mappings here if the API can return other arguments
         else -> R.string.argument_unknown
     }
 }
@@ -40,22 +40,22 @@ private fun CallApiMessage(response: String) {
         response == "successfully_enqueued" -> stringResource(R.string.call_successfully_enqueued)
         response == "error callback_failed" -> stringResource(R.string.call_error_callback_failed)
         response.startsWith("error missing_argument") -> {
-            
+            // 1. Get the raw arguments string from the API (e.g., "caller, recipient")
             val rawArgsString = response.substringAfter("error missing_argument ").trim()
 
-            
+            // 2. Split it into a list of individual arguments
             val rawArgsList = rawArgsString.split(',').map { it.trim() }
 
-            
+            // 3. Translate each raw argument into its human-readable form
             val translatedArgs = rawArgsList.map { rawArg ->
                 val stringId = mapApiArgumentToStringId(rawArg)
                 stringResource(id = stringId)
             }
 
-            
+            // 4. Join the translated arguments back into a single string (e.g., "Caller ID, Recipient")
             val finalArgsString = translatedArgs.joinToString(", ")
 
-            
+            // 5. Use the fully translated string in our main error message
             stringResource(R.string.call_error_missing_argument, finalArgsString)
         }
         response == "error invalid_delay_format" -> stringResource(R.string.call_error_invalid_delay_format)
@@ -87,7 +87,7 @@ fun CallScreen(
     val selectedLine by viewModel.selectedLine.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
-    
+    // New state variables for phone number selection
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
     var currentContactField by remember { mutableStateOf<ContactField?>(null) }
@@ -119,18 +119,18 @@ fun CallScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                
+                // If permission was granted, trigger the stored action
                 launcherToTrigger?.invoke()
-                launcherToTrigger = null 
+                launcherToTrigger = null // Clear it after use
             } else {
                 Log.w("CallScreen", "Permission denied for contacts")
             }
         }
     )
 
-    
+    // A single unified handler function
     fun pickContact(field: ContactField) {
-        currentContactField = field 
+        currentContactField = field // Remember which field we're working on
         
         val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
         if (hasPermission) {
@@ -250,7 +250,7 @@ fun CallScreen(
             }
         }
 
-        
+        // Phone number selection dialog
         if (showPhoneNumberDialog) {
             AlertDialog(
                 onDismissRequest = { showPhoneNumberDialog = false },

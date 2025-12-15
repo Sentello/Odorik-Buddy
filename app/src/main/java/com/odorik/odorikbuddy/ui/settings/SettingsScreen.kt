@@ -1,49 +1,87 @@
 package com.odorik.odorikbuddy.ui.settings
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brightness6
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.LOGIN
 import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.MAIN
-import com.odorik.odorikbuddy.ui.settings.SettingsViewModel
-import android.content.res.Configuration
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import java.util.Locale
+import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
-    navController: NavController
+    outerNavController: NavController,
+    internalNavController: NavHostController // Use NavHostController for nested navigation
 ) {
     val lines = viewModel.lines.collectAsState()
     val lineInfo = viewModel.lineInfo.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    
+    // Observe the dark mode state from ViewModel
     val isDarkMode by viewModel.isDarkMode
     val language by viewModel.language.collectAsState()
+
+    // Remove showRoutes; use navigation instead
 
     LaunchedEffect(Unit) {
         viewModel.getLines()
@@ -62,7 +100,7 @@ fun SettingsScreen(
                 .padding(padding),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            
+            // Display Section
             item {
                 Card(
                     modifier = Modifier
@@ -93,7 +131,7 @@ fun SettingsScreen(
             item {
                 val configuration = LocalConfiguration.current
                 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-                
+                // Theme selection
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,7 +146,7 @@ fun SettingsScreen(
                     )
                     Switch(
                         checked = isDarkMode,
-                        onCheckedChange = { viewModel.setDarkMode(it) }, 
+                        onCheckedChange = { viewModel.setDarkMode(it) }, // Call ViewModel's setDarkMode
                         modifier = Modifier.semantics { contentDescription = a11yDarkMode },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.primary,
@@ -119,7 +157,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            
+            // Language selection (label on left, selector on right)
             item {
                 val context = LocalContext.current
                 val configuration = LocalConfiguration.current
@@ -129,7 +167,7 @@ fun SettingsScreen(
                     stringResource(R.string.lang_english) to "en",
                     stringResource(R.string.lang_czech) to "cs"
                 )
-                val currentLangCode = language 
+                val currentLangCode = language // Sync with ViewModel state
                 val selectedLang = languages.find { it.second == currentLangCode }?.first ?: stringResource(R.string.lang_english)
                 
                 Row(
@@ -158,7 +196,7 @@ fun SettingsScreen(
                                 .menuAnchor()
                                 .wrapContentWidth()
                                 .widthIn(max = if (isLandscape) 120.dp else 150.dp),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() 
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors() // Optional: for consistency
                         )
                         ExposedDropdownMenu(
                             expanded = expanded,
@@ -178,7 +216,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            
+            // History Period selection
             item {
                 val configuration = LocalConfiguration.current
                 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -235,7 +273,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            
+            // Account Section
             item {
                 Card(
                     modifier = Modifier
@@ -294,8 +332,44 @@ fun SettingsScreen(
                     }
                 }
             }
+            // Routing Section
             item {
-                
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { internalNavController.navigate(SettingsRoutes.ROUTES_SCREEN) }
+                            .padding(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.section_routing),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = Icons.Filled.ChevronRight,
+                            contentDescription = stringResource(R.string.navigate_to_routing_settings)
+                        )
+                    }
+                }
+            }
+            item {
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            }
+            item {
+                // Logout Button
                 Button(
                     onClick = { showLogoutDialog = true },
                     modifier = Modifier
@@ -306,7 +380,7 @@ fun SettingsScreen(
                     Text(stringResource(R.string.logout))
                 }
             }
-            
+            // Version info
             item {
                 Text(
                     text = stringResource(R.string.version, BuildConfig.VERSION_NAME),
@@ -314,7 +388,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // Subtle color for info text
                 )
             }
         }
@@ -364,7 +438,7 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         viewModel.logout()
-                        navController.navigate(LOGIN) {
+                        outerNavController.navigate(LOGIN) {
                             popUpTo(MAIN) { inclusive = true }
                         }
                         showLogoutDialog = false

@@ -2,11 +2,11 @@ package com.odorik.odorikbuddy.data.repository
 
 import android.app.Application
 import javax.inject.Inject
-import com.odorik.odorikbuddy.data.local.SecurePreferences 
+import com.odorik.odorikbuddy.data.local.SecurePreferences // Import SecurePreferences
 
 class UserRepository @Inject constructor(
     private val application: Application,
-    private val securePreferences: SecurePreferences 
+    private val securePreferences: SecurePreferences // Inject SecurePreferences
 ) {
 
     fun saveCredentials(userId: String, password: String, remember: Boolean) {

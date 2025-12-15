@@ -121,4 +121,41 @@
     <string name="argument_recipient">Číslo volaného</string>
     <string name="argument_line">Linka</string>
     <string name="argument_unknown">Neznámé pole</string>
+    <string name="section_routing">Pravidla směrování</string>
+    <string name="shared_number">Sdílené číslo</string>
+    <string name="add_rule">Přidat pravidlo</string>
+    <string name="delete_rule">Smazat pravidlo</string>
+    <string name="delete_rule_confirm">Jste si jisti, že chcete smazat toto pravidlo?</string>
+    <string name="source_number">Zdrojové číslo</string>
+    <string name="ringing_number">Vyzváněcí číslo</string>
+    <string name="replace_by_source_number">Nahradit zdrojovým číslem</string>
+    <string name="route_created_success">Pravidlo úspěšně vytvořeno</string>
+    <string name="route_deleted_success">Pravidlo úspěšně smazáno</string>
+    <string name="error_internal">Interní chyba</string>
+    <string name="error_nonexisting_public_number">Neexistující veřejné číslo</string>
+    <string name="error_invalid_ringing_number">Neplatné vyzváněcí číslo</string>
+    <string name="error_nonexisting_route">Neexistující pravidlo</string>
+    <string name="error_shared_number_conflict">Konflikt sdíleného čísla</string>
+    <string name="error_invalid_source_number">Neplatné zdrojové číslo</string>
+    <string name="error_redirection_loop">Smyčka přesměrování</string>
+    <string name="error_route_generic">Operace s pravidlem selhala</string>
+
+    <plurals name="route_rules_count">
+        <item quantity="one">%d pravidlo</item>
+        <item quantity="few">%d pravidla</item>
+        <item quantity="many">%d pravidel</item>
+        <item quantity="other">%d pravidel</item>
+    </plurals>
+    <string name="navigate_to_routing_settings">Přejít na nastavení směrování</string>
+    <string name="no_history_found">Žádná historie nenalezena</string>
+    <string name="pull_to_refresh_or_change_period_in_settings">Potáhněte pro obnovení nebo změňte období v nastavení</string>
+    <string name="error_loading_history">Chyba při načítání historie</string>
+    <string name="retry">Zkusit znovu</string>
+    <string name="use_line_number_as_caller_id">Použít číslo linky jako ID volajícího</string>
+    <!-- Error Messages -->
+    <string name="error_loading_shared_numbers">Selhání načítání sdílených čísel</string>
+    <string name="error_loading_routes_for_numbers">Selhání načítání detailů rout</string>
+    <string name="error_creating_route">Selhání vytvoření routy</string>
+    <string name="error_deleting_route">Selhání smazání routy</string>
+    <string name="error_unknown">Došlo k neznámé chybě</string>
 </resources>

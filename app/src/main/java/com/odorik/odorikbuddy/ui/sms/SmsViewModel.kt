@@ -46,18 +46,18 @@ class SmsViewModel @Inject constructor(
     val delayedError: StateFlow<Int?> = _delayedError
 
     fun fetchAllowedSenders() = viewModelScope.launch {
-        _error.value = null 
+        _error.value = null // Clear previous error
         try {
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
                 _error.value = context.getString(R.string.auth_credentials_not_set)
-                println("SmsViewModel: Authentication credentials are null or empty.") 
+                println("SmsViewModel: Authentication credentials are null or empty.") // Changed to println
                 return@launch
             }
 
-            println("SmsViewModel: Fetching allowed senders with user: $user, password: ${password.take(3)}...") 
+            println("SmsViewModel: Fetching allowed senders with user: $user, password: ${password.take(3)}...") // Changed to println
             val response = api.getAllowedSenders(user, password)
             if (response.isSuccessful) {
                 val body = response.body()
@@ -75,8 +75,8 @@ class SmsViewModel @Inject constructor(
     }
 
     fun sendSms(recipient: String, message: String, sender: String?) = viewModelScope.launch {
-        _sendResult.value = null 
-        _error.value = null      
+        _sendResult.value = null // Clear previous result
+        _error.value = null      // Clear previous error
         try {
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
@@ -92,7 +92,7 @@ class SmsViewModel @Inject constructor(
                 if (body?.startsWith("error") == true) {
                     _error.value = body
                 } else {
-                    _sendResult.value = body  
+                    _sendResult.value = body  // e.g., "successfully_sent 193.32"
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"
@@ -119,7 +119,7 @@ class SmsViewModel @Inject constructor(
                 )?.use { phoneCursor ->
                     while (phoneCursor.moveToNext()) {
                         var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                        number = number.replace(Regex("[^0-9+]"), "") 
+                        number = number.replace(Regex("[^0-9+]"), "") // Normalize
                         if (number.isNotBlank()) {
                             numbers.add(number)
                         }
@@ -143,12 +143,12 @@ class SmsViewModel @Inject constructor(
             return
         }
 
-        
+        // Try parse as minutes (positive integer)
         try {
             val minutes = delayed.toInt()
             _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
         } catch (e: NumberFormatException) {
-            
+            // Try parse as datetime
             try {
                 val scheduled = Instant.parse(delayed)
                 val now = Instant.now()

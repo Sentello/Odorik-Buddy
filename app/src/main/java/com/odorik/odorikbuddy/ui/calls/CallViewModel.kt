@@ -69,8 +69,15 @@ class CallViewModel @Inject constructor(
     }
 
     fun getCallList() {
-        
-        
+        // Commented out again as GetCallListUseCase.execute() is commented out
+        /*
+        viewModelScope.launch {
+            val result = getCallListUseCase.execute()
+            result.onSuccess {
+                _callList.value = it
+            }
+        }
+        */
     }
 
     fun getLines() {
@@ -92,8 +99,8 @@ class CallViewModel @Inject constructor(
 
     fun makeCall(callerId: String, recipient: String, line: String) {
         viewModelScope.launch {
-            _error.value = null 
-            _callResult.value = "" 
+            _error.value = null // Clear previous errors
+            _callResult.value = "" // Clear previous results
             val result = callUseCase.execute(callerId, recipient, line)
             result.onSuccess {
                 _callResult.value = it
@@ -121,7 +128,7 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
             )?.use { phoneCursor ->
                 while (phoneCursor.moveToNext()) {
                     var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    number = number.replace(Regex("[^0-9+]"), "") 
+                    number = number.replace(Regex("[^0-9+]"), "") // Normalize
                     if (number.isNotBlank()) {
                         numbers.add(number)
                     }

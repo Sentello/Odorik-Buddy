@@ -13,6 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.joinAll
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -63,26 +64,31 @@ class DashboardViewModel @Inject constructor(
 
     fun loadData(isInitialLoad: Boolean) {
         viewModelScope.launch {
+            if (isInitialLoad) _isInitialLoading.value = true else _isRefreshing.value = true
+            
+            // Clear previous errors on every new load attempt
+            _error.value = null
+
+            // On initial load, reset states to Loading
             if (isInitialLoad) {
-                _isInitialLoading.value = true
-            } else {
-                _isRefreshing.value = true
-            }
-            try {
                 _credit.value = UiState.Loading
                 _userInfo.value = UiState.Loading
-                getCredit()
-                getUserInfo()
-                fetchSpendingData()
+            }
+
+            try {
+                // We can run these in parallel for speed
+                val creditJob = launch { getCredit() }
+                val userInfoJob = launch { getUserInfo() }
+                val spendingJob = launch { fetchSpendingData() }
+
+                listOf(creditJob, userInfoJob, spendingJob).joinAll() // Wait for all to finish
+
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
-                android.util.Log.e("DashboardViewModel", "Error loading data", e)
+                // This is a fallback, but individual functions will handle their own errors
+                _error.value = e.message ?: context.getString(R.string.unknown_error)
+                Log.e("DashboardViewModel", "Error loading data", e)
             } finally {
-                if (isInitialLoad) {
-                    _isInitialLoading.value = false
-                } else {
-                    _isRefreshing.value = false
-                }
+                if (isInitialLoad) _isInitialLoading.value = false else _isRefreshing.value = false
             }
         }
     }
@@ -91,12 +97,20 @@ class DashboardViewModel @Inject constructor(
         loadData(false)
     }
 
+    // --- NEW FUNCTION ---
+    fun clearError() {
+        _error.value = null
+    }
+
     private suspend fun getCredit() {
         val result = getCreditUseCase.execute()
         result.onSuccess {
             _credit.value = UiState.Success(it)
         }.onFailure {
-            _credit.value = UiState.Error(it.message ?: "Failed to load credit")
+            val errorMessage = it.message ?: "Failed to load credit"
+            _credit.value = UiState.Error(errorMessage)
+            // --- UNIFY ERROR REPORTING ---
+            _error.value = errorMessage
         }
     }
 
@@ -107,7 +121,7 @@ class DashboardViewModel @Inject constructor(
         }.onFailure {
             _userInfo.value = UiState.Error(it.message ?: "Failed to load user info")
             Log.e("DashboardViewModel", "Error fetching user info", it)
-            
+            // Optionally set error, but keep separate from main error for specificity
         }
     }
 
@@ -124,7 +138,7 @@ class DashboardViewModel @Inject constructor(
         val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
         val now = Calendar.getInstance()
         val to = isoFormat.format(now.time)
-        now.set(Calendar.DAY_OF_MONTH, 1) 
+        now.set(Calendar.DAY_OF_MONTH, 1) // Start of current month
         now.set(Calendar.HOUR_OF_DAY, 0)
         now.set(Calendar.MINUTE, 0)
         now.set(Calendar.SECOND, 0)
@@ -135,30 +149,34 @@ class DashboardViewModel @Inject constructor(
             android.util.Log.d("DashboardViewModel", "Fetching history from $from to $to")
             val history = historyRepository.getCombinedHistory(user, password, from, to)
             android.util.Log.d("DashboardViewModel", "History size: ${history.size}")
-            
+            // Cache the fetched history
             historyRepository.insertHistory(history)
             calculateTodaysSpending(history)
             calculateThisMonthsSpending(history)
             calculateWeeklySpending(history)
             _error.value = null
         } catch (e: Exception) {
-            android.util.Log.e("DashboardViewModel", "Error fetching history: ${e.message}")
-            _error.value = e.message
+            val errorMessage = e.message ?: context.getString(R.string.unknown_error)
+            Log.e("DashboardViewModel", "Error fetching history: $errorMessage")
+            // --- UNIFY ERROR REPORTING ---
+            _error.value = errorMessage
             
+            // The fallback to cached data logic is still good, just make sure to update the error message
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
-                android.util.Log.d("DashboardViewModel", "Using cached history, size: ${cachedHistory.size}")
+                Log.d("DashboardViewModel", "Using cached history, size: ${cachedHistory.size}")
                 if (cachedHistory.isNotEmpty()) {
+                    // ... calculate with cached data ...
                     calculateTodaysSpending(cachedHistory)
                     calculateThisMonthsSpending(cachedHistory)
                     calculateWeeklySpending(cachedHistory)
-                    _error.value = "${e.message} (using cached data)"
+                    _error.value = "$errorMessage (using cached data)"
                 } else {
-                    _error.value = "${e.message} (no cached data available)"
+                    _error.value = "$errorMessage (no cached data available)"
                 }
             } catch (cacheError: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error loading cached history: ${cacheError.message}")
-                _error.value = "${e.message} (cache also unavailable)"
+                Log.e("DashboardViewModel", "Error loading cached history: ${cacheError.message}")
+                _error.value = "$errorMessage (cache also unavailable)"
             }
         }
     }

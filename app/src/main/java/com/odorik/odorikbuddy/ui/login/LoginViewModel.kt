@@ -32,15 +32,15 @@ class LoginViewModel @Inject constructor(
     val loginUiState: StateFlow<LoginUiState> = _loginUiState
 
     fun onLoginClick(userId: String, password: String, remember: Boolean) {
-        _loginUiState.value = LoginUiState.Loading 
+        _loginUiState.value = LoginUiState.Loading // Set loading state
 
         viewModelScope.launch {
-            userRepository.saveCredentials(userId, password, remember) 
+            userRepository.saveCredentials(userId, password, remember) // Save credentials first
 
-            val result = getCreditUseCase.execute() 
+            val result = getCreditUseCase.execute() // Attempt to get credit (which includes authentication)
 
             result.onSuccess {
-                _loginUiState.value = LoginUiState.Success 
+                _loginUiState.value = LoginUiState.Success // Login successful
             }.onFailure { e ->
                 if (e is AuthenticationException) {
                     _loginUiState.value = LoginUiState.Error(context.getString(R.string.invalid_credentials))

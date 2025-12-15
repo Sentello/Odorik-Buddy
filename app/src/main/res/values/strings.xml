@@ -121,4 +121,38 @@
     <string name="argument_recipient">Recipient</string>
     <string name="argument_line">Line</string>
     <string name="argument_unknown">Unknown field</string>
+    <string name="section_routing">Routing Rules</string>
+    <string name="shared_number">Shared Number</string>
+    <string name="add_rule">Add Rule</string>
+    <string name="delete_rule">Delete Rule</string>
+    <string name="delete_rule_confirm">Are you sure you want to delete this rule?</string>
+    <string name="source_number">Source Number</string>
+    <string name="ringing_number">Ringing Number</string>
+    <string name="replace_by_source_number">Replace by Source Number</string>
+    <string name="route_created_success">Route created successfully</string>
+    <string name="route_deleted_success">Route deleted successfully</string>
+    <string name="error_internal">Internal Error</string>
+    <string name="error_nonexisting_public_number">Nonexisting Public Number</string>
+    <string name="error_invalid_ringing_number">Invalid Ringing Number</string>
+    <string name="error_nonexisting_route">Nonexisting Route</string>
+    <string name="error_shared_number_conflict">Shared Number Conflict</string>
+    <string name="error_invalid_source_number">Invalid Source Number</string>
+    <string name="error_redirection_loop">Redirection Loop</string>
+    <string name="error_route_generic">Route operation failed</string>
+    <string name="navigate_to_routing_settings">Navigate to routing settings</string>
+    <string name="no_history_found">No history found</string>
+    <string name="pull_to_refresh_or_change_period_in_settings">Pull to refresh or change the period in settings</string>
+    <plurals name="route_rules_count">
+        <item quantity="one">%d rule</item>
+        <item quantity="other">%d rules</item>
+    </plurals>
+    <string name="error_loading_history">Error loading history</string>
+    <string name="retry">Retry</string>
+    <string name="use_line_number_as_caller_id">Use line number as caller ID</string>
+    <!-- Error Messages -->
+    <string name="error_loading_shared_numbers">Failed to load shared numbers</string>
+    <string name="error_loading_routes_for_numbers">Failed to load route details</string>
+    <string name="error_creating_route">Failed to create route</string>
+    <string name="error_deleting_route">Failed to delete route</string>
+    <string name="error_unknown">An unknown error occurred</string>
 </resources>

@@ -1,18 +1,14 @@
 package com.odorik.odorikbuddy.domain.usecase
 
 import com.odorik.odorikbuddy.data.remote.OdorikApi
-import com.odorik.odorikbuddy.data.model.CallInfo
-// import com.odorik.odorikbuddy.data.model.RpcRequest // Commented out
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import javax.inject.Inject
 
-class GetCallListUseCase @Inject constructor(
+class DeleteRouteUseCase @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
-    // Commented out the execute method for now
-    /*
-    suspend fun execute(): Result<List<CallInfo>> {
+    suspend fun execute(publicNumber: String, routeId: Long): Result<String> {
         val userId = userRepository.getUserId()
         val password = userRepository.getPassword()
 
@@ -21,15 +17,15 @@ class GetCallListUseCase @Inject constructor(
         }
 
         return try {
-            val response = odorikApi.getCallList(RpcRequest("get_call_list", listOf(userId, password)))
-            if (response.result != null) {
-                Result.success(response.result)
+            val response = odorikApi.deleteRoute(publicNumber, routeId, userId, password)
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: "Route deleted successfully")
             } else {
-                Result.failure(Exception(response.error ?: "Unknown error"))
+                val errorMessage = response.errorBody()?.string() ?: "HTTP error: ${response.code()}"
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    */
 }

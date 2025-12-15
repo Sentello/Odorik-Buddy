@@ -35,7 +35,7 @@ fun LoginScreen(
 
     val loginUiState by viewModel.loginUiState.collectAsState()
 
-    
+    // LaunchedEffect to navigate on successful login
     LaunchedEffect(loginUiState) {
         if (loginUiState is LoginUiState.Success) {
             onLoginSuccess()
@@ -57,12 +57,12 @@ fun LoginScreen(
                 .height(120.dp)
                 .padding(bottom = 16.dp)
         )
-
-
-
-
-
-
+//        Text(
+//            text = stringResource(R.string.app_name),
+//            fontWeight = FontWeight.Bold,
+//            fontSize = 24.sp,
+//            modifier = Modifier.padding(bottom = 32.dp)
+//        )
         OutlinedTextField(
             value = userId,
             onValueChange = { userId = it },
@@ -90,7 +90,7 @@ fun LoginScreen(
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        
+        // Display error message if loginUiState is Error
         if (loginUiState is LoginUiState.Error) {
             Text(
                 text = (loginUiState as LoginUiState.Error).message,
@@ -103,7 +103,7 @@ fun LoginScreen(
             onClick = {
                 viewModel.onLoginClick(userId, password, rememberMe)
             },
-            enabled = loginUiState != LoginUiState.Loading, 
+            enabled = loginUiState != LoginUiState.Loading, // Disable button when loading
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(if (loginUiState is LoginUiState.Loading) stringResource(R.string.logging_in) else stringResource(R.string.login))

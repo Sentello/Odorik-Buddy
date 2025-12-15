@@ -14,6 +14,10 @@ import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
 import androidx.compose.material.icons.automirrored.filled.PhoneMissed
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Sms
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.ui.text.style.TextAlign
 import com.odorik.odorikbuddy.ui.history.HistoryViewModel.HistoryDisplayItem
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -51,6 +55,7 @@ fun HistoryScreen(
 ) {
     val historyItems by viewModel.history.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val error by viewModel.error.collectAsState()
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory() })
 
     Scaffold(
@@ -66,14 +71,73 @@ fun HistoryScreen(
                 .padding(padding)
                 .pullRefresh(pullRefreshState)
         ) {
-            if (historyItems.isEmpty() && !isRefreshing) {
+            // --- THIS IS THE CORRECTED LOGIC ---
+            val hasError = error != null
+
+            if (isRefreshing && historyItems.isEmpty() && !hasError) {
+                // Show spinner only on initial load AND if there's no error
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else {
-                LazyColumn(
+            } else if (hasError) {
+                // If an error occurred, show this regardless of other states.
+                Column(
                     modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.error_loading_history),
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = error!!,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.fetchHistory() }) {
+                        Text(stringResource(R.string.retry))
+                    }
+                }
+            } else if (historyItems.isEmpty()) {
+                // Show empty state message AFTER loading is finished and list is still empty
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.no_history_found),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(R.string.pull_to_refresh_or_change_period_in_settings),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            } else {
+                // If we have items, show the list
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     items(historyItems) { displayItem ->
@@ -105,7 +169,7 @@ fun HistoryListItem(displayItem: HistoryDisplayItem) {
         val date = inputFormat.parse(item.date)
         date?.let { outputFormat.format(it) } ?: item.date
     } catch (e: Exception) {
-        item.date 
+        item.date // Fallback to original if parsing fails
     }
 
     Row(
@@ -123,7 +187,7 @@ fun HistoryListItem(displayItem: HistoryDisplayItem) {
                 item.direction == "in" -> Icons.AutoMirrored.Filled.PhoneCallback
                 item.direction == "redirected" -> Icons.AutoMirrored.Filled.PhoneForwarded
                 item.direction == "out" -> Icons.Filled.Call
-                else -> Icons.AutoMirrored.Filled.PhoneCallback 
+                else -> Icons.AutoMirrored.Filled.PhoneCallback // Default for other cases
             }
             Icon(
                 imageVector = icon,

@@ -33,6 +33,9 @@ class HistoryViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
     init {
         fetchHistory()
     }
@@ -40,17 +43,17 @@ class HistoryViewModel @Inject constructor(
     fun fetchHistory() {
         viewModelScope.launch {
             _isRefreshing.value = true
+            _error.value = null // Clear previous errors on a new fetch attempt
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-                
-                
+                _error.value = "User not logged in or credentials missing"
                 _isRefreshing.value = false
                 return@launch
             }
 
-            
+            // Fetch history for the user-selected period (default 90 days)
             val days = sharedPreferences.getInt("history_period_days", 90)
             val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
             val now = Calendar.getInstance()
@@ -70,14 +73,14 @@ class HistoryViewModel @Inject constructor(
                         displayItems.add(HistoryDisplayItem(child, true))
                     }
                 }
-                
+                // Add any standalone items not grouped (though unlikely)
                 val standalones = result.filter { it.redirection_parent_id == null && !parents.contains(it) }
                 standalones.sortedByDescending { it.date }.forEach { standalone ->
                     displayItems.add(HistoryDisplayItem(standalone, false))
                 }
                 _history.value = displayItems
             } catch (e: Exception) {
-                
+                _error.value = e.message ?: "An unknown error occurred."
                 e.printStackTrace()
             } finally {
                 _isRefreshing.value = false

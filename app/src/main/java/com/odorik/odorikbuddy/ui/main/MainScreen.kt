@@ -21,9 +21,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
+import androidx.navigation.navigation
 import com.odorik.odorikbuddy.ui.calls.CallScreen
 import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
+import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.history.HistoryScreen
+import com.odorik.odorikbuddy.ui.routes.RoutesScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
 
@@ -53,7 +56,7 @@ fun MainScreen(navController: NavController) {
                         icon = {
                             Icon(
                                 screen.icon,
-                                contentDescription = label 
+                                contentDescription = label // Accessibility: Spoken label for icon
                             )
                         },
                         label = { Text(label) },
@@ -85,7 +88,12 @@ fun MainScreen(navController: NavController) {
             composable(BottomNavItem.Calls.route) { CallScreen() }
             composable(BottomNavItem.Sms.route) { SmsScreen() }
             composable(BottomNavItem.History.route) { HistoryScreen() }
-            composable(BottomNavItem.Settings.route) { SettingsScreen(navController = navController) }
+            navigation(startDestination = SettingsRoutes.SETTINGS_HOME, route = BottomNavItem.Settings.route) {
+                composable(SettingsRoutes.SETTINGS_HOME) {
+                    SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)
+                }
+                composable(SettingsRoutes.ROUTES_SCREEN) { RoutesScreen() }
+            }
         }
     }
 }
