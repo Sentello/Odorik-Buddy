@@ -93,7 +93,7 @@ fun HistoryScreen(
     val filterNumber by viewModel.filterNumber.collectAsState()
     val eventTypeFilter by viewModel.eventTypeFilter.collectAsState()
     val eventDirectionFilter by viewModel.eventDirectionFilter.collectAsState()
-    val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory() })
+    val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory(isRefresh = true) })
     
     val context = LocalContext.current
     

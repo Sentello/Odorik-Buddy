@@ -1,5 +1,8 @@
 package com.odorik.odorikbuddy.ui.settings
 
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -104,14 +107,40 @@ fun SettingsScreen(
     var showUpdateDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     val currentPhoneNumber by viewModel.phoneNumber.collectAsState()
+    val autoUpdateEnabled by viewModel.autoUpdateEnabled.collectAsState()
+    val directCallsEnabled by viewModel.directCallsEnabled.collectAsState()
 
     val uriHandler = LocalUriHandler.current
-    
+
     
     val updateInfo by updateViewModel.updateInfo.collectAsState()
     val isUpdateLoading by updateViewModel.isLoading.collectAsState()
     val updateError by updateViewModel.error.collectAsState()
+
     
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            
+            viewModel.setAutoUpdateEnabled(true)
+            
+            viewModel.performImmediateUpdateCheck()
+        }
+        
+    }
+
+    
+    val callPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            
+            viewModel.setDirectCallsEnabled(true)
+        }
+        
+    }
+
     LaunchedEffect(Unit) {
         viewModel.getLines()
     }

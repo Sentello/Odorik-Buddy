@@ -10,6 +10,7 @@ import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
+import com.odorik.odorikbuddy.worker.UpdateWorkManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +25,8 @@ class SettingsViewModel @Inject constructor(
     private val themeManager: ThemeManager,
     private val localeManager: LocaleManager,
     private val sharedPreferences: SharedPreferences,
-    private val securePreferences: SecurePreferences
+    private val securePreferences: SecurePreferences,
+    private val updateWorkManager: UpdateWorkManager
 ) : ViewModel() {
 
     val isDarkMode: State<Boolean> = themeManager.isDarkMode
@@ -56,12 +58,22 @@ class SettingsViewModel @Inject constructor(
     private val _phoneNumber = MutableStateFlow(getPhoneNumber())
     val phoneNumber: StateFlow<String> = _phoneNumber.asStateFlow()
 
+    private val _autoUpdateEnabled = MutableStateFlow(updateWorkManager.isAutoUpdateEnabled())
+    val autoUpdateEnabled: StateFlow<Boolean> = _autoUpdateEnabled.asStateFlow()
+
+    private val _directCallsEnabled = MutableStateFlow(getDirectCallsEnabled())
+    val directCallsEnabled: StateFlow<Boolean> = _directCallsEnabled.asStateFlow()
+
     private fun getHistoryPeriod(): Int {
         return sharedPreferences.getInt("history_period_days", 90)
     }
 
     private fun getPhoneNumber(): String {
         return securePreferences.getString("phone_number", "") ?: ""
+    }
+
+    private fun getDirectCallsEnabled(): Boolean {
+        return sharedPreferences.getBoolean("direct_calls_enabled", false)
     }
 
     fun setHistoryPeriod(days: Int) {
@@ -78,6 +90,20 @@ class SettingsViewModel @Inject constructor(
         }
         securePreferences.saveString("phone_number", formattedNumber)
         _phoneNumber.value = formattedNumber
+    }
+
+    fun setAutoUpdateEnabled(enabled: Boolean) {
+        updateWorkManager.setAutoUpdateEnabled(enabled)
+        _autoUpdateEnabled.value = enabled
+    }
+
+    fun setDirectCallsEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("direct_calls_enabled", enabled).apply()
+        _directCallsEnabled.value = enabled
+    }
+
+    fun performImmediateUpdateCheck() {
+        updateWorkManager.performImmediateUpdateCheck()
     }
 
     fun getLines() {

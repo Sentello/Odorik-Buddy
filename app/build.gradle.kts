@@ -17,7 +17,7 @@ android {
         minSdk = 24
         targetSdk = 34
                 versionCode = 2
-        versionName = "1.1.9"
+        versionName = "1.1.11"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -117,6 +117,9 @@ dependencies {
     // Lottie
     implementation("com.airbnb.android:lottie-compose:6.0.0")
 
+    // Phone number parsing and formatting
+    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.35")
+
     // Hilt testing dependencies
     testImplementation("com.google.dagger:hilt-android-testing:2.50")
     kaptTest("com.google.dagger:hilt-android-compiler:2.50")
@@ -133,5 +136,12 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+
+    // Gson
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 

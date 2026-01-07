@@ -72,8 +72,10 @@
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Přehled útraty</string>
     <string name="todays_spending">Dnešní útrata</string>
-    <string name="this_months_spending">Měsíční útrata</string>
-    <string name="last_7_days">Posledních 7 dní</string>
+    <string name="spending_for_selected_period">Útrata za vybrané období</string>
+    <string name="this_week">Tento týden</string>
+    <string name="this_month">Tento měsíc</string>
+    <string name="last_month">Minulý měsíc</string>
     <string name="pick_caller_id_number">Vyber číslo volajícího</string>
     <string name="pick_recipient_number">Vyber číslo volaného</string>
     <string name="choose_phone_number">Vyber telefonní číslo</string>
@@ -131,10 +133,14 @@
     <string name="section_data">Data</string>
     <string name="section_app">Aplikace</string>
     <string name="version_label">Verze</string>
+    <string name="auto_update_checking">Automatická kontrola aktualizací</string>
+    <string name="auto_update_checking_description">Kontrolovat aktualizace aplikace týdně a zobrazovat oznámení</string>
+    <string name="direct_calls">Přímé volání</string>
+    <string name="direct_calls_description">Povolit přímé telefonní hovory bez otevření vytáčeče</string>
     <string name="routing_description">Spravovat pravidla pro sdílená a vlastní čísla</string>
     <string name="section_personal">Osobní</string>
-    <string name="personal_phone_number">Osobní telefonní číslo</string>
-    <string name="personal_phone_number_description">Zadejte své osobní telefonní číslo v mezinárodním formátu (např. 00420601123123 nebo +420601123123)</string>
+    <string name="personal_phone_number">Telefonní číslo</string>
+    <string name="personal_phone_number_description">Zadejte své telefonní číslo v mezinárodním formátu (např. 00420601123123 nebo +420601123123)</string>
     <string name="oneshot_call">Přesměrované volání</string>
     <string name="shared_number">Sdílená telefonní čísla</string>
     <string name="add_rule">Přidat pravidlo</string>
@@ -163,6 +169,7 @@
         <item quantity="other">%d pravidel</item>
     </plurals>
     <string name="error_loading_history">Chyba při načítání historie</string>
+    <string name="error_loading_dashboard">Chyba při načítání přehledu</string>
     <string name="retry">Zkusit znovu</string>
     <string name="redirected_to">Přesměrováno na:</string>
     <string name="use_line_number_as_caller_id">Použít číslo linky jako ID volajícího</string>
@@ -207,6 +214,7 @@
     <string name="apply">Použít</string>
     <string name="reset">Reset</string>
     <string name="custom_period">Vlastní období</string>
+    <string name="custom_date_range">Vlastní časové období</string>
     <string name="spending_for_date">Útrata za %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
     <string name="sms_options_menu">Více možností</string>
@@ -227,6 +235,14 @@
     <string name="download_update">Stáhnout aktualizaci</string>
     <string name="no_update_info">Nejsou k dispozici žádné informace o aktualizaci</string>
     <string name="close">Zavřít</string>
-    <string name="cannot_open_url">Nelze otevřít URL</string>
+    <!-- Network Error Messages -->
+    <string name="error_network_unreachable">Žádné připojení k internetu. Zkontrolujte síť a zkuste to znovu.</string>
+    <string name="error_host_unresolvable">Nelze se připojit k serverům Odorik. Zkontrolujte své internetové připojení a zkuste to znovu.</string>
+    <string name="cannot_open_url">Nelze načíst URL</string>
+    <!-- Update Notification Strings -->
+    <string name="app_update_available">Aktualizace aplikace k dispozici</string>
+    <string name="new_version_available">Nová verze %s je k dispozici</string>
+    <string name="update_notifications">Oznámení o aktualizacích</string>
+    <string name="update_notifications_description">Oznámení o aktualizacích aplikace</string>
 
 </resources>

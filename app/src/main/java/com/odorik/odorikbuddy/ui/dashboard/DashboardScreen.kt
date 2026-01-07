@@ -26,8 +26,8 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -86,6 +86,9 @@ import com.odorik.odorikbuddy.util.getResponsivePadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 import java.text.SimpleDateFormat
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 
 class TwoDecimalValueFormatter : ValueFormatter() {
@@ -109,7 +112,7 @@ fun DashboardScreen(
 ) {
     val creditState by viewModel.credit.collectAsState()
     val todaysSpending by viewModel.todaysSpending.collectAsState()
-    val thisMonthsSpending by viewModel.thisMonthsSpending.collectAsState()
+    val selectedPeriodSpending by viewModel.selectedPeriodSpending.collectAsState()
     val spendingChartData by viewModel.spendingChartData.collectAsState()
     val spendingChartAverage by viewModel.spendingChartAverage.collectAsState()
     val startDate by viewModel.startDate.collectAsState()
@@ -197,21 +200,27 @@ fun DashboardScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        Icons.Default.Error,
+                        Icons.Default.Warning,
                         contentDescription = "Error icon",
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
+                        text = stringResource(R.string.error_loading_dashboard),
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
                         text = (creditState as DashboardViewModel.UiState.Error).message,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadData(true) }) { 
-                        Text("Retry")
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(onClick = { viewModel.loadData(true) }) {
+                        Text(stringResource(R.string.retry))
                     }
                 }
             } else {
@@ -262,7 +271,7 @@ fun DashboardScreen(
                     
                     item {
                         Spacer(modifier = Modifier.height(getResponsiveSpacing()))
-                        SpendingSummary(todaysSpending, thisMonthsSpending, currentLanguage, currencyFormatter)
+                        SpendingSummary(todaysSpending, selectedPeriodSpending, currentLanguage, currencyFormatter)
                     }
                     
                     item {
@@ -283,16 +292,16 @@ fun DashboardScreen(
 
 @Composable
 fun SpendingSummary(
-    todaysSpending: Double, 
-    thisMonthsSpending: Double,
+    todaysSpending: Double,
+    selectedPeriodSpending: Double,
     language: String,
     currencyFormatter: CurrencyFormatter
 ) {
     val todaysLabel = currencyFormatter.formatCurrency(todaysSpending, language)
-    val monthsLabel = currencyFormatter.formatCurrency(thisMonthsSpending, language)
-    val summaryDesc = "Spending summary: Today's $todaysLabel, this month's $monthsLabel"
+    val periodLabel = currencyFormatter.formatCurrency(selectedPeriodSpending, language)
+    val summaryDesc = "Spending summary: Today's $todaysLabel, selected period $periodLabel"
     val todaysDesc = "Today's spending: $todaysLabel"
-    val monthsDesc = "This month's spending: $monthsLabel"
+    val periodDesc = "Spending for selected period: $periodLabel"
 
     Card(
         modifier = Modifier
@@ -337,13 +346,13 @@ fun SpendingSummary(
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics {
-                        contentDescription = monthsDesc
+                        contentDescription = periodDesc
                     },
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = stringResource(R.string.this_months_spending))
+                Text(text = stringResource(R.string.spending_for_selected_period))
                 Text(
-                    text = monthsLabel,
+                    text = periodLabel,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -370,10 +379,13 @@ fun SpendingChart(
     val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer.toArgb()
     val averageText = stringResource(R.string.weekly_average, spendingChartAverage)
 
-    val isDefaultRange = startDate.toEpochDay() == java.time.LocalDate.now().minusDays(6).toEpochDay() && endDate.toEpochDay() == java.time.LocalDate.now().toEpochDay()
+    val now = LocalDate.now()
+    val monday = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val sunday = monday.plusDays(6)
+    val isDefaultRange = startDate == monday && endDate == sunday
 
     val title = if (isDefaultRange) {
-        stringResource(R.string.last_7_days)
+        stringResource(R.string.this_week)
     } else {
         stringResource(R.string.custom_period)
     }

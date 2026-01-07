@@ -114,8 +114,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideUpdateRepository(updateApi: UpdateApi): UpdateRepository {
-        return UpdateRepository(updateApi)
+    fun provideUpdateRepository(updateApi: UpdateApi, @dagger.hilt.android.qualifiers.ApplicationContext context: Context): UpdateRepository {
+        return UpdateRepository(updateApi, context)
     }
 
     @Provides

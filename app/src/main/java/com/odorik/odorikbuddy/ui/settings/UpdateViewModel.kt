@@ -25,6 +25,17 @@ class UpdateViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    init {
+        
+        loadCachedUpdateInfo()
+    }
+
+    private fun loadCachedUpdateInfo() {
+        updateRepository.getCachedUpdateInfo()?.let { cachedInfo ->
+            _updateInfo.value = cachedInfo
+        }
+    }
+
     fun checkForUpdates() {
         
         if (_isLoading.value) return

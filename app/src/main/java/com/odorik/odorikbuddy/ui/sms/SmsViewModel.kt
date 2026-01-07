@@ -7,11 +7,13 @@ import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase
+import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import com.odorik.odorikbuddy.util.SmsDraftHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,6 +32,7 @@ class SmsViewModel @Inject constructor(
     private val securePreferences: SecurePreferences,
     private val api: OdorikApi,
     private val smsDraftHelper: SmsDraftHelper,
+    private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _allowedSenders = MutableStateFlow<List<String>>(emptyList())
@@ -76,7 +79,8 @@ class SmsViewModel @Inject constructor(
                 _error.value = "HTTP error: ${response.code()}"
             }
         } catch (e: Exception) {
-            _error.value = "Network error: ${e.message}"
+            val localizedContext = localeManager.createLocaleContext(context)
+            _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
         }
     }
 
@@ -105,7 +109,8 @@ class SmsViewModel @Inject constructor(
                 _error.value = "HTTP error: ${response.code()}"
             }
         } catch (e: Exception) {
-            _error.value = "Network error: ${e.message}"
+            val localizedContext = localeManager.createLocaleContext(context)
+            _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
         }
     }
 

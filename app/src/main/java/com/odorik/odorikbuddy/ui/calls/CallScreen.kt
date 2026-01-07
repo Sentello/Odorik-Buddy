@@ -1,6 +1,7 @@
 package com.odorik.odorikbuddy.ui.calls
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -287,7 +288,7 @@ fun CallbackTab(
                     Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
                 
-                val intent = if (hasCallPermission) {
+                val intent = if (directCallsEnabled && hasCallPermission) {
                     Intent(Intent.ACTION_CALL, Uri.parse("tel:$oneShotCallResult"))
                 } else {
                     Intent(Intent.ACTION_DIAL, Uri.parse("tel:$oneShotCallResult"))
@@ -364,10 +365,10 @@ fun CallbackTab(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = lines.find { it.id == selectedLine }?.caller_id ?: stringResource(R.string.select_line),
+                        value = lines.find { it.id == selectedLine }?.let { "${it.name} (${it.caller_id})" } ?: stringResource(R.string.select_line),
                         onValueChange = {},
                         readOnly = true,
-                        label = { 
+                        label = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.Phone,
@@ -387,9 +388,9 @@ fun CallbackTab(
                     ) {
                         lines.forEach { line ->
                             DropdownMenuItem(
-                                text = { 
-                                    Text(line.caller_id) 
-                                }, 
+                                text = {
+                                    Text("${line.name} (${line.caller_id})")
+                                },
                                 onClick = {
                                     callViewModel.updateSelectedLine(line.id)
                                     expanded = false
@@ -476,7 +477,7 @@ fun CallbackTab(
                     }
                 }
                 
-                if (!oneShotCallError.isNullOrEmpty() && !isOneShotCallLoading) {
+                if (oneShotCallError?.isNotEmpty() == true && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         modifier = Modifier
@@ -485,33 +486,8 @@ fun CallbackTab(
                         shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
                     ) {
-                        
-                        val localizedError = oneShotCallError?.let { error ->
-                            when {
-                                error.contains("No shared public numbers available") -> 
-                                    stringResource(R.string.oneshot_error_no_shared_numbers_available)
-                                error.contains("No shared numbers found") -> 
-                                    stringResource(R.string.oneshot_error_no_shared_numbers_found)
-                                error.contains("No source number configured") -> 
-                                    stringResource(R.string.oneshot_error_no_source_number_configured)
-                                error.contains("Error getting public numbers:") -> {
-                                    val errorMessage = error.substringAfter("Error getting public numbers: ")
-                                    stringResource(R.string.oneshot_error_getting_public_numbers, errorMessage)
-                                }
-                                error.contains("Error creating route:") -> {
-                                    val errorMessage = error.substringAfter("Error creating route: ")
-                                    stringResource(R.string.oneshot_error_creating_route, errorMessage)
-                                }
-                                error.contains("Error during One Shot Call setup:") -> {
-                                    val errorMessage = error.substringAfter("Error during One Shot Call setup: ")
-                                    stringResource(R.string.oneshot_error_during_setup, errorMessage)
-                                }
-                                else -> error
-                            }
-                        } ?: oneShotCallError ?: ""
-                        
                         Text(
-                            text = localizedError,
+                            text = oneShotCallError ?: "",
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier
                                 .fillMaxWidth()

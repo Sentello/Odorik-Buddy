@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.model.UserInfo
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +19,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -28,6 +33,7 @@ class DashboardViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val historyRepository: HistoryRepository,
     private val securePreferences: SecurePreferences,
+    private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -46,8 +52,8 @@ class DashboardViewModel @Inject constructor(
     private val _todaysSpending = MutableStateFlow(0.0)
     val todaysSpending: StateFlow<Double> = _todaysSpending
 
-    private val _thisMonthsSpending = MutableStateFlow(0.0)
-    val thisMonthsSpending: StateFlow<Double> = _thisMonthsSpending
+    private val _selectedPeriodSpending = MutableStateFlow(0.0)
+    val selectedPeriodSpending: StateFlow<Double> = _selectedPeriodSpending
 
     data class ChartDay(val date: String, val spending: Double)
 
@@ -57,11 +63,14 @@ class DashboardViewModel @Inject constructor(
     private val _spendingChartAverage = MutableStateFlow(0.0)
     val spendingChartAverage: StateFlow<Double> = _spendingChartAverage
 
-    private val _startDate = MutableStateFlow(java.time.LocalDate.now().minusDays(6))
-    val startDate: StateFlow<java.time.LocalDate> = _startDate
+    private val defaultStartDate: LocalDate = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    private val defaultEndDate: LocalDate = defaultStartDate.plusDays(6)
 
-    private val _endDate = MutableStateFlow(java.time.LocalDate.now())
-    val endDate: StateFlow<java.time.LocalDate> = _endDate
+    private val _startDate = MutableStateFlow(defaultStartDate)
+    val startDate: StateFlow<LocalDate> = _startDate
+
+    private val _endDate = MutableStateFlow(defaultEndDate)
+    val endDate: StateFlow<LocalDate> = _endDate
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
@@ -71,6 +80,10 @@ class DashboardViewModel @Inject constructor(
 
     private val _isInitialLoading = MutableStateFlow(false)
     val isInitialLoading: StateFlow<Boolean> = _isInitialLoading
+
+    init {
+        loadSavedDateRange()
+    }
 
     fun loadData(isInitialLoad: Boolean) {
         viewModelScope.launch {
@@ -91,7 +104,8 @@ class DashboardViewModel @Inject constructor(
                 listOf(creditJob, userInfoJob, spendingJob).joinAll()
 
             } catch (e: Exception) {
-                _error.value = e.message ?: context.getString(R.string.unknown_error)
+                val localizedContext = localeManager.createLocaleContext(context)
+                _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
             } finally {
                 if (isInitialLoad) _isInitialLoading.value = false else _isRefreshing.value = false
             }
@@ -106,17 +120,39 @@ class DashboardViewModel @Inject constructor(
         _error.value = null
     }
 
+    private fun loadSavedDateRange() {
+        val startStr = securePreferences.getString("dashboard_start_date")
+        val endStr = securePreferences.getString("dashboard_end_date")
+        if (startStr != null && endStr != null) {
+            try {
+                val startEpoch = startStr.toLong()
+                val endEpoch = endStr.toLong()
+                _startDate.value = java.time.LocalDate.ofEpochDay(startEpoch)
+                _endDate.value = java.time.LocalDate.ofEpochDay(endEpoch)
+            } catch (e: Exception) {
+                
+            }
+        }
+    }
+
+    private fun saveDateRange(start: java.time.LocalDate, end: java.time.LocalDate) {
+        securePreferences.saveString("dashboard_start_date", start.toEpochDay().toString())
+        securePreferences.saveString("dashboard_end_date", end.toEpochDay().toString())
+    }
+
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
         _startDate.value = newStartDate
         _endDate.value = newEndDate
+        saveDateRange(newStartDate, newEndDate)
         viewModelScope.launch {
             fetchSpendingData()
         }
     }
 
     fun resetDateRange() {
-        _startDate.value = java.time.LocalDate.now().minusDays(6)
-        _endDate.value = java.time.LocalDate.now()
+        _startDate.value = defaultStartDate
+        _endDate.value = defaultEndDate
+        saveDateRange(defaultStartDate, defaultEndDate)
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -127,7 +163,8 @@ class DashboardViewModel @Inject constructor(
         result.onSuccess {
             _credit.value = UiState.Success(it)
         }.onFailure {
-            val errorMessage = it.message ?: "Failed to load credit"
+            val localizedContext = localeManager.createLocaleContext(context)
+            val errorMessage = ErrorMessageUtil.standardizeError(it.message ?: "Failed to load credit", localizedContext)
             _credit.value = UiState.Error(errorMessage)
             _error.value = errorMessage
         }
@@ -159,18 +196,19 @@ class DashboardViewModel @Inject constructor(
             val history = historyRepository.getCombinedHistory(user, password, from, to)
             historyRepository.insertHistory(history)
             calculateTodaysSpending(history)
-            calculateThisMonthsSpending(history)
+            calculateSelectedPeriodSpending(history)
             calculateChartSpending(history)
             _error.value = null
         } catch (e: Exception) {
-            val errorMessage = e.message ?: context.getString(R.string.unknown_error)
+            val localizedContext = localeManager.createLocaleContext(context)
+            val errorMessage = ErrorMessageUtil.standardizeError(e.message, localizedContext)
             _error.value = errorMessage
 
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
                 if (cachedHistory.isNotEmpty()) {
                     calculateTodaysSpending(cachedHistory)
-                    calculateThisMonthsSpending(cachedHistory)
+                    calculateSelectedPeriodSpending(cachedHistory)
                     calculateChartSpending(cachedHistory)
                     _error.value = "$errorMessage (using cached data)"
                 } else {
@@ -187,9 +225,8 @@ class DashboardViewModel @Inject constructor(
         _todaysSpending.value = history.filter { isSameDay(it.date, today) }.sumOf { it.price }
     }
 
-    private fun calculateThisMonthsSpending(history: List<HistoryItem>) {
-        val today = Calendar.getInstance()
-        _thisMonthsSpending.value = history.filter { isSameMonth(it.date, today) }.sumOf { it.price }
+    private fun calculateSelectedPeriodSpending(history: List<HistoryItem>) {
+        _selectedPeriodSpending.value = history.sumOf { it.price }
     }
 
     private fun calculateChartSpending(history: List<HistoryItem>) {

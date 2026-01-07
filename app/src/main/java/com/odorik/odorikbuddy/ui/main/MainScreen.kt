@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -40,6 +41,7 @@ import com.odorik.odorikbuddy.util.shouldShowNavigationLabels
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavController) {
+    val viewModel: MainViewModel = hiltViewModel()
     val bottomNavController = rememberNavController()
 
     Scaffold(
@@ -90,6 +92,7 @@ fun MainScreen(navController: NavController) {
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                            viewModel.saveLastScreen(screen.route)
                         },
                         modifier = Modifier.semantics {
                             role = Role.Tab
@@ -102,7 +105,7 @@ fun MainScreen(navController: NavController) {
     ) { innerPadding ->
         NavHost(
             bottomNavController,
-            startDestination = BottomNavItem.Dashboard.route,
+            startDestination = viewModel.getLastScreen(),
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen(navController = bottomNavController) }

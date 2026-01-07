@@ -90,11 +90,14 @@ import kotlin.math.ceil
 @Composable
 private fun ApiMessage(response: String, isError: Boolean) {
     val message = when {
+        
         response.startsWith("successfully_sent") -> {
             val credit = response.substringAfter("successfully_sent ").trim()
             stringResource(R.string.sms_successfully_sent, credit)
         }
         response == "successfully_enqueued" -> stringResource(R.string.sms_successfully_enqueued)
+
+        
         response.startsWith("error missing_argument") -> {
             val args = response.substringAfter("error missing_argument ").trim()
             stringResource(R.string.sms_error_missing_argument, args)
@@ -106,6 +109,22 @@ private fun ApiMessage(response: String, isError: Boolean) {
         response == "error gateway_failed" -> stringResource(R.string.sms_error_gateway_failed)
         response == "error invalid_delay_format" -> stringResource(R.string.sms_error_invalid_delay_format)
         response == "error delayed_into_past" -> stringResource(R.string.sms_error_delayed_into_past)
+
+        
+        response == stringResource(R.string.error_network_unreachable) -> stringResource(R.string.error_network_unreachable)
+        response == stringResource(R.string.error_host_unresolvable) -> stringResource(R.string.error_host_unresolvable)
+
+        
+        response == stringResource(R.string.auth_credentials_not_set) -> stringResource(R.string.auth_credentials_not_set)
+        response == stringResource(R.string.user_or_password_not_set) -> stringResource(R.string.user_or_password_not_set)
+
+        
+        response.startsWith("HTTP error:") -> {
+            val code = response.substringAfter("HTTP error: ").trim()
+            stringResource(R.string.error_unknown) + " (HTTP $code)"
+        }
+
+        
         else -> stringResource(R.string.sms_unknown_error)
     }
     Surface(

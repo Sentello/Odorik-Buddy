@@ -72,8 +72,10 @@
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Spending Summary</string>
     <string name="todays_spending">Today\'s Spending</string>
-    <string name="this_months_spending">This Month\'s Spending</string>
-    <string name="last_7_days">Last 7 Days</string>
+    <string name="spending_for_selected_period">Spending for Selected Period</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
+    <string name="last_month">Last Month</string>
     <string name="pick_caller_id_number">Choose Caller</string>
     <string name="pick_recipient_number">Choose Recipient</string>
     <string name="choose_phone_number">Choose Phone Number</string>
@@ -131,10 +133,14 @@
     <string name="section_data">Data</string>
     <string name="section_app">Application</string>
     <string name="version_label">Version</string>
+    <string name="auto_update_checking">Automatic Update Checking</string>
+    <string name="auto_update_checking_description">Check for app updates weekly and show notifications</string>
+    <string name="direct_calls">Direct Calls</string>
+    <string name="direct_calls_description">Allow direct phone calls without opening the dialer</string>
     <string name="routing_description">Manage shared and own number routes</string>
     <string name="section_personal">Personal</string>
-    <string name="personal_phone_number">Personal Phone Number</string>
-    <string name="personal_phone_number_description">Enter your personal phone number in international format (e.g. 00420601123123 or +420601123123)</string>
+    <string name="personal_phone_number">Phone Number</string>
+    <string name="personal_phone_number_description">Enter your phone number in international format (e.g. 00420601123123 or +420601123123)</string>
     <string name="oneshot_call">One Shot Call</string>
     <string name="shared_number">Shared phone numbers</string>
     <string name="add_rule">Add Rule</string>
@@ -161,6 +167,7 @@
         <item quantity="other">%d rules</item>
     </plurals>
     <string name="error_loading_history">Error loading history</string>
+    <string name="error_loading_dashboard">Error loading dashboard</string>
     <string name="retry">Retry</string>
     <string name="redirected_to">Redirected to:</string>
     <string name="use_line_number_as_caller_id">Use line number as caller ID</string>
@@ -205,6 +212,7 @@
     <string name="apply">Apply</string>
     <string name="reset">Reset</string>
     <string name="custom_period">Custom Period</string>
+    <string name="custom_date_range">Custom Date Range</string>
     <string name="spending_for_date">Spending for %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">End date cannot be before start date.</string>
     <string name="sms_options_menu">More options</string>
@@ -226,5 +234,13 @@
     <string name="no_update_info">No update information available</string>
     <string name="close">Close</string>
     <string name="cannot_open_url">Cannot open URL</string>
+    <!-- Update Notification Strings -->
+    <string name="app_update_available">App Update Available</string>
+    <string name="new_version_available">New version %s is available</string>
+    <string name="update_notifications">Update Notifications</string>
+    <string name="update_notifications_description">Notifications for app updates</string>
+    <!-- Network Error Messages -->
+    <string name="error_network_unreachable">No internet connection. Please check your network and try again.</string>
+    <string name="error_host_unresolvable">Cannot connect to Odorik servers. Please check your internet connection and try again.</string>
 
 </resources>

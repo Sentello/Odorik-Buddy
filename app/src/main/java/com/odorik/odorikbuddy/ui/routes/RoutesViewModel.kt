@@ -12,6 +12,7 @@ import com.odorik.odorikbuddy.domain.usecase.GetRoutesForNumberUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
 import com.odorik.odorikbuddy.model.Route
 import com.odorik.odorikbuddy.model.SharedPublicNumber
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -179,32 +180,66 @@ class RoutesViewModel @Inject constructor(
 
     
 
+
+    
+    fun loadContacts(contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            val projection = arrayOf(
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+            )
+            val contacts = mutableMapOf<String, String>()
+
+            contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+
+                if (numberIndex >= 0 && nameIndex >= 0) {
+                    while (cursor.moveToNext()) {
+                        val number = cursor.getString(numberIndex)
+                        val name = cursor.getString(nameIndex)
+                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
+                            
+                            val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
+                            
+                            if (!contacts.containsKey(normalizedNumber)) {
+                                contacts[normalizedNumber] = name
+                            }
+                        }
+                    }
+                }
+            }
+            _contactsMap.value = contacts
+        }
+    }
+    
     
     fun getContactName(number: String): String {
-        val prefix = "*087"
-        var numberToLookup = number
-        var detectedPrefix = ""
+        
+        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
         
-        if (number.startsWith(prefix)) {
-            detectedPrefix = prefix
-            numberToLookup = number.substring(prefix.length)
+        for ((contactNumber, contactName) in _contactsMap.value) {
+            
+            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
+                
+                val numberPart = if (parsedInput.specialPrefix.isNotEmpty()) {
+                    "${parsedInput.specialPrefix} ${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)}"
+                } else {
+                    PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)
+                }
+                return "$contactName ($numberPart)"
+            }
         }
 
         
-        val normalizedNumber = normalizePhoneNumber(numberToLookup)
-        val contactName = _contactsMap.value[normalizedNumber]
-
-        
-        return if (contactName != null) {
-            
-            val numberPart = if (detectedPrefix.isNotEmpty()) "$detectedPrefix $numberToLookup" else numberToLookup
-            "$contactName ($numberPart)"
-        } else {
-            
-            
-            number
-        }
+        return number
     }
 
 

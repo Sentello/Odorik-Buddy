@@ -1,10 +1,12 @@
 package com.odorik.odorikbuddy.ui.calls
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.model.CallInfo
 import com.odorik.odorikbuddy.data.model.Line
@@ -13,7 +15,9 @@ import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetCallListUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
+import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -26,7 +30,9 @@ class CallViewModel @Inject constructor(
     private val callUseCase: CallUseCase,
     private val createRouteUseCase: CreateRouteUseCase,
     private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
-    private val securePreferences: SecurePreferences
+    private val securePreferences: SecurePreferences,
+    private val localeManager: LocaleManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _callList = MutableStateFlow<List<CallInfo>>(emptyList())
@@ -170,7 +176,8 @@ class CallViewModel @Inject constructor(
                     _selectedLine.value = it.first().id
                 }
             }.onFailure {
-                _error.value = it.message
+                val localizedContext = localeManager.createLocaleContext(context)
+                _error.value = ErrorMessageUtil.standardizeError(it.message, localizedContext)
             }
         }
     }
@@ -231,22 +238,23 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
                 
                 val publicNumbersResult = getSharedPublicNumbersUseCase.execute()
                 if (publicNumbersResult.isFailure) {
-                    _oneShotCallError.value = "Error getting public numbers: ${publicNumbersResult.exceptionOrNull()?.message}"
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error getting public numbers: ${publicNumbersResult.exceptionOrNull()?.message}", localizedContext)
                     _isOneShotCallLoading.value = false
                     return@launch
                 }
                 
                 val publicNumbers = publicNumbersResult.getOrNull()
                 if (publicNumbers.isNullOrEmpty()) {
-                    _oneShotCallError.value = "No shared public numbers available"
+                    _oneShotCallError.value = context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_available)
                     _isOneShotCallLoading.value = false
                     return@launch
                 }
-                
+
                 
                 val lastSharedNumber = publicNumbers.lastOrNull { it.type == "shared" }?.publicNumber
                 if (lastSharedNumber == null) {
-                    _oneShotCallError.value = "No shared numbers found"
+                    _oneShotCallError.value = context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_found)
                     _isOneShotCallLoading.value = false
                     return@launch
                 }
@@ -261,7 +269,7 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
                 }
                 
                 if (sourceNumber.isNullOrEmpty()) {
-                    _oneShotCallError.value = "No source number configured. Please set your phone number in settings."
+                    _oneShotCallError.value = context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_source_number_configured)
                     _isOneShotCallLoading.value = false
                     return@launch
                 }
@@ -290,7 +298,8 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
                 }
                 
                 if (routeResult.isFailure) {
-                    _oneShotCallError.value = "Error creating route: ${routeResult.exceptionOrNull()?.message}"
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error creating route: ${routeResult.exceptionOrNull()?.message}", localizedContext)
                     _isOneShotCallLoading.value = false
                     return@launch
                 }
@@ -298,7 +307,8 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
                 
                 _oneShotCallResult.value = lastSharedNumber
             } catch (e: Exception) {
-                _oneShotCallError.value = "Error during One Shot Call setup: ${e.message}"
+                val localizedContext = localeManager.createLocaleContext(context)
+                _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error during One Shot Call setup: ${e.message}", localizedContext)
             } finally {
                 _isOneShotCallLoading.value = false
             }

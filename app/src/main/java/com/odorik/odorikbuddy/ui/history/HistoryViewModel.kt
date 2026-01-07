@@ -1,16 +1,21 @@
 package com.odorik.odorikbuddy.ui.history
 
 import android.content.ContentResolver
+import android.content.Context
 import android.content.SharedPreferences
 import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.util.ErrorMessageUtil
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +31,9 @@ class HistoryViewModel @Inject constructor(
     private val repository: HistoryRepository,
     private val securePreferences: SecurePreferences,
     private val sharedPreferences: SharedPreferences,
-    private val getLinesUseCase: GetLinesUseCase
+    private val getLinesUseCase: GetLinesUseCase,
+    private val localeManager: LocaleManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     data class HistoryDisplayItem(
@@ -74,10 +81,12 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun fetchHistory() {
+    fun fetchHistory(isRefresh: Boolean = false) {
         viewModelScope.launch {
             _isRefreshing.value = true
-            _error.value = null 
+            if (isRefresh) {
+                _error.value = null 
+            }
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
 
@@ -87,161 +96,66 @@ class HistoryViewModel @Inject constructor(
                 return@launch
             }
 
-            try {
+            
+            if (!isRefresh) {
+                try {
+                    val cachedHistory = repository.getCachedHistory()
+                    if (cachedHistory.isNotEmpty()) {
+                        
+                        val grouped = cachedHistory.groupBy { it.redirection_parent_id }
+                        val parents = grouped[null] ?: emptyList()
+                        val displayItems = mutableListOf<HistoryDisplayItem>()
+                        parents.sortedByDescending { it.date }.forEach { parent ->
+                            displayItems.add(HistoryDisplayItem(parent, false))
+                            val children = grouped[parent.id] ?: emptyList()
+                            children.sortedByDescending { it.date }.forEach { child ->
+                                displayItems.add(HistoryDisplayItem(child, true))
+                            }
+                        }
+                        val standalones = cachedHistory.filter { it.redirection_parent_id == null && !parents.contains(it) }
+                        standalones.sortedByDescending { it.date }.forEach { standalone ->
+                            displayItems.add(HistoryDisplayItem(standalone, false))
+                        }
+                        _history.value = displayItems
+                        applyFilters()
+                        _error.value = null 
+                        _isRefreshing.value = false 
+                        return@launch 
+                if (_history.value.isEmpty()) {
+                    _error.value = it.message ?: "Failed to fetch lines"
+                }
                 
-                
-                val days = sharedPreferences.getInt("history_period_days", 90)
-                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                isoFormat.timeZone = TimeZone.getTimeZone("UTC") 
-                val now = Calendar.getInstance(TimeZone.getTimeZone("UTC")) 
-                val to = isoFormat.format(now.time)
-                now.add(Calendar.DAY_OF_YEAR, -days)
-                val from = isoFormat.format(now.time)
-
-                val result = repository.getCombinedHistory(user, password, from, to)
-                val grouped = result.groupBy { it.redirection_parent_id }
-                val parents = grouped[null] ?: emptyList()
-                val displayItems = mutableListOf<HistoryDisplayItem>()
-                parents.sortedByDescending { it.date }.forEach { parent ->
-                    displayItems.add(HistoryDisplayItem(parent, false))
-                    val children = grouped[parent.id] ?: emptyList()
-                    children.sortedByDescending { it.date }.forEach { child ->
-                        displayItems.add(HistoryDisplayItem(child, true))
+                            if (!contacts.containsKey(normalizedNumber)) {
+                                contacts[normalizedNumber] = name
+                            }
+                        }
                     }
                 }
-                
-                val standalones = result.filter { it.redirection_parent_id == null && !parents.contains(it) }
-                standalones.sortedByDescending { it.date }.forEach { standalone ->
-                    displayItems.add(HistoryDisplayItem(standalone, false))
-                }
-                _history.value = displayItems
-                applyFilters()
-            } catch (e: Exception) {
-                _error.value = e.message ?: "An unknown error occurred."
-                e.printStackTrace()
-            } finally {
-                _isRefreshing.value = false
             }
-        }
-    }
-
-    fun fetchLines() {
-        viewModelScope.launch {
-            val result = getLinesUseCase.execute()
-            result.onSuccess {
-                _lines.value = it
-                
-                applyFilters()
-            }.onFailure {
-                _error.value = it.message ?: "Failed to fetch lines"
-            }
+            _contactsMap.value = contacts
         }
     }
     
-    
-    fun refreshData() {
-        viewModelScope.launch {
-            
-            fetchLines()
-            kotlinx.coroutines.delay(200) 
-            fetchHistory()
-        }
-    }
-
-    fun setSelectedLine(line: Line?) {
-        _selectedLine.value = line
-        applyFilters()
-    }
-
-    fun setFilterNumber(number: String) {
-        _filterNumber.value = number
-        applyFilters()
-    }
-
-    fun setEventTypeFilter(type: String) {
-        _eventTypeFilter.value = type
-        applyFilters()
-    }
-
-    fun setEventDirectionFilter(direction: String) {
-        _eventDirectionFilter.value = direction
-        applyFilters()
-    }
-
-    private fun applyFilters() {
-        val lineFilter = _selectedLine.value
-        val numberFilter = _filterNumber.value
-        val eventTypeFilter = _eventTypeFilter.value
-        val eventDirectionFilter = _eventDirectionFilter.value
-
-        val filtered = if (lineFilter == null && numberFilter.isBlank() && eventTypeFilter == "all" && eventDirectionFilter == "all") {
-            
-            _history.value
-        } else {
-            _history.value.filter { displayItem ->
-                val item = displayItem.item
-                
-                
-                val lineMatch = lineFilter?.let {
-                    item.line == it.id
-                } ?: true
-                
-                
-                val numberMatch = if (numberFilter.isBlank()) {
-                    true
-                } else {
-                    item.source_number.contains(numberFilter) || item.destination_number.contains(numberFilter)
-                }
-                
-                
-                val eventTypeMatch = when (eventTypeFilter) {
-                    "call" -> item.isCall
-                    "sms" -> item.isSms
-                    else -> true 
-                }
-                
-                
-                val eventDirectionMatch = when (eventDirectionFilter) {
-                    "incoming" -> item.isIncoming
-                    "outgoing" -> item.isOutgoing
-                    else -> true 
-                }
-                
-                lineMatch && numberMatch && eventTypeMatch && eventDirectionMatch
-            }
-        }
-        
-        _filteredHistory.value = filtered
-    }
-
-    
-
     
     fun getContactName(number: String): String {
-        val prefix = "*087"
-        var numberToLookup = number
-        var detectedPrefix = ""
+        
+        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
         
-        if (number.startsWith(prefix)) {
-            detectedPrefix = prefix
-            numberToLookup = number.substring(prefix.length)
+        for ((contactNumber, contactName) in _contactsMap.value) {
+            
+            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
+                
+                return if (parsedInput.specialPrefix.isNotEmpty()) {
+                    "${parsedInput.specialPrefix} $contactName".trim()
+                } else {
+                    contactName
+                }
+            }
         }
 
         
-        val normalizedNumber = normalizePhoneNumber(numberToLookup)
-        val contactName = _contactsMap.value[normalizedNumber]
-
-        
-        return if (contactName != null) {
-            
-            
-            "$detectedPrefix $contactName".trim()
-        } else {
-            
-            
-            number
-        }
+        return number
     }
 
     
