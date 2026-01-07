@@ -45,6 +45,11 @@ class SmsViewModel @Inject constructor(
     private val _delayedError = MutableStateFlow<Int?>(null)
     val delayedError: StateFlow<Int?> = _delayedError
 
+    
+    private fun filterAllowedSenders(numbers: List<String>): List<String> {
+        return numbers.filter { !it.trim().startsWith("00") }
+    }
+
     fun fetchAllowedSenders() = viewModelScope.launch {
         _error.value = null 
         try {
@@ -53,18 +58,17 @@ class SmsViewModel @Inject constructor(
 
             if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
                 _error.value = context.getString(R.string.auth_credentials_not_set)
-                println("SmsViewModel: Authentication credentials are null or empty.") 
                 return@launch
             }
 
-            println("SmsViewModel: Fetching allowed senders with user: $user, password: ${password.take(3)}...") 
             val response = api.getAllowedSenders(user, password)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.startsWith("error") == true) {
                     _error.value = body
                 } else {
-                    _allowedSenders.value = body?.split(",") ?: emptyList()
+                    val allNumbers = body?.split(",") ?: emptyList()
+                    _allowedSenders.value = filterAllowedSenders(allNumbers)
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"

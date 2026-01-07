@@ -14,6 +14,7 @@ import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.RoutingRepository
 import com.odorik.odorikbuddy.data.repository.UserRepository
+import com.odorik.odorikbuddy.util.CurrencyFormatter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -94,4 +95,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSharedPreferences(app: Application): SharedPreferences = app.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    
+    @Provides
+    @Singleton
+    fun provideCurrencyFormatter(context: Context): CurrencyFormatter {
+        return CurrencyFormatter(context)
+    }
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
@@ -54,13 +55,23 @@ class HistoryViewModel @Inject constructor(
     private val _filterNumber = MutableStateFlow<String>("")
     val filterNumber: StateFlow<String> = _filterNumber
 
+    private val _eventTypeFilter = MutableStateFlow<String>("all") 
+    val eventTypeFilter: StateFlow<String> = _eventTypeFilter
+
+    private val _eventDirectionFilter = MutableStateFlow<String>("all") 
+    val eventDirectionFilter: StateFlow<String> = _eventDirectionFilter
+
     
     private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
 
     init {
-        fetchHistory()
-        fetchLines()
+        viewModelScope.launch {
+            
+            fetchLines() 
+            kotlinx.coroutines.delay(100) 
+            fetchHistory() 
+        }
     }
 
     fun fetchHistory() {
@@ -76,15 +87,17 @@ class HistoryViewModel @Inject constructor(
                 return@launch
             }
 
-            
-            val days = sharedPreferences.getInt("history_period_days", 90)
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
-            val now = Calendar.getInstance()
-            val to = isoFormat.format(now.time)
-            now.add(Calendar.DAY_OF_YEAR, -days)
-            val from = isoFormat.format(now.time)
-
             try {
+                
+                
+                val days = sharedPreferences.getInt("history_period_days", 90)
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+                isoFormat.timeZone = TimeZone.getTimeZone("UTC") 
+                val now = Calendar.getInstance(TimeZone.getTimeZone("UTC")) 
+                val to = isoFormat.format(now.time)
+                now.add(Calendar.DAY_OF_YEAR, -days)
+                val from = isoFormat.format(now.time)
+
                 val result = repository.getCombinedHistory(user, password, from, to)
                 val grouped = result.groupBy { it.redirection_parent_id }
                 val parents = grouped[null] ?: emptyList()
@@ -118,13 +131,20 @@ class HistoryViewModel @Inject constructor(
             result.onSuccess {
                 _lines.value = it
                 
-                if (_selectedLine.value == null && it.isNotEmpty()) {
-                    _selectedLine.value = it.first()
-                    applyFilters()
-                }
+                applyFilters()
             }.onFailure {
                 _error.value = it.message ?: "Failed to fetch lines"
             }
+        }
+    }
+    
+    
+    fun refreshData() {
+        viewModelScope.launch {
+            
+            fetchLines()
+            kotlinx.coroutines.delay(200) 
+            fetchHistory()
         }
     }
 
@@ -138,11 +158,23 @@ class HistoryViewModel @Inject constructor(
         applyFilters()
     }
 
+    fun setEventTypeFilter(type: String) {
+        _eventTypeFilter.value = type
+        applyFilters()
+    }
+
+    fun setEventDirectionFilter(direction: String) {
+        _eventDirectionFilter.value = direction
+        applyFilters()
+    }
+
     private fun applyFilters() {
         val lineFilter = _selectedLine.value
         val numberFilter = _filterNumber.value
+        val eventTypeFilter = _eventTypeFilter.value
+        val eventDirectionFilter = _eventDirectionFilter.value
 
-        val filtered = if (lineFilter == null && numberFilter.isBlank()) {
+        val filtered = if (lineFilter == null && numberFilter.isBlank() && eventTypeFilter == "all" && eventDirectionFilter == "all") {
             
             _history.value
         } else {
@@ -150,8 +182,8 @@ class HistoryViewModel @Inject constructor(
                 val item = displayItem.item
                 
                 
-                val lineMatch = lineFilter?.let { 
-                    item.line == it.id 
+                val lineMatch = lineFilter?.let {
+                    item.line == it.id
                 } ?: true
                 
                 
@@ -161,7 +193,21 @@ class HistoryViewModel @Inject constructor(
                     item.source_number.contains(numberFilter) || item.destination_number.contains(numberFilter)
                 }
                 
-                lineMatch && numberMatch
+                
+                val eventTypeMatch = when (eventTypeFilter) {
+                    "call" -> item.isCall
+                    "sms" -> item.isSms
+                    else -> true 
+                }
+                
+                
+                val eventDirectionMatch = when (eventDirectionFilter) {
+                    "incoming" -> item.isIncoming
+                    "outgoing" -> item.isOutgoing
+                    else -> true 
+                }
+                
+                lineMatch && numberMatch && eventTypeMatch && eventDirectionMatch
             }
         }
         

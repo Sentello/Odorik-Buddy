@@ -3,7 +3,6 @@ package com.odorik.odorikbuddy.ui.calls
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.ContactsContract
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.SecurePreferences
@@ -60,6 +59,52 @@ class CallViewModel @Inject constructor(
     private val _isOneShotCallLoading = MutableStateFlow(false)
     val isOneShotCallLoading: StateFlow<Boolean> = _isOneShotCallLoading
 
+    private val _useCallerIdPrefix = MutableStateFlow(getUseCallerIdPrefix())
+    val useCallerIdPrefix: StateFlow<Boolean> = _useCallerIdPrefix
+
+    private fun getUseCallerIdPrefix(): Boolean {
+        return securePreferences.getString("use_caller_id_prefix", "false")?.toBoolean() ?: false
+    }
+
+    private val _selectedTab = MutableStateFlow(getSelectedTab())
+    val selectedTab: StateFlow<String> = _selectedTab
+
+    private fun getSelectedTab(): String {
+        val savedString = securePreferences.getString("calls_selected_tab", null)
+        val defaultTitle = "callback_title" 
+        val tabOrder = getTabOrder()
+        return if (savedString?.toIntOrNull() != null) {
+            
+            val oldIndex = savedString.toInt()
+            val migratedTitle = if (oldIndex in tabOrder.indices) tabOrder[oldIndex] else defaultTitle
+            
+            securePreferences.saveString("calls_selected_tab", migratedTitle)
+            migratedTitle
+        } else {
+            
+            savedString?.takeIf { it in tabOrder } ?: defaultTitle
+        }
+    }
+
+    private val _tabOrder = MutableStateFlow(getTabOrder())
+    val tabOrder: StateFlow<List<String>> = _tabOrder
+
+    private fun getTabOrder(): List<String> {
+        val savedOrder = securePreferences.getString("calls_tab_order", null)
+        return savedOrder?.split(",")?.filter { it.isNotBlank() } ?: listOf(
+            "callback_title", "oneshot_call"
+        )
+    }
+
+    fun updateTabOrder(newOrder: List<String>) {
+        _tabOrder.value = newOrder
+        securePreferences.saveString("calls_tab_order", newOrder.joinToString(","))
+    }
+
+    fun getTabIndexByTitle(title: String): Int {
+        return _tabOrder.value.indexOf(title).takeIf { it >= 0 } ?: 0
+    }
+
     private val _phoneNumber = MutableStateFlow(getPhoneNumber())
     val phoneNumber: StateFlow<String> = _phoneNumber
 
@@ -71,6 +116,16 @@ class CallViewModel @Inject constructor(
         _callerId.value = securePreferences.getString("caller_id", "") ?: ""
         _recipient.value = securePreferences.getString("recipient", "") ?: ""
         _selectedLine.value = securePreferences.getString("selected_line", null)?.toIntOrNull()
+        _useCallerIdPrefix.value = getUseCallerIdPrefix()
+        _tabOrder.value = getTabOrder()
+        
+    }
+
+    fun updateSelectedTab(tabTitle: String) {
+        if (tabTitle in _tabOrder.value) {
+            _selectedTab.value = tabTitle
+            securePreferences.saveString("calls_selected_tab", tabTitle)
+        }
     }
 
     fun updateCallerId(newCallerId: String) {
@@ -88,23 +143,33 @@ class CallViewModel @Inject constructor(
         securePreferences.saveString("selected_line", newLine?.toString() ?: "")
     }
 
+    fun updateUseCallerIdPrefix(useCallerIdPrefix: Boolean) {
+        _useCallerIdPrefix.value = useCallerIdPrefix
+        securePreferences.saveString("use_caller_id_prefix", useCallerIdPrefix.toString())
+    }
+
+    fun updateSelectedTabByIndex(tabIndex: Int) {
+        val tabTitles = _tabOrder.value
+        if (tabIndex in tabTitles.indices) {
+            val tabTitle = tabTitles[tabIndex]
+            updateSelectedTab(tabTitle)
+        }
+    }
+
     fun getCallList() {
         
         
     }
 
     fun getLines() {
-        Log.d("CallViewModel", "Fetching lines...")
         viewModelScope.launch {
             val result = getLinesUseCase.execute()
             result.onSuccess {
-                Log.d("CallViewModel", "Lines fetched successfully: $it")
                 _lines.value = it
                 if (_selectedLine.value == null && it.isNotEmpty()) {
                     _selectedLine.value = it.first().id
                 }
             }.onFailure {
-                Log.e("CallViewModel", "Error fetching lines: ${it.message}")
                 _error.value = it.message
             }
         }
@@ -238,6 +303,10 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
                 _isOneShotCallLoading.value = false
             }
         }
+    }
+    
+    fun resetCallResult() {
+        _callResult.value = ""
     }
     
     fun resetOneShotCallResult() {

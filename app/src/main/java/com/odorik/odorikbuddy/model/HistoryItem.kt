@@ -33,4 +33,19 @@ data class HistoryItem(
     val redirection_parent_id: String?,
     @SerializedName("line")
     val line: Int? 
-)
+) {
+    val eventType: String
+        get() = if (length != null) "call" else "sms"
+    
+    val isCall: Boolean
+        get() = length != null
+    
+    val isSms: Boolean
+        get() = length == null
+    
+    val isIncoming: Boolean
+        get() = direction == "in"
+    
+    val isOutgoing: Boolean
+        get() = direction == "out" || direction == "redirected"
+}

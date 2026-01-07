@@ -14,6 +14,7 @@
     <string name="line">Linka</string>
     <string name="select_line">Vybrat linku</string>
     <string name="call">Volat</string>
+    <string name="callback_call_button">Objednat hovor</string>
     <string name="from_label">Od:</string>
     <string name="to_label">Do:</string>
     <string name="duration_label">Doba trvání:</string>
@@ -56,6 +57,8 @@
     <string name="from_history">Od:</string>
     <string name="to_history">Komu:</string>
     <string name="currency_format">%.2f Kč</string>
+    <string name="czech_currency_symbol">Kč</string>
+    <string name="english_currency_symbol">Czk</string>
     <string name="pick_caller_id">Vybrat volajícího</string>
     <string name="pick_recipient">Vybrat příjemce</string>
     <string name="invalid_credentials">Neplatné přihlašovací údaje</string>
@@ -132,7 +135,7 @@
     <string name="section_personal">Osobní</string>
     <string name="personal_phone_number">Osobní telefonní číslo</string>
     <string name="personal_phone_number_description">Zadejte své osobní telefonní číslo v mezinárodním formátu (např. 00420601123123 nebo +420601123123)</string>
-    <string name="oneshot_call">Jednorázové volání</string>
+    <string name="oneshot_call">Přesměrované volání</string>
     <string name="shared_number">Sdílená telefonní čísla</string>
     <string name="add_rule">Přidat pravidlo</string>
     <string name="delete_rule">Smazat pravidlo</string>
@@ -164,10 +167,19 @@
     <string name="redirected_to">Přesměrováno na:</string>
     <string name="use_line_number_as_caller_id">Použít číslo linky jako ID volajícího</string>
     <string name="filter_history">Filtrovat historii</string>
+    <string name="event_type_filter">Typ události</string>
+    <string name="event_type_all">Vše</string>
+    <string name="event_type_call">Hovor</string>
+    <string name="event_type_sms">SMS</string>
+    <string name="event_direction_filter">Směr</string>
+    <string name="event_direction_all">Vše</string>
+    <string name="event_direction_incoming">Příchozí</string>
+    <string name="event_direction_outgoing">Odchozí</string>
     <string name="apply_filters">Použít filtry</string>
     <string name="line_filter">Filtr linek</string>
     <string name="all_lines">Všechny linky</string>
     <string name="number_filter">Filtr čísel</string>
+    <string name="clear_filters">Zrušit filtry</string>
     <!-- Error Messages -->
     <string name="error_loading_shared_numbers">Selhání načítání sdílených čísel</string>
     <string name="error_loading_routes_for_numbers">Selhání načítání detailů rout</string>

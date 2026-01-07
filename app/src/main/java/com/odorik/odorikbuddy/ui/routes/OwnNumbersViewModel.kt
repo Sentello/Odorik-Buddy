@@ -214,22 +214,30 @@ class OwnNumbersViewModel @Inject constructor(
         }
     }
     
+    
     fun getContactName(number: String): String {
         val prefix = "*087"
         var numberToLookup = number
         var detectedPrefix = ""
 
+        
         if (number.startsWith(prefix)) {
             detectedPrefix = prefix
             numberToLookup = number.substring(prefix.length)
         }
 
+        
         val normalizedNumber = normalizePhoneNumber(numberToLookup)
         val contactName = _contactsMap.value[normalizedNumber]
 
+        
         return if (contactName != null) {
-            "$detectedPrefix $contactName".trim()
+            
+            val numberPart = if (detectedPrefix.isNotEmpty()) "$detectedPrefix $numberToLookup" else numberToLookup
+            "$contactName ($numberPart)"
         } else {
+            
+            
             number
         }
     }

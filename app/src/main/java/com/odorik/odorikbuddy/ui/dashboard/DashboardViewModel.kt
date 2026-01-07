@@ -1,7 +1,6 @@
 package com.odorik.odorikbuddy.ui.dashboard
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
@@ -93,7 +92,6 @@ class DashboardViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 _error.value = e.message ?: context.getString(R.string.unknown_error)
-                Log.e("DashboardViewModel", "Error loading data", e)
             } finally {
                 if (isInitialLoad) _isInitialLoading.value = false else _isRefreshing.value = false
             }
@@ -141,7 +139,6 @@ class DashboardViewModel @Inject constructor(
             _userInfo.value = UiState.Success(it)
         }.onFailure {
             _userInfo.value = UiState.Error(it.message ?: "Failed to load user info")
-            Log.e("DashboardViewModel", "Error fetching user info", it)
         }
     }
 
@@ -150,7 +147,6 @@ class DashboardViewModel @Inject constructor(
         val password = securePreferences.getPassword()
 
         if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-            Log.e("DashboardViewModel", "User or password is not set.")
             _error.value = context.getString(R.string.user_or_password_not_set)
             return
         }
@@ -160,9 +156,7 @@ class DashboardViewModel @Inject constructor(
         val from = isoFormat.format(Date.from(_startDate.value.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()))
 
         try {
-            Log.d("DashboardViewModel", "Fetching history from $from to $to")
             val history = historyRepository.getCombinedHistory(user, password, from, to)
-            Log.d("DashboardViewModel", "History size: ${history.size}")
             historyRepository.insertHistory(history)
             calculateTodaysSpending(history)
             calculateThisMonthsSpending(history)
@@ -170,12 +164,10 @@ class DashboardViewModel @Inject constructor(
             _error.value = null
         } catch (e: Exception) {
             val errorMessage = e.message ?: context.getString(R.string.unknown_error)
-            Log.e("DashboardViewModel", "Error fetching history: $errorMessage")
             _error.value = errorMessage
 
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
-                Log.d("DashboardViewModel", "Using cached history, size: ${cachedHistory.size}")
                 if (cachedHistory.isNotEmpty()) {
                     calculateTodaysSpending(cachedHistory)
                     calculateThisMonthsSpending(cachedHistory)
@@ -185,7 +177,6 @@ class DashboardViewModel @Inject constructor(
                     _error.value = "$errorMessage (no cached data available)"
                 }
             } catch (cacheError: Exception) {
-                Log.e("DashboardViewModel", "Error loading cached history: ${cacheError.message}")
                 _error.value = "$errorMessage (cache also unavailable)"
             }
         }
@@ -194,13 +185,11 @@ class DashboardViewModel @Inject constructor(
     private fun calculateTodaysSpending(history: List<HistoryItem>) {
         val today = Calendar.getInstance()
         _todaysSpending.value = history.filter { isSameDay(it.date, today) }.sumOf { it.price }
-        Log.d("DashboardViewModel", "Today's spending: ${_todaysSpending.value}")
     }
 
     private fun calculateThisMonthsSpending(history: List<HistoryItem>) {
         val today = Calendar.getInstance()
         _thisMonthsSpending.value = history.filter { isSameMonth(it.date, today) }.sumOf { it.price }
-        Log.d("DashboardViewModel", "This month's spending: ${_thisMonthsSpending.value}")
     }
 
     private fun calculateChartSpending(history: List<HistoryItem>) {
@@ -223,8 +212,6 @@ class DashboardViewModel @Inject constructor(
         _spendingChartData.value = chartData
         val average = if (chartData.isNotEmpty()) chartData.map { it.spending }.average() else 0.0
         _spendingChartAverage.value = average
-        Log.d("DashboardViewModel", "Chart spending: $chartData, average: $average")
-        Log.d("ViewModelChartDebug", "Updated spendingChartData: size=${chartData.size}, startDate=${_startDate.value}, endDate=${_endDate.value}, isDefaultRange=${_startDate.value.toEpochDay() == java.time.LocalDate.now().minusDays(6).toEpochDay() && _endDate.value.toEpochDay() == java.time.LocalDate.now().toEpochDay()}")
     }
 
     private fun isSameDay(isoDate: String, calendar: Calendar): Boolean {

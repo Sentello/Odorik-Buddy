@@ -14,6 +14,7 @@
     <string name="line">Line</string>
     <string name="select_line">Select Line</string>
     <string name="call">Call</string>
+    <string name="callback_call_button">Call me</string>
     <string name="from_label">From:</string>
     <string name="to_label">To:</string>
     <string name="duration_label">Duration:</string>
@@ -56,6 +57,8 @@
     <string name="from_history">From:</string>
     <string name="to_history">To:</string>
     <string name="currency_format">%.2f Kč</string>
+    <string name="czech_currency_symbol">Kč</string>
+    <string name="english_currency_symbol">Czk</string>
     <string name="pick_caller_id">Pick Caller ID</string>
     <string name="pick_recipient">Pick Recipient</string>
     <string name="invalid_credentials">Invalid credentials</string>
@@ -162,10 +165,19 @@
     <string name="redirected_to">Redirected to:</string>
     <string name="use_line_number_as_caller_id">Use line number as caller ID</string>
     <string name="filter_history">Filter History</string>
+    <string name="event_type_filter">Event Type</string>
+    <string name="event_type_all">All</string>
+    <string name="event_type_call">Call</string>
+    <string name="event_type_sms">SMS</string>
+    <string name="event_direction_filter">Direction</string>
+    <string name="event_direction_all">All</string>
+    <string name="event_direction_incoming">Incoming</string>
+    <string name="event_direction_outgoing">Outgoing</string>
     <string name="apply_filters">Apply Filters</string>
     <string name="line_filter">Line Filter</string>
     <string name="all_lines">All Lines</string>
     <string name="number_filter">Number Filter</string>
+    <string name="clear_filters">Clear Filters</string>
     <!-- Error Messages -->
     <string name="error_loading_shared_numbers">Failed to load shared numbers</string>
     <string name="error_loading_routes_for_numbers">Failed to load route details</string>

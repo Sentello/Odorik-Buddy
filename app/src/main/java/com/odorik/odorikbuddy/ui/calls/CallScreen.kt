@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -41,8 +40,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -63,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
+import kotlinx.coroutines.delay
 
 private fun mapApiArgumentToStringId(apiArgument: String): Int {
     return when (apiArgument) {
@@ -142,7 +140,31 @@ enum class ContactField {
 fun CallScreen(
     viewModel: CallViewModel = hiltViewModel()
 ) {
-    val selectedTab = remember { mutableStateOf(0) }
+    val selectedTab by viewModel.selectedTab.collectAsState()
+    val tabOrder by viewModel.tabOrder.collectAsState()
+    
+    
+    val tabItems = remember(tabOrder) {
+        tabOrder.map { title ->
+            when (title) {
+                "callback_title" -> TabItem(
+                    titleResId = R.string.callback_title,
+                    title = "callback_title",
+                    content = { CallbackTab(viewModel) }
+                )
+                "oneshot_call" -> TabItem(
+                    titleResId = R.string.oneshot_call,
+                    title = "oneshot_call",
+                    content = { OneShotCallTab(viewModel) }
+                )
+                else -> TabItem(
+                    titleResId = R.string.callback_title,
+                    title = "callback_title",
+                    content = { CallbackTab(viewModel) }
+                )
+            }
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -156,27 +178,13 @@ fun CallScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            
-            TabRow(
-                selectedTabIndex = selectedTab.value
-            ) {
-                Tab(
-                    selected = selectedTab.value == 0,
-                    onClick = { selectedTab.value = 0 },
-                    text = { Text(stringResource(R.string.callback_title)) }
-                )
-                Tab(
-                    selected = selectedTab.value == 1,
-                    onClick = { selectedTab.value = 1 },
-                    text = { Text(stringResource(R.string.oneshot_call)) }
-                )
-            }
-            
-            
-            when (selectedTab.value) {
-                0 -> CallbackTab(viewModel)
-                1 -> OneShotCallTab(viewModel)
-            }
+            DraggableTabs(
+                tabItems = tabItems,
+                selectedTabTitle = selectedTab,
+                onTabSelected = { viewModel.updateSelectedTab(it) },
+                onTabOrderChanged = { newOrder -> viewModel.updateTabOrder(newOrder) },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -186,8 +194,8 @@ fun CallScreen(
 fun CallbackTab(
     viewModel: CallViewModel = hiltViewModel()
 ) {
-    val callList = viewModel.callList.collectAsState()
-    val callResult = viewModel.callResult.collectAsState()
+    val callList by viewModel.callList.collectAsState()
+    val callResult by viewModel.callResult.collectAsState()
     val lines by viewModel.lines.collectAsState()
     val callerId by viewModel.callerId.collectAsState()
     val recipient by viewModel.recipient.collectAsState()
@@ -231,7 +239,7 @@ fun CallbackTab(
                 launcherToTrigger?.invoke()
                 launcherToTrigger = null 
             } else {
-                Log.w("CallScreen", "Permission denied for contacts")
+                
             }
         }
     )
@@ -284,7 +292,7 @@ fun CallbackTab(
                 
                 callViewModel.resetOneShotCallResult()
             } catch (e: Exception) {
-                Log.e("OneShotCallTab", "Error launching dialer: ${e.message}")
+                
                 hasLaunchedDialer.value = true  
                 callViewModel.resetOneShotCallResult()  
             }
@@ -388,11 +396,11 @@ fun CallbackTab(
                 ) {
                     Checkbox(
                         checked = useCallerIdPrefix,
-                        onCheckedChange = { useCallerIdPrefix = it }
+                        onCheckedChange = { callViewModel.updateUseCallerIdPrefix(it) }
                     )
                     Text(
                         text = stringResource(R.string.use_line_number_as_caller_id),
-                        modifier = Modifier.clickable { useCallerIdPrefix = !useCallerIdPrefix }
+                        modifier = Modifier.clickable { callViewModel.updateUseCallerIdPrefix(!useCallerIdPrefix) }
                     )
                 }
                 

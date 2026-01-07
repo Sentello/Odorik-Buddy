@@ -198,8 +198,8 @@ class RoutesViewModel @Inject constructor(
         
         return if (contactName != null) {
             
-            
-            "$detectedPrefix $contactName".trim()
+            val numberPart = if (detectedPrefix.isNotEmpty()) "$detectedPrefix $numberToLookup" else numberToLookup
+            "$contactName ($numberPart)"
         } else {
             
             

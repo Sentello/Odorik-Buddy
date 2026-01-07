@@ -35,13 +35,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val lang = LanguagePreferences.getPreferredLanguage(this)
-        android.util.Log.d("MainActivity", "Explicitly loading lang: $lang")
         val locale = Locale(lang)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
         @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
-        android.util.Log.d("MainActivity", "Current locale after explicit update: ${resources.configuration.locales[0].language}")
 
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
@@ -62,7 +60,6 @@ class MainActivity : ComponentActivity() {
                         
                         
                     }
-                    android.util.Log.d("MainActivity", "Locale after setContent: ${resources.configuration.locales[0].language}")
                 }
             }
         }

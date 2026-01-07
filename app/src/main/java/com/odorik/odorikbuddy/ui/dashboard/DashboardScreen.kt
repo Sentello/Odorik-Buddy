@@ -49,6 +49,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -78,7 +79,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.odorik.odorikbuddy.R
-import java.text.NumberFormat
+import com.odorik.odorikbuddy.util.CurrencyFormatter
 import java.text.SimpleDateFormat
 
 
@@ -112,6 +113,14 @@ fun DashboardScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
 
+    
+    val context = LocalContext.current
+    val currentLanguage = remember {
+        val locale = context.resources.configuration.locales[0]
+        locale.language
+    }
+    val currencyFormatter = remember { CurrencyFormatter(context) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.refresh() })
 
@@ -119,11 +128,28 @@ fun DashboardScreen(
         viewModel.loadData(true)
     }
 
-    LaunchedEffect(navController) {
-        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<Long>("startDate")?.observeForever {
-            val newStartDate = java.time.LocalDate.ofEpochDay(it)
-            val newEndDate = java.time.LocalDate.ofEpochDay(navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate") ?: newStartDate.toEpochDay())
-            viewModel.updateDateRange(newStartDate, newEndDate)
+    
+    val currentStartDate by viewModel.startDate.collectAsState()
+    val currentEndDate by viewModel.endDate.collectAsState()
+    
+    LaunchedEffect(Unit) {
+        snapshotFlow { 
+            navController.currentBackStackEntry?.savedStateHandle?.get<Long>("startDate") to
+            navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate")
+        }.collect { (startDateValue, endDateValue) ->
+            if (startDateValue != null && endDateValue != null) {
+                val newStartDate = java.time.LocalDate.ofEpochDay(startDateValue)
+                val newEndDate = java.time.LocalDate.ofEpochDay(endDateValue)
+                
+                
+                if (newStartDate != currentStartDate || newEndDate != currentEndDate) {
+                    viewModel.updateDateRange(newStartDate, newEndDate)
+                    
+                    
+                    navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("startDate")
+                    navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("endDate")
+                }
+            }
         }
     }
 
@@ -218,15 +244,13 @@ fun DashboardScreen(
                                                 style = MaterialTheme.typography.titleLarge
                                             )
                                         }
-                                        val czechFormat = NumberFormat.getNumberInstance(java.util.Locale("cs", "CZ"))
-                                        czechFormat.maximumFractionDigits = 2
-                                        val formattedBalance = czechFormat.format(balance)
+                                        val formattedBalance = currencyFormatter.formatCurrency(balance, currentLanguage)
                                         Text(
-                                            text = "$formattedBalance Kč",
+                                            text = formattedBalance,
                                             style = MaterialTheme.typography.headlineMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.semantics {
-                                                contentDescription = "Current balance: $formattedBalance Kč"
+                                                contentDescription = "Current balance: $formattedBalance"
                                             }
                                         )
                                     }
@@ -237,12 +261,12 @@ fun DashboardScreen(
                     
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
-                        SpendingSummary(todaysSpending, thisMonthsSpending)
+                        SpendingSummary(todaysSpending, thisMonthsSpending, currentLanguage, currencyFormatter)
                     }
                     
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
-                        SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel)
+                        SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel, currentLanguage, currencyFormatter)
                     }
                 }
             }
@@ -257,11 +281,14 @@ fun DashboardScreen(
 }
 
 @Composable
-fun SpendingSummary(todaysSpending: Double, thisMonthsSpending: Double) {
-    val czechFormat = NumberFormat.getNumberInstance(java.util.Locale("cs", "CZ"))
-    czechFormat.maximumFractionDigits = 2
-    val todaysLabel = "${czechFormat.format(todaysSpending)} Kč"
-    val monthsLabel = "${czechFormat.format(thisMonthsSpending)} Kč"
+fun SpendingSummary(
+    todaysSpending: Double, 
+    thisMonthsSpending: Double,
+    language: String,
+    currencyFormatter: CurrencyFormatter
+) {
+    val todaysLabel = currencyFormatter.formatCurrency(todaysSpending, language)
+    val monthsLabel = currencyFormatter.formatCurrency(thisMonthsSpending, language)
     val summaryDesc = "Spending summary: Today's $todaysLabel, this month's $monthsLabel"
     val todaysDesc = "Today's spending: $todaysLabel"
     val monthsDesc = "This month's spending: $monthsLabel"
@@ -330,7 +357,9 @@ fun SpendingChart(
     startDate: java.time.LocalDate,
     endDate: java.time.LocalDate,
     navController: NavController,
-    viewModel: DashboardViewModel
+    viewModel: DashboardViewModel,
+    language: String,
+    currencyFormatter: CurrencyFormatter
 ) {
     val context = LocalContext.current
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
@@ -366,8 +395,12 @@ fun SpendingChart(
         modifier = Modifier
             .fillMaxWidth()
             .semantics {
-                val valuesDesc = spendingChartData.joinToString(", ") { "${it.date}: %.2f Kč".format(it.spending) }
-                contentDescription = "Weekly spending chart for last 7 days. $valuesDesc. Average: %.2f Kč".format(spendingChartAverage)
+                val valuesDesc = spendingChartData.joinToString(", ") { 
+                    val formattedValue = currencyFormatter.formatCurrency(it.spending, language)
+                    "${it.date}: $formattedValue"
+                }
+                val formattedAverage = currencyFormatter.formatCurrency(spendingChartAverage, language)
+                contentDescription = "Weekly spending chart for last 7 days. $valuesDesc. Average: $formattedAverage"
                 heading()
             }
     ) {

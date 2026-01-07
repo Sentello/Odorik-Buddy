@@ -62,7 +62,14 @@ fun MainScreen(navController: NavController) {
                             )
                         },
                         label = { Text(label) },
-                        selected = currentDestination?.route == screen.route,
+                        selected = when (screen) {
+                            is BottomNavItem.Settings -> {
+                                currentDestination?.route?.startsWith(BottomNavItem.Settings.route) == true
+                            }
+                            else -> {
+                                currentDestination?.route == screen.route
+                            }
+                        },
                         onClick = {
                             bottomNavController.navigate(screen.route) {
                                 popUpTo(bottomNavController.graph.findStartDestination().id) {
@@ -95,8 +102,8 @@ fun MainScreen(navController: NavController) {
                 composable(SettingsRoutes.SETTINGS_HOME) {
                     SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)
                 }
-                composable(SettingsRoutes.ROUTES_SCREEN) { RoutesScreen() }
-                composable(SettingsRoutes.OWN_NUMBERS_SCREEN) { OwnNumbersScreen() }
+                composable(SettingsRoutes.ROUTES_SCREEN) { RoutesScreen(internalNavController = bottomNavController) }
+                composable(SettingsRoutes.OWN_NUMBERS_SCREEN) { OwnNumbersScreen(internalNavController = bottomNavController) }
                 composable(SettingsRoutes.ROUTING_OPTIONS_SCREEN) {
                     RoutingOptionsScreen(internalNavController = bottomNavController)
                 }

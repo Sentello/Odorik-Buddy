@@ -73,6 +73,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.history.HistoryViewModel.HistoryDisplayItem
+import com.odorik.odorikbuddy.util.CurrencyFormatter
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -88,7 +89,21 @@ fun HistoryScreen(
     val lines by viewModel.lines.collectAsState()
     val selectedLine by viewModel.selectedLine.collectAsState()
     val filterNumber by viewModel.filterNumber.collectAsState()
+    val eventTypeFilter by viewModel.eventTypeFilter.collectAsState()
+    val eventDirectionFilter by viewModel.eventDirectionFilter.collectAsState()
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory() })
+    
+    val context = LocalContext.current
+    
+    
+    val currentLanguage = remember {
+        
+        val locale = context.resources.configuration.locales[0]
+        locale.language 
+    }
+    
+    
+    val currencyFormatter = remember { CurrencyFormatter(context) }
     
     
     var showFilterSheet by remember { mutableStateOf(false) }
@@ -97,8 +112,10 @@ fun HistoryScreen(
     var lineExpanded by remember { mutableStateOf(false) }
     var tempSelectedLine by remember { mutableStateOf(selectedLine) }
     var tempFilterNumber by remember { mutableStateOf(filterNumber) }
-    
-    val context = LocalContext.current
+    var tempEventTypeFilter by remember { mutableStateOf(eventTypeFilter) }
+    var tempEventDirectionFilter by remember { mutableStateOf(eventDirectionFilter) }
+    var eventTypeExpanded by remember { mutableStateOf(false) }
+    var eventDirectionExpanded by remember { mutableStateOf(false) }
     
     
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
@@ -148,19 +165,22 @@ fun HistoryScreen(
                 .pullRefresh(pullRefreshState)
         ) {
             
-            LaunchedEffect(Unit) {
-                viewModel.fetchHistory()
-                viewModel.fetchLines()
+            var filtersApplied by remember { mutableStateOf(false) }
+            
+            LaunchedEffect(filterNumber, selectedLine, filtersApplied) {
+                
+                
+                if (!filtersApplied) {
+                    if (filterNumber.isEmpty() && selectedLine == null) {
+                        filtersApplied = true
+                    } else if (filterNumber.isNotEmpty() || selectedLine != null) {
+                        filterNumber.takeIf { it.isNotEmpty() }?.let { viewModel.setFilterNumber(it) }
+                        selectedLine?.let { viewModel.setSelectedLine(it) }
+                        filtersApplied = true
+                    }
+                }
             }
-            
-            
-            var numberFilter by remember { mutableStateOf(filterNumber) }
-            
-            
-            LaunchedEffect(numberFilter) {
-                viewModel.setFilterNumber(numberFilter)
-            }
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
