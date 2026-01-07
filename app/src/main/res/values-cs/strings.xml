@@ -209,5 +209,24 @@
     <string name="custom_period">Vlastní období</string>
     <string name="spending_for_date">Útrata za %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
+    <string name="sms_options_menu">Více možností</string>
+    <string name="sms_delay_options_title">Naplánovat SMS</string>
+    
+    <!-- App Update and About Strings -->
+    <string name="about_app">O aplikaci</string>
+    <string name="about_app_description">Odorik Buddy je neoficiální aplikace pro služby Odorik.cz.</string>
+    <string name="github_repository">GitHub Repozitář</string>
+    <string name="discussion_forum">Diskuzní fórum</string>
+    <string name="app_update">Aktualizace aplikace</string>
+    <string name="checking_for_updates">Kontrola aktualizací...</string>
+    <string name="error_checking_for_updates">Chyba při kontrole aktualizací</string>
+    <string name="current_version">Současná verze</string>
+    <string name="latest_version">Nejnovější verze</string>
+    <string name="update_available">Je dostupná aktualizace!</string>
+    <string name="up_to_date">Aplikace je aktuální</string>
+    <string name="download_update">Stáhnout aktualizaci</string>
+    <string name="no_update_info">Nejsou k dispozici žádné informace o aktualizaci</string>
+    <string name="close">Zavřít</string>
+    <string name="cannot_open_url">Nelze otevřít URL</string>
 
 </resources>

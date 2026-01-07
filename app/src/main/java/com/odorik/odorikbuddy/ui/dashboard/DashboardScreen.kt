@@ -53,7 +53,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -80,6 +79,12 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.util.CurrencyFormatter
+import com.odorik.odorikbuddy.util.getResponsiveCardPadding
+import com.odorik.odorikbuddy.util.getResponsiveChartHeight
+import com.odorik.odorikbuddy.util.getResponsiveHeadlineLargeSize
+import com.odorik.odorikbuddy.util.getResponsivePadding
+import com.odorik.odorikbuddy.util.getResponsiveSpacing
+import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 import java.text.SimpleDateFormat
 
 
@@ -179,12 +184,6 @@ fun DashboardScreen(
                 .windowInsetsPadding(WindowInsets.systemBars)
                 .pullRefresh(pullRefreshState)
         ) {
-            val configuration = LocalConfiguration.current
-            val horizontalPadding = when {
-                configuration.screenWidthDp < 600 -> 16.dp
-                else -> 24.dp
-            }
-
             val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
 
             if (isInitialLoading) {
@@ -219,7 +218,7 @@ fun DashboardScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = horizontalPadding, vertical = 8.dp),
+                        .padding(getResponsivePadding()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
@@ -231,23 +230,25 @@ fun DashboardScreen(
                                 enter = fadeIn() + slideInVertically(initialOffsetY = { it })
                             ) {
                                 Card(modifier = Modifier.fillMaxWidth()) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
+                                    Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(
                                                 Icons.Default.AccountBalanceWallet,
                                                 contentDescription = "Balance icon",
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(20.dp)
                                             )
-                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
                                             Text(
                                                 text = stringResource(R.string.balance),
-                                                style = MaterialTheme.typography.titleLarge
+                                                fontSize = getResponsiveTitleLargeSize(),
+                                                fontWeight = FontWeight.Bold
                                             )
                                         }
                                         val formattedBalance = currencyFormatter.formatCurrency(balance, currentLanguage)
                                         Text(
                                             text = formattedBalance,
-                                            style = MaterialTheme.typography.headlineMedium,
+                                            fontSize = getResponsiveHeadlineLargeSize(),
+                                            fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.semantics {
                                                 contentDescription = "Current balance: $formattedBalance"
@@ -260,12 +261,12 @@ fun DashboardScreen(
                     }
                     
                     item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(getResponsiveSpacing()))
                         SpendingSummary(todaysSpending, thisMonthsSpending, currentLanguage, currencyFormatter)
                     }
                     
                     item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(getResponsiveSpacing()))
                         SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel, currentLanguage, currencyFormatter)
                     }
                 }
@@ -301,20 +302,21 @@ fun SpendingSummary(
                 heading()
             }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.BarChart,
                     contentDescription = "Spending summary icon",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
                 Text(
                     text = stringResource(R.string.spending_summary),
-                    style = MaterialTheme.typography.titleLarge
+                    fontSize = getResponsiveTitleLargeSize(),
+                    fontWeight = FontWeight.Bold
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(getResponsiveSpacing()/2))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -404,17 +406,18 @@ fun SpendingChart(
                 heading()
             }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Icon(
                     Icons.Default.CalendarToday,
                     contentDescription = "Weekly spending chart icon",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = getResponsiveTitleLargeSize(),
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
                 if (!isDefaultRange) {
@@ -431,11 +434,11 @@ fun SpendingChart(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(getResponsiveSpacing()/2))
             if (spendingChartData.isNotEmpty()) {
                 val maxSpending = spendingChartData.maxOfOrNull { it.spending } ?: 0.0
                 if (maxSpending > 0) {
-                    val chartHeight = (200 + (maxSpending * 5).coerceAtMost(100.0)).dp
+                    val chartHeight = getResponsiveChartHeight(maxSpending)
                     val chartKey = listOf(startDate, endDate, spendingChartData.size)
                     key(chartKey) {
                         AndroidView(
@@ -469,7 +472,7 @@ fun SpendingChart(
                                     color = primaryColor
                                     setGradientColor(primaryColor, primaryContainerColor)
                                     valueTypeface = Typeface.DEFAULT_BOLD
-                                    valueTextSize = 12f
+                                    valueTextSize = 10f  
                                     valueTextColor = primaryColor
                                     valueFormatter = TwoDecimalValueFormatter()
                                     setDrawValues(true)
@@ -486,7 +489,7 @@ fun SpendingChart(
                                 val averageLabel = chart.context.getString(R.string.chart_average)
                                 val lineDataSet = LineDataSet(lineEntries, averageLabel).apply {
                                     color = secondaryColor
-                                    lineWidth = 2f
+                                    lineWidth = 1.5f  
                                     setDrawCircles(false)
                                     setDrawValues(false)
                                     setDrawFilled(false)

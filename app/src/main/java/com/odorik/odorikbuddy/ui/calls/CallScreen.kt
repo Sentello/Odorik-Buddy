@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Contacts
@@ -60,6 +62,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
+import com.odorik.odorikbuddy.util.getResponsiveCardPadding
+import com.odorik.odorikbuddy.util.getResponsivePadding
+import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import kotlinx.coroutines.delay
 
 private fun mapApiArgumentToStringId(apiArgument: String): Int {
@@ -302,7 +308,8 @@ fun CallbackTab(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(getResponsivePadding())
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -317,8 +324,8 @@ fun CallbackTab(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(getResponsiveCardPadding()),
+                verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
             ) {
 
                 
@@ -333,7 +340,10 @@ fun CallbackTab(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.padding(start = 4.dp))
-                            Text(stringResource(R.string.called_number))
+                            Text(
+                                stringResource(R.string.called_number),
+                                fontSize = getResponsiveBodyLargeSize()
+                            )
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -400,6 +410,7 @@ fun CallbackTab(
                     )
                     Text(
                         text = stringResource(R.string.use_line_number_as_caller_id),
+                        fontSize = getResponsiveBodyLargeSize(),
                         modifier = Modifier.clickable { callViewModel.updateUseCallerIdPrefix(!useCallerIdPrefix) }
                     )
                 }

@@ -33,6 +33,8 @@ import com.odorik.odorikbuddy.ui.routes.RoutesScreen
 import com.odorik.odorikbuddy.ui.settings.RoutingOptionsScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
+import com.odorik.odorikbuddy.util.getResponsiveNavigationLabelSize
+import com.odorik.odorikbuddy.util.shouldShowNavigationLabels
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +56,8 @@ fun MainScreen(navController: NavController) {
                 )
                 items.forEach { screen ->
                     val label = stringResource(screen.titleRes)
+                    val showLabels = shouldShowNavigationLabels()
+                    val labelFontSize = getResponsiveNavigationLabelSize()
                     NavigationBarItem(
                         icon = {
                             Icon(
@@ -61,7 +65,15 @@ fun MainScreen(navController: NavController) {
                                 contentDescription = label 
                             )
                         },
-                        label = { Text(label) },
+                        label = if (showLabels) {
+                            {
+                                Text(
+                                    text = label,
+                                    fontSize = labelFontSize,
+                                    maxLines = 1
+                                )
+                            }
+                        } else null,
                         selected = when (screen) {
                             is BottomNavItem.Settings -> {
                                 currentDestination?.route?.startsWith(BottomNavItem.Settings.route) == true

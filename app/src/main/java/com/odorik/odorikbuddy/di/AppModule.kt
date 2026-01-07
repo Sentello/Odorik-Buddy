@@ -7,12 +7,14 @@ import androidx.room.Room
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.odorik.odorikbuddy.BuildConfig
+import com.odorik.odorikbuddy.data.api.UpdateApi
 import com.odorik.odorikbuddy.data.local.HistoryDao
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.OdorikDatabase
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.RoutingRepository
+import com.odorik.odorikbuddy.data.repository.UpdateRepository
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.util.CurrencyFormatter
 import dagger.Module
@@ -47,6 +49,24 @@ object AppModule {
             .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create())) 
             .build()
             .create(OdorikApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateApi(): UpdateApi {
+        val logging = HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        }
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl("https://raw.githubusercontent.com/Sentello/Odorik-Buddy/refs/heads/main/")
+            .client(httpClient)
+            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()))
+            .build()
+            .create(UpdateApi::class.java)
     }
 
     @Provides
@@ -90,6 +110,12 @@ object AppModule {
     @Singleton
     fun provideRoutingRepository(odorikApi: OdorikApi, userRepository: UserRepository): RoutingRepository {
         return RoutingRepository(odorikApi, userRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateRepository(updateApi: UpdateApi): UpdateRepository {
+        return UpdateRepository(updateApi)
     }
 
     @Provides

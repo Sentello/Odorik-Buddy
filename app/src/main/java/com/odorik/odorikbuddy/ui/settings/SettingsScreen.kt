@@ -9,19 +9,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Brightness6
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Route
-import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -45,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -58,16 +65,20 @@ import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
+import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
+import com.odorik.odorikbuddy.util.getResponsiveCardPadding
+import com.odorik.odorikbuddy.util.getResponsiveSpacing
 
 @Composable
 private fun SettingsHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.labelLarge,
+        fontSize = getResponsiveBodyLargeSize(),
+        fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing()/2)
     )
 }
 
@@ -84,13 +95,23 @@ fun SettingsScreen(
     val isDarkMode by viewModel.isDarkMode
     val language by viewModel.language.collectAsState()
     val historyPeriod by viewModel.historyPeriod.collectAsState()
+    val updateViewModel: UpdateViewModel = hiltViewModel()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showHistoryPeriodDialog by remember { mutableStateOf(false) }
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
     val currentPhoneNumber by viewModel.phoneNumber.collectAsState()
 
+    val uriHandler = LocalUriHandler.current
+    
+    
+    val updateInfo by updateViewModel.updateInfo.collectAsState()
+    val isUpdateLoading by updateViewModel.isLoading.collectAsState()
+    val updateError by updateViewModel.error.collectAsState()
+    
     LaunchedEffect(Unit) {
         viewModel.getLines()
     }
@@ -104,7 +125,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(bottom = getResponsiveSpacing())
         ) {
             item { SettingsHeader(stringResource(R.string.section_display)) }
             item {
@@ -156,19 +177,27 @@ fun SettingsScreen(
             item {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.personal_phone_number)) },
-                    supportingContent = { 
+                    supportingContent = {
                         Text(
-                            if (currentPhoneNumber.isNotEmpty()) currentPhoneNumber 
+                            if (currentPhoneNumber.isNotEmpty()) currentPhoneNumber
                             else stringResource(R.string.personal_phone_number_description)
-                        ) 
+                        )
                     },
-                    leadingContent = { Icon(Icons.Default.VpnKey, contentDescription = null) },
+                    leadingContent = { Icon(Icons.Default.Person, contentDescription = null) },
                     trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
                     modifier = Modifier.clickable {
                         
                             Column {
-                                Text("• ${device.userAgent}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                Text("  IP: $ipAddress", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    "• ${device.userAgent}", 
+                                    fontSize = getResponsiveBodyLargeSize(),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    "  IP: $ipAddress", 
+                                    fontSize = getResponsiveBodyLargeSize() * 0.85f, 
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -196,12 +225,18 @@ fun PhoneNumberInputDialog(
             Column {
                 Text(
                     text = stringResource(R.string.personal_phone_number_description),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    fontSize = getResponsiveBodyLargeSize(),
+                    modifier = Modifier.padding(bottom = getResponsiveSpacing())
                 )
                 OutlinedTextField(
                     value = phoneNumberInput,
                     onValueChange = { phoneNumberInput = it },
-                    label = { Text(stringResource(R.string.personal_phone_number)) },
+                    label = { 
+                        Text(
+                            stringResource(R.string.personal_phone_number),
+                            fontSize = getResponsiveBodyLargeSize()
+                        ) 
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -259,8 +294,8 @@ fun LanguageSelectionDialog(
                         )
                         Text(
                             text = display,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 16.dp)
+                            fontSize = getResponsiveBodyLargeSize(),
+                            modifier = Modifier.padding(start = getResponsiveSpacing()/2)
                         )
                     }
                 }
@@ -314,8 +349,8 @@ fun HistoryPeriodSelectionDialog(
                         )
                         Text(
                             text = display,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 16.dp)
+                            fontSize = getResponsiveBodyLargeSize(),
+                            modifier = Modifier.padding(start = getResponsiveSpacing()/2)
                         )
                     }
                 }
@@ -324,6 +359,143 @@ fun HistoryPeriodSelectionDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+fun UpdateInfoDialog(
+    updateInfo: com.odorik.odorikbuddy.model.AppUpdateInfo?,
+    isLoading: Boolean,
+    error: String?,
+    isUpdateAvailable: Boolean,
+    onDismiss: () -> Unit,
+) {
+    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    
+    
+    val cannotOpenUrlString = stringResource(R.string.cannot_open_url)
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.app_update)) },
+        text = {
+            Column {
+                if (isLoading) {
+                    Text(stringResource(R.string.checking_for_updates))
+                } else if (error != null) {
+                    Text("${stringResource(R.string.error_checking_for_updates)}: $error")
+                } else if (updateInfo != null) {
+                    Column {
+                        Text(
+                            "${stringResource(R.string.current_version)}: ${BuildConfig.VERSION_NAME}",
+                            fontSize = getResponsiveBodyLargeSize()
+                        )
+                        Text(
+                            "${stringResource(R.string.latest_version)}: ${updateInfo.version}",
+                            fontSize = getResponsiveBodyLargeSize()
+                        )
+                        
+                        if (isUpdateAvailable) {
+                            Text(
+                                stringResource(R.string.update_available),
+                                fontSize = getResponsiveBodyLargeSize(),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = getResponsiveSpacing()/2)
+                            )
+                            Text(
+                                updateInfo.message,
+                                fontSize = getResponsiveBodyLargeSize(),
+                                modifier = Modifier.padding(top = getResponsiveSpacing()/2)
+                            )
+                        } else {
+                            Text(
+                                stringResource(R.string.up_to_date),
+                                fontSize = getResponsiveBodyLargeSize(),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = getResponsiveSpacing()/2)
+                            )
+                        }
+                    }
+                } else {
+                    Text(stringResource(R.string.no_update_info))
+                }
+            }
+        },
+        confirmButton = {
+            if (updateInfo != null && isUpdateAvailable) {
+                TextButton(
+                    onClick = { 
+                        try {
+                            uriHandler.openUri(updateInfo.downloadUrl)
+                        } catch (e: Exception) {
+                            
+                            android.widget.Toast.makeText(
+                                context, 
+                                cannotOpenUrlString, 
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.download_update))
+                }
+            } else {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        },
+        dismissButton = if (updateInfo != null && isUpdateAvailable) {
+            null
+        } else {
+            {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        }
+    )
+    
+}
+
+@Composable
+fun AboutDialog(
+    onDismiss: () -> Unit,
+    onOpenGitHub: () -> Unit,
+    onOpenForum: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.about_app)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.about_app_description),
+                    fontSize = getResponsiveBodyLargeSize(),
+                    modifier = Modifier.padding(bottom = getResponsiveSpacing()/2)
+                )
+                
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.github_repository)) },
+                    leadingContent = { Icon(Icons.Default.Code, contentDescription = null) },
+                    modifier = Modifier.clickable { onOpenGitHub() }
+                )
+                
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.discussion_forum)) },
+                    leadingContent = { Icon(Icons.Default.Forum, contentDescription = null) },
+                    modifier = Modifier.clickable { onOpenForum() }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.ok))
             }
         }
     )

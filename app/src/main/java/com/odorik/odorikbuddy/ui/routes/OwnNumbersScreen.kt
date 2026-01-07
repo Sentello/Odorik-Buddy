@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,7 +33,6 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,6 +66,9 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
+import com.odorik.odorikbuddy.util.getResponsiveCardPadding
+import com.odorik.odorikbuddy.util.getResponsiveSpacing
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -176,7 +177,7 @@ fun OwnNumbersScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(bottom = getResponsiveSpacing())
             ) {
                 when (val currentState = uiState) {
                     is OwnNumbersViewModel.UiState.Loading -> {
@@ -202,93 +203,85 @@ fun OwnNumbersScreen(
                             
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .animateContentSize()
-                                    .clickable {
-                                        selectedPublicNumber = if (selectedPublicNumber == number.publicNumber) null else number.publicNumber
-                                    }
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        text = publicNumberDisplayName,
+                                        fontSize = getResponsiveBodyLargeSize(),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                },
+                                supportingContent = if (hasRules) {
+                                    {
                                         Text(
-                                            text = publicNumberDisplayName,
-                                            style = MaterialTheme.typography.titleMedium
+                                            text = pluralStringResource(R.plurals.route_rules_count, routesForThisNumber.size, routesForThisNumber.size),
+                                            fontSize = getResponsiveBodyLargeSize() * 0.85f,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
                                         )
-
-                                        if (hasRules) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Info,
-                                                    contentDescription = "Has rules",
-                                                    modifier = Modifier.size(16.dp),
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
-                                                Spacer(Modifier.width(4.dp))
-                                                Text(
-                                                    text = pluralStringResource(R.plurals.route_rules_count, routesForThisNumber.size, routesForThisNumber.size),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                        }
                                     }
+                                } else null,
+                                leadingContent = if (hasRules) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = "Has rules",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                } else null,
+                                modifier = Modifier.clickable {
+                                    selectedPublicNumber = if (selectedPublicNumber == number.publicNumber) null else number.publicNumber
+                                }
+                            )
 
-                                    AnimatedVisibility(visible = selectedPublicNumber == number.publicNumber) {
-                                        Column {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = 48.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                if (isLoading && selectedPublicNumber == number.publicNumber) {
-                                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                                } else {
-                                                    val routes = routesMap[number.publicNumber] ?: emptyList()
-                                                    LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                                                        items(routes) { route ->
-                                                            val sourceName = viewModel.getContactName(route.sourceNumber)
-                                                            val ringingName = viewModel.getContactName(route.ringingNumber)
+                            AnimatedVisibility(visible = selectedPublicNumber == number.publicNumber) {
+                                Column {
+                                    HorizontalDivider()
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 48.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (isLoading && selectedPublicNumber == number.publicNumber) {
+                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                        } else {
+                                            val routes = routesMap[number.publicNumber] ?: emptyList()
+                                            LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                                                items(routes) { route ->
+                                                    val sourceName = viewModel.getContactName(route.sourceNumber)
+                                                    val ringingName = viewModel.getContactName(route.ringingNumber)
 
-                                                            ListItem(
-                                                                headlineContent = { Text(sourceName) },
-                                                                supportingContent = { Text("→ $ringingName") },
-                                                                trailingContent = {
-                                                                    IconButton(onClick = {
-                                                                        viewModel.deleteRoute(number.publicNumber, route.id)
-                                                                    }) {
-                                                                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_rule))
-                                                                    }
-                                                                }
-                                                            )
-                                                            HorizontalDivider()
+                                                    ListItem(
+                                                        headlineContent = { Text(sourceName) },
+                                                        supportingContent = { Text("→ $ringingName") },
+                                                        trailingContent = {
+                                                            IconButton(onClick = {
+                                                                viewModel.deleteRoute(number.publicNumber, route.id)
+                                                            }) {
+                                                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_rule))
+                                                            }
                                                         }
-                                                    }
+                                                    )
+                                                    HorizontalDivider()
                                                 }
                                             }
-                                            Button(
-                                                onClick = {
-                                                    viewModel.resetDialogState()
-                                                    showAddDialog = true
-                                                },
-                                                enabled = !isLoading,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(top = 8.dp)
-                                            ) {
-                                                Icon(Icons.Default.Add, contentDescription = null)
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(stringResource(R.string.add_rule))
-                                            }
                                         }
+                                    }
+                                    Button(
+                                        onClick = {
+                                            viewModel.resetDialogState()
+                                            showAddDialog = true
+                                        },
+                                        enabled = !isLoading,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing()/2)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
+                                        Text(stringResource(R.string.add_rule))
                                     }
                                 }
                             }
@@ -296,7 +289,7 @@ fun OwnNumbersScreen(
                     }
                 }
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(getResponsiveSpacing()))
                 }
             }
             PullRefreshIndicator(isLoading, pullRefreshState, Modifier.align(Alignment.TopCenter))
@@ -310,7 +303,7 @@ fun OwnNumbersScreen(
             },
             title = { Text(stringResource(R.string.add_rule)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/2)) {
                     val dialogSourceNumber by viewModel.dialogSourceNumber.collectAsState()
                     val dialogRingingNumber by viewModel.dialogRingingNumber.collectAsState()
                     val dialogUseCallerIdPrefix by viewModel.dialogUseCallerIdPrefix.collectAsState()
@@ -318,7 +311,12 @@ fun OwnNumbersScreen(
                     OutlinedTextField(
                         value = dialogSourceNumber,
                         onValueChange = viewModel::onSourceNumberChange,
-                        label = { Text(stringResource(R.string.source_number)) },
+                        label = {
+                            Text(
+                                stringResource(R.string.source_number),
+                                fontSize = getResponsiveBodyLargeSize()
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             IconButton(onClick = { pickContactFor("source") }) {
@@ -329,7 +327,12 @@ fun OwnNumbersScreen(
                     OutlinedTextField(
                         value = dialogRingingNumber,
                         onValueChange = viewModel::onRingingNumberChange,
-                        label = { Text(stringResource(R.string.ringing_number)) },
+                        label = {
+                            Text(
+                                stringResource(R.string.ringing_number),
+                                fontSize = getResponsiveBodyLargeSize()
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             IconButton(onClick = { pickContactFor("ringing") }) {
@@ -339,7 +342,10 @@ fun OwnNumbersScreen(
                     )
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = dialogUseCallerIdPrefix, onCheckedChange = viewModel::onUseCallerIdPrefixChange)
-                        Text(stringResource(R.string.use_line_number_as_caller_id))
+                        Text(
+                            stringResource(R.string.use_line_number_as_caller_id),
+                            fontSize = getResponsiveBodyLargeSize()
+                        )
                     }
                 }
             },

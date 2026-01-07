@@ -12,6 +12,7 @@ import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase
+import com.odorik.odorikbuddy.util.SmsDraftHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ class SmsViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val securePreferences: SecurePreferences,
     private val api: OdorikApi,
+    private val smsDraftHelper: SmsDraftHelper,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _allowedSenders = MutableStateFlow<List<String>>(emptyList())
@@ -97,6 +99,7 @@ class SmsViewModel @Inject constructor(
                     _error.value = body
                 } else {
                     _sendResult.value = body  
+                    clearDraft() 
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"
@@ -166,5 +169,17 @@ class SmsViewModel @Inject constructor(
     fun setDateTimeDelayed(newValue: String) {
         _delayed.value = newValue
         validateDelayedInput(newValue)
+    }
+
+    fun loadDraft(): Triple<String, String, String?> {
+        return smsDraftHelper.loadDraft()
+    }
+
+    fun saveDraft(recipient: String, message: String, sender: String?) {
+        smsDraftHelper.saveDraft(recipient, message, sender)
+    }
+
+    fun clearDraft() {
+        smsDraftHelper.clearDraft()
     }
 }

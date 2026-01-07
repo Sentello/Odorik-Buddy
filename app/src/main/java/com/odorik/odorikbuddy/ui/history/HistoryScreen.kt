@@ -74,6 +74,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.history.HistoryViewModel.HistoryDisplayItem
 import com.odorik.odorikbuddy.util.CurrencyFormatter
+import com.odorik.odorikbuddy.util.getResponsiveCardPadding
+import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
