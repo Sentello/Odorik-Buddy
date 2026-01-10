@@ -4,26 +4,34 @@ Odorik Buddy is a modern Android application for interacting with the ODORIK.CZ 
 
 ## Features
 
-*   **Dashboard**: View your account balance, recent calls, and current settings.
-*   **Call Management**: Initiate calls through the ODORIK.CZ API.
-*   **SMS Management**: Send and receive SMS messages.
-*   **Call Forwarding**: Configure your call forwarding settings.
-*   **Billing History**: View your call history and billing information.
-*   **Secure Login**: Securely log in to your ODORIK.CZ account.
-*   **Modern UI**: A beautiful and responsive UI built with Material 3.
-*   **Dark/Light Mode**: The app adapts to your system's theme.
+*   **Dashboard**: View account balance, today's and selected period spending, interactive spending charts with date range picker, and pull-to-refresh functionality.
+*   **Call Management**: Initiate callback and one-shot calls through the ODORIK.CZ API, select lines, configure caller ID prefix, and pick contacts from device.
+*   **SMS Management**: Send SMS with multipart support, character counting, sender selection, delay scheduling (minutes or specific time), and contact picker integration.
+*   **History**: View detailed call and SMS history with advanced filtering (by line, number, event type, direction), contact name resolution, and pull-to-refresh.
+*   **Routing Management**: Configure call forwarding rules for shared and own numbers, with options for source/ringing numbers, caller ID prefix, and contact picker.
+*   **Settings**: Customize dark/light mode, language selection (English/Czech), history period, personal phone number, auto-update checks, direct call launching, and account management.
+*   **Secure Login**: Securely authenticate with ODORIK.CZ API using encrypted storage.
+*   **Modern UI**: Responsive design with Material 3 components, draggable tabs, and adaptive layouts.
+*   **Dark/Light Mode**: Automatic theme adaptation with manual override option.
 
 ## Tech Stack
 
 *   **Kotlin**: The primary programming language.
-*   **Jetpack Compose**: For building the UI.
-*   **Material 3**: For modern UI components.
-*   **MVVM Architecture**: For a clean and maintainable codebase.
-*   **Retrofit**: For making API calls.
-*   **Coroutines & Flow**: For asynchronous operations.
-*   **Hilt**: For dependency injection.
-*   **Room**: For local data storage.
-*   **Jetpack Security**: For secure storage of API keys.
+*   **Jetpack Compose**: For building declarative UI.
+*   **Material 3**: For modern UI components and theming.
+*   **Navigation Compose**: For in-app navigation and routing.
+*   **MVVM Architecture**: For clean separation of concerns and maintainable codebase.
+*   **Retrofit**: For REST API communication with ODORIK.CZ.
+*   **Coroutines & Flow**: For asynchronous operations and reactive data streams.
+*   **Hilt**: For dependency injection and service management.
+*   **Room**: For local SQLite database storage.
+*   **Jetpack Security**: For encrypted storage of sensitive data like API keys.
+*   **WorkManager**: For scheduling background tasks like update checks.
+*   **MPAndroidChart**: For interactive data visualization and charts.
+*   **Lottie**: For vector animations and loading indicators.
+*   **Libphonenumber**: For phone number parsing, formatting, and validation.
+*   **Gson**: For JSON serialization and deserialization.
+*   **Material PullRefresh**: For pull-to-refresh functionality across screens.
 
 ## License
 
