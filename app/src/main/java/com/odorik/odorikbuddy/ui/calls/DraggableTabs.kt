@@ -1,13 +1,20 @@
 package com.odorik.odorikbuddy.ui.calls
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +71,7 @@ fun DraggableTabs(
     var currentTabOrder by remember { mutableStateOf<List<String>>(emptyList()) }
     val isDragging = remember { mutableStateOf(false) }
     val draggingIndex = remember { mutableStateOf(-1) }
+    val initialDraggingIndex = remember { mutableStateOf(-1) }
     val dragOffset = remember { mutableStateOf(0f) }
     
     LaunchedEffect(Unit) {
@@ -103,21 +111,23 @@ fun DraggableTabs(
                                 if (tabIndex in currentTabOrder.indices) {
                                     isDragging.value = true
                                     draggingIndex.value = tabIndex
+                                    initialDraggingIndex.value = tabIndex
                                 }
                             },
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 dragOffset.value += dragAmount.x
                                 
-                                val currentDraggingIndex = draggingIndex.value
-                                if (currentDraggingIndex >= 0) {
+                                val currentDraggingIdx = draggingIndex.value
+                                val initialIdx = initialDraggingIndex.value
+                                if (currentDraggingIdx >= 0 && initialIdx >= 0) {
                                     val tabWidth = size.width / currentTabOrder.size
-                                    val newIndex = ((dragOffset.value + currentDraggingIndex * tabWidth) / tabWidth).roundToInt()
+                                    val newIndex = ((dragOffset.value + initialIdx * tabWidth) / tabWidth).roundToInt()
                                         .coerceIn(0, currentTabOrder.size - 1)
                                     
-                                    if (newIndex != currentDraggingIndex) {
+                                    if (newIndex != currentDraggingIdx) {
                                         val newOrder = currentTabOrder.toMutableList()
-                                        val draggedTitle = newOrder.removeAt(currentDraggingIndex)
+                                        val draggedTitle = newOrder.removeAt(currentDraggingIdx)
                                         newOrder.add(newIndex, draggedTitle)
                                         currentTabOrder = newOrder
                                         draggingIndex.value = newIndex
@@ -127,6 +137,7 @@ fun DraggableTabs(
                             onDragEnd = {
                                 isDragging.value = false
                                 draggingIndex.value = -1
+                                initialDraggingIndex.value = -1
                                 dragOffset.value = 0f
                                 val viewModelOrder = tabItems.map { it.title }
                                 if (currentTabOrder != viewModelOrder) {
@@ -136,6 +147,7 @@ fun DraggableTabs(
                             onDragCancel = {
                                 isDragging.value = false
                                 draggingIndex.value = -1
+                                initialDraggingIndex.value = -1
                                 dragOffset.value = 0f
                                 currentTabOrder = tabItems.map { it.title }
                             }
@@ -159,17 +171,55 @@ fun DraggableTabs(
         }
         
         
-        val selectedItem = tabItems.firstOrNull { it.title == selectedTabTitle }
-        if (selectedItem != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                selectedItem.content()
+        val selectedIndex = currentTabOrder.indexOf(selectedTabTitle)
+        var swipeOffset by remember { mutableStateOf(0f) }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .pointerInput(currentTabOrder, selectedIndex) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { swipeOffset = 0f },
+                        onDragEnd = {
+                            val threshold = 100f 
+                            if (swipeOffset > threshold) {
+                                
+                                if (selectedIndex > 0) {
+                                    onTabSelected(currentTabOrder[selectedIndex - 1])
+                                }
+                            } else if (swipeOffset < -threshold) {
+                                
+                                if (selectedIndex >= 0 && selectedIndex < currentTabOrder.size - 1) {
+                                    onTabSelected(currentTabOrder[selectedIndex + 1])
+                                }
+                            }
+                        },
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            swipeOffset += dragAmount
+                        }
+                    )
+                }
+        ) {
+            AnimatedContent(
+                targetState = selectedTabTitle,
+                transitionSpec = {
+                    val oldIndex = currentTabOrder.indexOf(initialState)
+                    val newIndex = currentTabOrder.indexOf(targetState)
+                    if (newIndex > oldIndex) {
+                        (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> -width } + fadeOut())
+                    } else {
+                        (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> width } + fadeOut())
+                    }
+                },
+                label = "TabContentAnimation"
+            ) { targetTitle ->
+                val item = tabItems.find { it.title == targetTitle }
+                item?.content?.invoke()
             }
-        } else {
-            tabItems.firstOrNull()?.content?.invoke()
         }
     }
 }

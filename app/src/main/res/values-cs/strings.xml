@@ -8,9 +8,9 @@
     <string name="balance">Zůstatek</string>
     <string name="loading">Načítání...</string>
     <string name="error">Chyba: %s</string>
-    <string name="caller_id">Volající</string>
+    <string name="caller_id">Volající (odkud)</string>
     <string name="recipient">Příjemce</string>
-    <string name="called_number">Volaný</string>
+    <string name="called_number">Volaný (kam)</string>
     <string name="line">Linka</string>
     <string name="select_line">Vybrat linku</string>
     <string name="call">Volat</string>
@@ -68,7 +68,7 @@
     <string name="history">Historie</string>
     <string name="history_title">Historie volání a SMS</string>
     <string name="number_coppied">Zkopírováno %s do schránky</string>
-    <string name="callback_title">Zpětné volání</string>
+    <string name="callback_title">Zpětné</string>
     <string name="call_history_title">Historie hovorů</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Přehled útraty</string>
@@ -149,7 +149,7 @@
     <string name="section_personal">Osobní</string>
     <string name="personal_phone_number">Telefonní číslo</string>
     <string name="personal_phone_number_description">Zadejte své telefonní číslo v mezinárodním formátu (např. 00420601123123 nebo +420601123123)</string>
-    <string name="oneshot_call">Přesměrované volání</string>
+    <string name="oneshot_call">Přesměrované</string>
     <string name="shared_number">Sdílená telefonní čísla</string>
     <string name="add_rule">Přidat pravidlo</string>
     <string name="delete_rule">Smazat pravidlo</string>
@@ -197,6 +197,13 @@
     <string name="clear_filters">Zrušit filtry</string>
     <!-- Error Messages -->
     <string name="error_loading_shared_numbers">Selhání načítání sdílených čísel</string>
+    <string name="error_loading_own_numbers">Selhání načítání vlastních čísel</string>
+    <plurals name="error_retry_failed">
+        <item quantity="one">Selhalo po %d pokusu</item>
+        <item quantity="few">Selhalo po %d pokusech</item>
+        <item quantity="many">Selhalo po %d pokusech</item>
+        <item quantity="other">Selhalo po %d pokusech</item>
+    </plurals>
     <string name="error_loading_routes_for_numbers">Selhání načítání detailů rout</string>
     <string name="error_creating_route">Selhání vytvoření routy</string>
     <string name="error_deleting_route">Selhání smazání routy</string>
@@ -227,6 +234,8 @@
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
     <string name="sms_options_menu">Více možností</string>
     <string name="sms_delay_options_title">Naplánovat SMS</string>
+
+    <string name="donate_button">Podpoř projekt kafem</string>
     
     <!-- App Update and About Strings -->
     <string name="about_app">O aplikaci</string>
@@ -253,4 +262,52 @@
     <string name="update_notifications">Oznámení o aktualizacích</string>
     <string name="update_notifications_description">Oznámení o aktualizacích aplikace</string>
 
+    <string name="tiles_title">Oblíbené</string>
+    <string name="add_tile">Přidat dlaždici</string>
+    <string name="edit_tile">Upravit dlaždici</string>
+    <string name="delete_tile_confirmation">Opravdu chcete smazat tuto dlaždici?</string>
+    <string name="call_type">Typ hovoru</string>
+    <string name="call_type_callback">Zpětné volání</string>
+    <string name="call_type_oneshot">Přesměrované volání</string>
+    <string name="label_optional">Popisek</string>
+    <string name="number">Číslo</string>
+    <string name="default_line">Výchozí linka</string>
+    <string name="caller_id_optional">ID volajícího</string>
+    <string name="color">Barva</string>
+    <string name="text_color">Barva textu</string>
+    <string name="save">Uložit</string>
+    <string name="default_selection">Výchozí</string>
+    <string name="error_fill_required_fields">Prosím vyplňte všechna povinná pole.</string>
+    <string name="no_tiles_yet">Žádné dlaždice</string>
+    <string name="add_tiles_description">Přidejte si dlaždice pro rychlé vytáčení kontaktů</string>
+    <string name="widget_style">Styl widgetu</string>
+    <string name="style_square">Čtverec (Klasický)</string>
+    <string name="style_circle">Kruh (Avatar)</string>
+
+    <!-- Widget Strings -->
+    <string name="callback_error_no_caller_id">Chyba: Není nastaveno ID volajícího.</string>
+    <string name="callback_success_notification">Zpětné volání objednáno pro %s</string>
+    <string name="callback_failed_notification">Zpětné volání selhalo pro %s</string>
+    <string name="widget_call_connecting">Spojování...</string>
+    <string name="widget_config_title">Vybrat dlaždici</string>
+    <string name="widget_config_instruction">Vyberte dlaždici pro zobrazení na tomto widgetu.</string>
+
+    <!-- Balance Widget -->
+    <string name="balance_widget_name">Zůstatek</string>
+    <string name="balance_widget_description">Zobrazuje váš aktuální kredit. Klepnutím aktualizujete.</string>
+    <string name="widget_config_background">Pozadí</string>
+    <string name="widget_config_transparent">Průhledné</string>
+    <string name="widget_config_translucent">Poloprůhledné</string>
+    <string name="widget_config_system">Systémové</string>
+    <string name="widget_config_dark">Tmavé</string>
+    <string name="widget_config_light">Světlé</string>
+    <string name="widget_config_appearance">Vzhled</string>
+    <string name="widget_config_auto">Automaticky</string>
+    <string name="widget_config_white">Bílá</string>
+    <string name="widget_config_black">Černá</string>
+    <string name="widget_config_text_size">Velikost textu</string>
+    <string name="widget_config_normal">Normální</string>
+    <string name="widget_config_large">Velká</string>
+    <string name="widget_config_extra_large">Extra velká</string>
+    <string name="widget_preview">Náhled</string>
 </resources>

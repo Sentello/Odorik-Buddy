@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Update
@@ -628,7 +629,8 @@ fun SettingsScreen(
         AboutDialog(
             onDismiss = { showAboutDialog = false },
             onOpenGitHub = { uriHandler.openUri("https://github.com/Sentello/Odorik-Buddy") },
-            onOpenForum = { uriHandler.openUri("https://forum.odorik.cz/viewtopic.php?t=6042") }
+            onOpenForum = { uriHandler.openUri("https://forum.odorik.cz/viewtopic.php?t=6042") },
+            onSupport = { uriHandler.openUri("https://buymeacoffee.com/sentello") }
         )
     }
 }
@@ -954,7 +956,8 @@ fun UpdateInfoDialog(
 fun AboutDialog(
     onDismiss: () -> Unit,
     onOpenGitHub: () -> Unit,
-    onOpenForum: () -> Unit
+    onOpenForum: () -> Unit,
+    onSupport: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -977,6 +980,12 @@ fun AboutDialog(
                     headlineContent = { Text(stringResource(R.string.discussion_forum)) },
                     leadingContent = { Icon(Icons.Default.Forum, contentDescription = null) },
                     modifier = Modifier.clickable { onOpenForum() }
+                )
+
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.donate_button)) },
+                    leadingContent = { Icon(Icons.Default.LocalCafe, contentDescription = null) },
+                    modifier = Modifier.clickable { onSupport() }
                 )
             }
         },

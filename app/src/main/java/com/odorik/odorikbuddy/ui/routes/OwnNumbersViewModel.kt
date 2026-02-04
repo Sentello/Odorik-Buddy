@@ -1,19 +1,23 @@
 package com.odorik.odorikbuddy.ui.routes
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.DeleteRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetPublicNumbersUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetRoutesForNumberUseCase
 import com.odorik.odorikbuddy.model.PublicNumber
 import com.odorik.odorikbuddy.model.Route
+import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -28,13 +32,15 @@ class OwnNumbersViewModel @Inject constructor(
     private val getPublicNumbersUseCase: GetPublicNumbersUseCase,
     private val getRoutesForNumberUseCase: GetRoutesForNumberUseCase,
     private val createRouteUseCase: CreateRouteUseCase,
-    private val deleteRouteUseCase: DeleteRouteUseCase
+    private val deleteRouteUseCase: DeleteRouteUseCase,
+    private val localeManager: LocaleManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     sealed class UiState<out T> {
         object Loading : UiState<Nothing>()
         data class Success<T>(val data: T) : UiState<T>()
-        data class Error(val messageResId: Int) : UiState<Nothing>()
+        data class Error(val message: String) : UiState<Nothing>()
     }
 
     private val _uiState = MutableStateFlow<UiState<List<PublicNumber>>>(UiState.Loading)
@@ -50,8 +56,8 @@ class OwnNumbersViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _error = MutableStateFlow<Int?>(null)
-    val error: StateFlow<Int?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     private val _dialogSourceNumber = MutableStateFlow("")
     val dialogSourceNumber: StateFlow<String> = _dialogSourceNumber.asStateFlow()
@@ -105,13 +111,17 @@ class OwnNumbersViewModel @Inject constructor(
                     _uiState.value = UiState.Success(numbers)
 
                 } catch (e: Exception) {
-                    _uiState.value = UiState.Error(R.string.error_loading_routes_for_numbers)
-                    _error.value = R.string.error_loading_routes_for_numbers
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    val errorMessage = ErrorMessageUtil.standardizeError(e.message, localizedContext)
+                    _uiState.value = UiState.Error(errorMessage)
+                    _error.value = errorMessage
                 }
 
-            }.onFailure { _ ->
-                _uiState.value = UiState.Error(R.string.error_loading_shared_numbers)
-                _error.value = R.string.error_loading_shared_numbers
+            }.onFailure { e ->
+                val localizedContext = localeManager.createLocaleContext(context)
+                val errorMessage = ErrorMessageUtil.standardizeError(e.message, localizedContext)
+                _uiState.value = UiState.Error(errorMessage)
+                _error.value = errorMessage
             }
             _isLoading.value = false
         }
@@ -123,8 +133,9 @@ class OwnNumbersViewModel @Inject constructor(
             val result = getRoutesForNumberUseCase.execute(publicNumber)
             result.onSuccess { routes ->
                 _routesMap.value = _routesMap.value + (publicNumber to routes)
-            }.onFailure { _ ->
-                _error.value = R.string.error_loading_routes_for_numbers
+            }.onFailure { e ->
+                val localizedContext = localeManager.createLocaleContext(context)
+                _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
             }
             _isLoading.value = false
         }
@@ -145,8 +156,9 @@ class OwnNumbersViewModel @Inject constructor(
                 .onSuccess {
                     refreshRoutesForNumber(publicNumber)
                 }
-                .onFailure { _ ->
-                    _error.value = R.string.error_creating_route
+                .onFailure { e ->
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
                 }
             _isLoading.value = false
         }
@@ -161,8 +173,9 @@ class OwnNumbersViewModel @Inject constructor(
                 .onSuccess {
                     refreshRoutesForNumber(publicNumber)
                 }
-                .onFailure { _ ->
-                    _error.value = R.string.error_deleting_route
+                .onFailure { e ->
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
                 }
             _isLoading.value = false
         }
@@ -282,6 +295,6 @@ class OwnNumbersViewModel @Inject constructor(
                 currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
             }
         }
-        return Result.failure(Exception("Failed after $times attempts"))
+        return Result.failure(Exception(context.resources.getQuantityString(R.plurals.error_retry_failed, times, times)))
     }
 }

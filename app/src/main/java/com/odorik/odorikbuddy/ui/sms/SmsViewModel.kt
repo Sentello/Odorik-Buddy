@@ -74,6 +74,7 @@ class SmsViewModel @Inject constructor(
                 } else {
                     val allNumbers = body?.split(",") ?: emptyList()
                     _allowedSenders.value = filterAllowedSenders(allNumbers)
+                    _error.value = null 
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"

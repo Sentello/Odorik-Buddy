@@ -241,31 +241,30 @@ fun OwnNumbersScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(bottom = getResponsiveSpacing())
-            ) {
-                when (val currentState = uiState) {
-                    is OwnNumbersViewModel.UiState.Loading -> {
-                        item {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .pullRefresh(pullRefreshState)
+        ) {
+            when (val currentState = uiState) {
+                is OwnNumbersViewModel.UiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = SettingsAccent)
                     }
-                    is OwnNumbersViewModel.UiState.Error -> {
-                        item {
-                            Text(
-                                text = stringResource(id = currentState.messageResId),
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                    is OwnNumbersViewModel.UiState.Success -> {
+                }
+                is OwnNumbersViewModel.UiState.Error -> {
+                    RoutesErrorState(
+                        title = stringResource(R.string.error_loading_own_numbers),
+                        error = currentState.message,
+                        onRetry = { viewModel.loadData(isRefresh = true, contentResolver = context.contentResolver) }
+                    )
+                }
+                is OwnNumbersViewModel.UiState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = getResponsiveSpacing())
+                    ) {
                         items(currentState.data) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
@@ -395,13 +394,19 @@ fun OwnNumbersScreen(
                                 }
                             }
                         }
+                        item {
+                            Spacer(modifier = Modifier.height(getResponsiveSpacing()))
+                        }
                     }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(getResponsiveSpacing()))
-                }
             }
-            PullRefreshIndicator(isLoading && uiState !is OwnNumbersViewModel.UiState.Loading, pullRefreshState, Modifier.align(Alignment.TopCenter))
+            
+            PullRefreshIndicator(
+                refreshing = isLoading && uiState !is OwnNumbersViewModel.UiState.Loading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                contentColor = SettingsAccent
+            )
         }
     }
 
@@ -511,8 +516,9 @@ fun OwnNumbersScreen(
     }
 
     LaunchedEffect(error) {
-        error?.let { messageResId ->
-            snackbarHostState.showSnackbar(context.getString(messageResId))
+        
+        if (uiState !is OwnNumbersViewModel.UiState.Error && error != null) {
+            snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
         }
     }

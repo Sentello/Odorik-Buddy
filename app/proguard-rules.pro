@@ -49,7 +49,7 @@
 
 #----------------- Jetpack Compose -----------------
 # Jetpack Compose Basic Rules
--keepclasseswithmembers class androidx.compose.** { *; }
+# -keepclasseswithmembers class androidx.compose.** { *; }
 -keepclassmembers class * { @androidx.compose.runtime.Composable *; }
 
 #----------------- App Specific Rules -----------------
@@ -57,6 +57,31 @@
 -keep class com.odorik.odorikbuddy.data.local.SecurePreferences { *; }
 -keep class com.odorik.odorikbuddy.data.repository.UserRepository { *; }
 -keep class com.odorik.odorikbuddy.domain.usecase.** { *; }
+
+# WorkManager
+-keep class * extends androidx.work.ListenableWorker {
+    public <init>(...);
+}
+-keep class androidx.work.** { *; }
+-keep class androidx.startup.** { *; }
+
+# Models - Keep them fully to avoid serialization issues
+-keep class com.odorik.odorikbuddy.data.model.** { *; }
+-keep class com.odorik.odorikbuddy.model.** { *; }
+
+# Keep UpdateWorkManager and its worker
+-keep class com.odorik.odorikbuddy.worker.** { *; }
+
+# Room
+-keep class * extends androidx.room.RoomDatabase
+-keep class * implements androidx.room.RoomDatabase
+-keep class com.odorik.odorikbuddy.data.local.OdorikDatabase { *; }
+-keep class com.odorik.odorikbuddy.data.local.**Dao { *; }
+-dontwarn androidx.room.paging.**
+
+# Retrofit APIs - Keep interfaces explicitly
+-keep interface com.odorik.odorikbuddy.data.api.** { *; }
+-keep interface com.odorik.odorikbuddy.data.remote.** { *; }
 
 # Optional: Ignore warnings for dependencies
 -dontwarn org.codehaus.mojo.animal_sniffer.*

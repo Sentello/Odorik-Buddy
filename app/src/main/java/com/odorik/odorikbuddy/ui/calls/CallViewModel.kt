@@ -97,9 +97,17 @@ class CallViewModel @Inject constructor(
 
     private fun getTabOrder(): List<String> {
         val savedOrder = securePreferences.getString("calls_tab_order", null)
-        return savedOrder?.split(",")?.filter { it.isNotBlank() } ?: listOf(
-            "callback_title", "oneshot_call"
-        )
+        val defaultOrder = listOf("callback_title", "oneshot_call", "tiles_title")
+        
+        if (savedOrder == null) return defaultOrder
+        
+        val currentList = savedOrder.split(",").filter { it.isNotBlank() }.toMutableList()
+        
+        if (!currentList.contains("tiles_title")) {
+            currentList.add("tiles_title")
+        }
+        
+        return currentList
     }
 
     fun updateTabOrder(newOrder: List<String>) {
@@ -172,6 +180,9 @@ class CallViewModel @Inject constructor(
             val result = getLinesUseCase.execute()
             result.onSuccess {
                 _lines.value = it
+                _error.value = null 
+                _oneShotCallError.value = null
+                _callResult.value = ""
                 if (_selectedLine.value == null && it.isNotEmpty()) {
                     _selectedLine.value = it.first().id
                 }
@@ -191,7 +202,8 @@ class CallViewModel @Inject constructor(
                 _callResult.value = it
                 getCallList()
             }.onFailure {
-                _callResult.value = it.message ?: ""
+                val localizedContext = localeManager.createLocaleContext(context)
+                _error.value = ErrorMessageUtil.standardizeError(it.message, localizedContext)
             }
         }
     }

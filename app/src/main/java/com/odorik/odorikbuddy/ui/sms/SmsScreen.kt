@@ -112,6 +112,7 @@ import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveMaxLines
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -265,7 +266,10 @@ private fun CircularCharacterCounter(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(56.dp)
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = segments > 1,
+                onClick = onClick
+            )
             .semantics {
                 contentDescription = "$charCount characters, ${if (segments > 1) "$segments messages" else "1 message"}"
             }
@@ -456,6 +460,15 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         message = draftMessage
         selectedSender = draftSender
         contentVisible = true
+    }
+
+    LaunchedEffect(error) {
+        if (!error.isNullOrEmpty()) {
+            while (true) {
+                delay(5000)
+                viewModel.fetchAllowedSenders()
+            }
+        }
     }
 
     LaunchedEffect(allowedSenders) {

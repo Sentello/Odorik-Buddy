@@ -4,15 +4,17 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.model.HistoryItem
 
 @Database(
-    entities = [HistoryItem::class],
-    version = 4,
+    entities = [HistoryItem::class, TileEntity::class],
+    version = 7,
     exportSchema = false
 )
 abstract class OdorikDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
+    abstract fun tileDao(): TileDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -33,6 +35,36 @@ abstract class OdorikDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE history ADD COLUMN price_per_minute REAL")
                 db.execSQL("ALTER TABLE history ADD COLUMN recording TEXT")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `tiles` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `position` INTEGER NOT NULL, 
+                        `label` TEXT NOT NULL, 
+                        `recipient` TEXT NOT NULL, 
+                        `callType` TEXT NOT NULL, 
+                        `lineId` TEXT, 
+                        `callerId` TEXT, 
+                        `useLineAsCallerId` INTEGER NOT NULL, 
+                        `color` INTEGER
+                    )
+                """.trimIndent())
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tiles ADD COLUMN textColor INTEGER")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tiles ADD COLUMN widgetStyle TEXT NOT NULL DEFAULT 'SQUARE'")
             }
         }
     }

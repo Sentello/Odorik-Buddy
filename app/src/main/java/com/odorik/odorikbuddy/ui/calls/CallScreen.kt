@@ -95,7 +95,8 @@ import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 import kotlinx.coroutines.delay
 
-private fun mapApiArgumentToStringId(apiArgument: String): Int {
+
+fun mapApiArgumentToStringId(apiArgument: String): Int {
     return when (apiArgument) {
         "caller" -> R.string.argument_caller
         "recipient" -> R.string.argument_recipient
@@ -105,7 +106,7 @@ private fun mapApiArgumentToStringId(apiArgument: String): Int {
 }
 
 @Composable
-private fun CallApiMessage(response: String, visible: Boolean) {
+fun CallApiMessage(response: String, visible: Boolean) {
     val isError = response.startsWith("error")
     val message = when {
         response == "callback_ordered" -> stringResource(R.string.call_callback_ordered)
@@ -187,7 +188,7 @@ private fun CallApiMessage(response: String, visible: Boolean) {
 }
 
 @Composable
-private fun ErrorMessage(errorText: String, visible: Boolean) {
+fun ErrorMessage(errorText: String, visible: Boolean) {
     AnimatedVisibility(
         visible = visible && errorText.isNotEmpty(),
         enter = slideInVertically(
@@ -316,6 +317,16 @@ fun CallScreen(
 ) {
     val selectedTab by viewModel.selectedTab.collectAsState()
     val tabOrder by viewModel.tabOrder.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    LaunchedEffect(error) {
+        if (!error.isNullOrEmpty()) {
+            while (true) {
+                delay(5000)
+                viewModel.getLines()
+            }
+        }
+    }
     
     val tabItems = remember(tabOrder) {
         tabOrder.map { title ->
@@ -329,6 +340,11 @@ fun CallScreen(
                     titleResId = R.string.oneshot_call,
                     title = "oneshot_call",
                     content = { OneShotCallTab(viewModel) }
+                )
+                "tiles_title" -> TabItem(
+                    titleResId = R.string.tiles_title,
+                    title = "tiles_title",
+                    content = { TilesTab(viewModel) }
                 )
                 else -> TabItem(
                     titleResId = R.string.callback_title,
@@ -772,6 +788,7 @@ fun OneShotCallTab(
     val selectedLine by callViewModel.selectedLine.collectAsState()
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
+    val error by callViewModel.error.collectAsState()
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
@@ -849,6 +866,9 @@ fun OneShotCallTab(
                     Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
                 
+                
+                kotlinx.coroutines.delay(1200L)
+
                 val intent = if (directCallsEnabled && hasCallPermission) {
                     Intent(Intent.ACTION_CALL, Uri.parse("tel:$oneShotCallResult"))
                 } else {
@@ -1102,9 +1122,16 @@ fun OneShotCallTab(
                     }
                 }
                 
-                if (oneShotCallError?.isNotEmpty() == true && !isOneShotCallLoading) {
+                
+                val activeError = if (!oneShotCallError.isNullOrEmpty()) {
+                    oneShotCallError
+                } else {
+                    error
+                }
+                
+                if (!activeError.isNullOrEmpty() && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    ErrorMessage(errorText = oneShotCallError ?: "", visible = true)
+                    ErrorMessage(errorText = activeError, visible = true)
                 }
             }
         }
@@ -1152,4 +1179,12 @@ fun OneShotCallTab(
             }
         )
     }
+}
+@Composable
+fun TilesTab(
+    viewModel: CallViewModel
+) {
+    TilesScreen(
+        callViewModel = viewModel
+    )
 }

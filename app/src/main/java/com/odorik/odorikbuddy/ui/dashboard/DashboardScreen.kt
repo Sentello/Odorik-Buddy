@@ -39,6 +39,7 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -100,6 +101,7 @@ import com.odorik.odorikbuddy.util.getResponsiveHeadlineLargeSize
 import com.odorik.odorikbuddy.util.getResponsivePadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -135,6 +137,8 @@ fun DashboardScreen(
     val error by viewModel.error.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
+    
+    val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
 
     
     val context = LocalContext.current
@@ -149,6 +153,18 @@ fun DashboardScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadData(true)
+    }
+    
+    
+    LaunchedEffect(isCriticalError) {
+        if (isCriticalError) {
+            while (true) {
+                delay(5000) 
+                if (isCriticalError) {
+                    viewModel.refresh()
+                }
+            }
+        }
     }
 
     
@@ -177,9 +193,10 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(error) {
-        error?.let {
+        
+        if (!isCriticalError && error != null) {
             snackbarHostState.showSnackbar(
-                message = it,
+                message = error!!,
                 actionLabel = "Dismiss"
             )
             viewModel.clearError()
@@ -203,45 +220,15 @@ fun DashboardScreen(
                 .windowInsetsPadding(WindowInsets.systemBars)
                 .pullRefresh(pullRefreshState)
         ) {
-            val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
-
             if (isInitialLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = DashboardAccent)
                 }
             } else if (isCriticalError) {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Default.Warning,
-                        contentDescription = "Error icon",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.error_loading_dashboard),
-                        style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = (creditState as DashboardViewModel.UiState.Error).message,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(
-                        onClick = { viewModel.loadData(true) },
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = DashboardAccent)
-                    ) {
-                        Text(stringResource(R.string.retry))
-                    }
-                }
+                DashboardErrorState(
+                    error = (creditState as DashboardViewModel.UiState.Error).message,
+                    onRetry = { viewModel.loadData(true) }
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier
@@ -683,6 +670,60 @@ private fun GradientHeader(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
+        }
+    }
+}
+
+@Composable
+fun DashboardErrorState(
+    error: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ElevatedCard(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.error_loading_dashboard),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = DashboardAccent)
+        ) {
+            Text(stringResource(R.string.retry))
         }
     }
 }

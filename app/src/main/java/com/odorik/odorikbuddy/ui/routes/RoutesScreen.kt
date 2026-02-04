@@ -68,6 +68,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -251,31 +252,30 @@ fun RoutesScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(bottom = getResponsiveSpacing())
-            ) {
-                when (val currentState = uiState) {
-                    is RoutesViewModel.UiState.Loading -> {
-                        item {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .pullRefresh(pullRefreshState)
+        ) {
+            when (val currentState = uiState) {
+                is RoutesViewModel.UiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = SettingsAccent)
                     }
-                    is RoutesViewModel.UiState.Error -> {
-                        item {
-                            Text(
-                                text = stringResource(id = currentState.messageResId),
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                    is RoutesViewModel.UiState.Success -> {
+                }
+                is RoutesViewModel.UiState.Error -> {
+                    RoutesErrorState(
+                        title = stringResource(R.string.error_loading_shared_numbers),
+                        error = currentState.message,
+                        onRetry = { viewModel.loadData(isRefresh = true, contentResolver = context.contentResolver) }
+                    )
+                }
+                is RoutesViewModel.UiState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = getResponsiveSpacing())
+                    ) {
                         items(currentState.data) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
@@ -407,13 +407,29 @@ fun RoutesScreen(
                                 }
                             }
                         }
+                        item {
+                            Spacer(modifier = Modifier.height(getResponsiveSpacing()))
+                        }
                     }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(getResponsiveSpacing()))
-                }
             }
-            PullRefreshIndicator(isLoading && uiState !is RoutesViewModel.UiState.Loading, pullRefreshState, Modifier.align(Alignment.TopCenter))
+            
+            PullRefreshIndicator(
+                refreshing = isLoading && uiState !is RoutesViewModel.UiState.Loading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                contentColor = SettingsAccent
+            )
+        }
+    }
+
+    
+
+    LaunchedEffect(error) {
+        
+        if (uiState !is RoutesViewModel.UiState.Error && error != null) {
+            snackbarHostState.showSnackbar(error!!)
+            viewModel.clearError()
         }
     }
 
@@ -533,11 +549,59 @@ fun RoutesScreen(
             }
         )
     }
+}
 
-    LaunchedEffect(error) {
-        error?.let { messageResId ->
-            snackbarHostState.showSnackbar(context.getString(messageResId))
-            viewModel.clearError()
+@Composable
+fun RoutesErrorState(
+    title: String,
+    error: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ElevatedCard(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onRetry,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = SettingsAccent)
+        ) {
+            Text(stringResource(R.string.retry))
         }
     }
 }

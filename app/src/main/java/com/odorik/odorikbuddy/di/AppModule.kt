@@ -103,12 +103,18 @@ object AppModule {
         ).addMigrations(
             OdorikDatabase.MIGRATION_1_2,
             OdorikDatabase.MIGRATION_2_3,
-            OdorikDatabase.MIGRATION_3_4
+            OdorikDatabase.MIGRATION_3_4,
+            OdorikDatabase.MIGRATION_4_5,
+            OdorikDatabase.MIGRATION_5_6,
+            OdorikDatabase.MIGRATION_6_7
         ).build()
     }
 
     @Provides
     fun provideHistoryDao(db: OdorikDatabase): HistoryDao = db.historyDao()
+
+    @Provides
+    fun provideTileDao(db: OdorikDatabase): com.odorik.odorikbuddy.data.local.TileDao = db.tileDao()
 
     @Provides
     @Singleton

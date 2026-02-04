@@ -16,13 +16,14 @@ android {
         applicationId = "com.odorik.odorikbuddy"
         minSdk = 24
         targetSdk = 34
-                versionCode = 2
-        versionName = "1.2.1"
+        versionCode = 6
+        versionName = "1.2.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+        resourceConfigurations.addAll(listOf("en", "cs"))
     }
 
     signingConfigs {
@@ -44,6 +45,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true // You can set to true later for obfuscation
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -94,14 +96,13 @@ dependencies {
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
-    kapt("com.google.dagger:hilt-compiler:2.50")
+    kapt("com.google.dagger:hilt-android-compiler:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -140,8 +141,10 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.1.0")
+    kapt("androidx.hilt:hilt-compiler:1.1.0")
 
-    // Gson
-    implementation("com.google.code.gson:gson:2.10.1")
+    // Glance
+    implementation("androidx.glance:glance-appwidget:1.0.0")
+    implementation("androidx.glance:glance-material3:1.0.0")
 }
 
