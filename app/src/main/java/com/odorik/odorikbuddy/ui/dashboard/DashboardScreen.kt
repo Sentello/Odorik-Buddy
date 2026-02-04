@@ -2,8 +2,12 @@ package com.odorik.odorikbuddy.ui.dashboard
 
 import android.graphics.Typeface
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,16 +19,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
@@ -32,8 +39,9 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,16 +50,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -78,6 +91,8 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.theme.DashboardAccent
+import com.odorik.odorikbuddy.ui.theme.DashboardAccentLight
 import com.odorik.odorikbuddy.util.CurrencyFormatter
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveChartHeight
@@ -173,12 +188,13 @@ fun DashboardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.dashboard)) },
-                windowInsets = WindowInsets.statusBars
+            GradientHeader(
+                title = stringResource(R.string.dashboard),
+                icon = Icons.Default.Dashboard
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -191,7 +207,7 @@ fun DashboardScreen(
 
             if (isInitialLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = DashboardAccent)
                 }
             } else if (isCriticalError) {
                 Column(
@@ -219,7 +235,10 @@ fun DashboardScreen(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                     Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = { viewModel.loadData(true) }) {
+                    Button(
+                        onClick = { viewModel.loadData(true) },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = DashboardAccent)
+                    ) {
                         Text(stringResource(R.string.retry))
                     }
                 }
@@ -236,29 +255,43 @@ fun DashboardScreen(
                             val balance = currentCreditState.data
                             AnimatedVisibility(
                                 visible = true,
-                                enter = fadeIn() + slideInVertically(initialOffsetY = { it })
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
                             ) {
-                                Card(modifier = Modifier.fillMaxWidth()) {
+                                ElevatedCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                                ) {
                                     Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Default.AccountBalanceWallet,
-                                                contentDescription = "Balance icon",
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(32.dp)
+                                                    .clip(CircleShape)
+                                                    .background(DashboardAccent.copy(alpha = 0.1f)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.AccountBalanceWallet,
+                                                    contentDescription = "Balance icon",
+                                                    tint = DashboardAccent,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(getResponsiveSpacing()))
                                             Text(
                                                 text = stringResource(R.string.balance),
                                                 fontSize = getResponsiveTitleLargeSize(),
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }
+                                        Spacer(modifier = Modifier.height(getResponsiveSpacing() / 2))
                                         val formattedBalance = currencyFormatter.formatCurrency(balance, currentLanguage)
                                         Text(
                                             text = formattedBalance,
                                             fontSize = getResponsiveHeadlineLargeSize(),
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = DashboardAccent,
                                             modifier = Modifier.semantics {
                                                 contentDescription = "Current balance: $formattedBalance"
                                             }
@@ -277,6 +310,7 @@ fun DashboardScreen(
                     item {
                         Spacer(modifier = Modifier.height(getResponsiveSpacing()))
                         SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel, currentLanguage, currencyFormatter)
+                        Spacer(modifier = Modifier.height(getResponsiveSpacing() * 2))
                     }
                 }
             }
@@ -284,7 +318,8 @@ fun DashboardScreen(
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = Modifier.align(Alignment.TopCenter),
+                contentColor = DashboardAccent
             )
         }
     }
@@ -303,29 +338,40 @@ fun SpendingSummary(
     val todaysDesc = "Today's spending: $todaysLabel"
     val periodDesc = "Spending for selected period: $periodLabel"
 
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .semantics {
                 contentDescription = summaryDesc
                 heading()
-            }
+            },
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.BarChart,
-                    contentDescription = "Spending summary icon",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(DashboardAccent.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.BarChart,
+                        contentDescription = "Spending summary icon",
+                        tint = DashboardAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(getResponsiveSpacing()))
                 Text(
                     text = stringResource(R.string.spending_summary),
                     fontSize = getResponsiveTitleLargeSize(),
                     fontWeight = FontWeight.Bold
                 )
             }
-            Spacer(modifier = Modifier.height(getResponsiveSpacing()/2))
+            Spacer(modifier = Modifier.height(getResponsiveSpacing()))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -338,10 +384,10 @@ fun SpendingSummary(
                 Text(
                     text = todaysLabel,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -354,7 +400,7 @@ fun SpendingSummary(
                 Text(
                     text = periodLabel,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -373,10 +419,10 @@ fun SpendingChart(
     currencyFormatter: CurrencyFormatter
 ) {
     val context = LocalContext.current
-    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val primaryColor = DashboardAccent.toArgb()
     val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface.toArgb()
-    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer.toArgb()
+    val primaryContainerColor = DashboardAccentLight.toArgb()
     val averageText = stringResource(R.string.weekly_average, spendingChartAverage)
 
     val now = LocalDate.now()
@@ -405,7 +451,7 @@ fun SpendingChart(
         currentDate = currentDate.plusDays(1)
     }
 
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .semantics {
@@ -416,16 +462,27 @@ fun SpendingChart(
                 val formattedAverage = currencyFormatter.formatCurrency(spendingChartAverage, language)
                 contentDescription = "Weekly spending chart for last 7 days. $valuesDesc. Average: $formattedAverage"
                 heading()
-            }
+            },
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Icon(
-                    Icons.Default.CalendarToday,
-                    contentDescription = "Weekly spending chart icon",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(getResponsiveSpacing()/2))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(DashboardAccent.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = "Weekly spending chart icon",
+                        tint = DashboardAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(getResponsiveSpacing()))
                 Text(
                     text = title,
                     fontSize = getResponsiveTitleLargeSize(),
@@ -434,11 +491,11 @@ fun SpendingChart(
                 )
                 if (!isDefaultRange) {
                     IconButton(onClick = { viewModel.resetDateRange() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset))
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset), tint = DashboardAccent)
                     }
                 }
                 IconButton(onClick = { navController.navigate("date_range_picker") }) {
-                    Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.select_date_range))
+                    Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.select_date_range), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Text(
@@ -446,11 +503,11 @@ fun SpendingChart(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(getResponsiveSpacing()/2))
+            Spacer(modifier = Modifier.height(getResponsiveSpacing()))
             if (spendingChartData.isNotEmpty()) {
                 val maxSpending = spendingChartData.maxOfOrNull { it.spending } ?: 0.0
                 if (maxSpending > 0) {
-                    val chartHeight = getResponsiveChartHeight(maxSpending)
+                    val chartHeight = getResponsiveChartHeight(maxSpending) - 40.dp
                     val chartKey = listOf(startDate, endDate, spendingChartData.size)
                     key(chartKey) {
                         AndroidView(
@@ -484,7 +541,7 @@ fun SpendingChart(
                                     color = primaryColor
                                     setGradientColor(primaryColor, primaryContainerColor)
                                     valueTypeface = Typeface.DEFAULT_BOLD
-                                    valueTextSize = 10f  
+                                    valueTextSize = 10f
                                     valueTextColor = primaryColor
                                     valueFormatter = TwoDecimalValueFormatter()
                                     setDrawValues(true)
@@ -492,16 +549,16 @@ fun SpendingChart(
                                 val barData = BarData(barDataSet)
 
                                 val lineEntries = listOf(
-                                    Entry(-0.5f, spendingChartAverage.toFloat()), 
+                                    Entry(-0.5f, spendingChartAverage.toFloat()),
                                     *(0 until spendingChartData.size).map { index ->
                                         Entry(index.toFloat(), spendingChartAverage.toFloat())
                                     }.toTypedArray(),
-                                    Entry((spendingChartData.size - 0.5f).toFloat(), spendingChartAverage.toFloat()) 
+                                    Entry((spendingChartData.size - 0.5f).toFloat(), spendingChartAverage.toFloat())
                                 )
                                 val averageLabel = chart.context.getString(R.string.chart_average)
                                 val lineDataSet = LineDataSet(lineEntries, averageLabel).apply {
                                     color = secondaryColor
-                                    lineWidth = 1.5f  
+                                    lineWidth = 1.5f
                                     setDrawCircles(false)
                                     setDrawValues(false)
                                     setDrawFilled(false)
@@ -519,7 +576,6 @@ fun SpendingChart(
                                 chart.axisLeft.setAxisMaximum((maxSpending * 1.1).toFloat())
                                 chart.axisLeft.setAxisMinimum(0f)
 
-                                
                                 chart.xAxis.axisMinimum = -0.5f
                                 chart.xAxis.axisMaximum = (spendingChartData.size - 1).toFloat()
 
@@ -559,6 +615,74 @@ fun SpendingChart(
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun GradientHeader(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    var iconVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        iconVisible = true
+    }
+
+    val iconScale by animateFloatAsState(
+        targetValue = if (iconVisible) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "iconScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        DashboardAccentLight.copy(alpha = 0.1f),
+                        MaterialTheme.colorScheme.background
+                    )
+                )
+            )
+            .statusBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .scale(iconScale)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(DashboardAccent, DashboardAccentLight)
+                        )
+                    )
+                    .shadow(elevation = 4.dp, shape = RoundedCornerShape(12.dp), spotColor = DashboardAccent),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = androidx.compose.ui.graphics.Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = title,
+                fontSize = com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize(),
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
     }
 }

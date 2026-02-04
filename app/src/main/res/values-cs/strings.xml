@@ -69,6 +69,7 @@
     <string name="history_title">Historie volání a SMS</string>
     <string name="number_coppied">Zkopírováno %s do schránky</string>
     <string name="callback_title">Zpětné volání</string>
+    <string name="call_history_title">Historie hovorů</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Přehled útraty</string>
     <string name="todays_spending">Dnešní útrata</string>
@@ -110,6 +111,13 @@
     <string name="a11y_language">Jazyk aplikace</string>
     <string name="a11y_line_card">Linka: %s</string>
     <string name="rang_duration">Zvonilo %ds</string>
+    <string name="today">Dneska</string>
+    <string name="yesterday">Včera</string>
+    <string name="recording_available">Nahrávka k dispozici</string>
+    <string name="network_mobile">Mobil</string>
+    <string name="network_landline">Pevná</string>
+    <string name="network_sms">SMS</string>
+    <string name="network_toll_free">Bezplatná</string>
     <string name="history_period_label">Období historie</string>
     <string name="history_period_7">7 dní</string>
     <string name="history_period_30">30 dní</string>

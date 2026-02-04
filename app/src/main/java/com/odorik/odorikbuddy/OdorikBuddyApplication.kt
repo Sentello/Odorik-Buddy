@@ -6,8 +6,8 @@ import android.content.res.Configuration
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.worker.UpdateWorkManager
 import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
 import java.util.Locale
+import javax.inject.Inject
 
 @HiltAndroidApp
 class OdorikBuddyApplication : Application() {

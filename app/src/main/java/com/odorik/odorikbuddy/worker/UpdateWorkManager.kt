@@ -5,7 +5,11 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.data.repository.UpdateRepository
 import com.odorik.odorikbuddy.model.AppUpdateInfo

@@ -37,11 +37,11 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
     }
 
     fun clearUser() {
-        sharedPreferences.edit().remove("user").apply()
+        sharedPreferences.edit().remove("user").commit()
     }
 
     fun clearPassword() {
-        sharedPreferences.edit().remove("password").apply()
+        sharedPreferences.edit().remove("password").commit()
     }
 
     fun saveString(key: String, value: String) {
@@ -53,6 +53,6 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
     }
 
     fun clearString(key: String) {
-        sharedPreferences.edit().remove(key).apply()
+        sharedPreferences.edit().remove(key).commit()
     }
 }

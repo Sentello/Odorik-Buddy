@@ -100,7 +100,11 @@ object AppModule {
             app,
             OdorikDatabase::class.java,
             "odorik_database"
-        ).addMigrations(OdorikDatabase.MIGRATION_1_2, OdorikDatabase.MIGRATION_2_3).build()
+        ).addMigrations(
+            OdorikDatabase.MIGRATION_1_2,
+            OdorikDatabase.MIGRATION_2_3,
+            OdorikDatabase.MIGRATION_3_4
+        ).build()
     }
 
     @Provides

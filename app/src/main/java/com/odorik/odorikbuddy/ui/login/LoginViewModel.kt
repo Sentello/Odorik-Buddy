@@ -32,22 +32,44 @@ class LoginViewModel @Inject constructor(
     val loginUiState: StateFlow<LoginUiState> = _loginUiState
 
     fun onLoginClick(userId: String, password: String, remember: Boolean) {
+        if (userId.isBlank() || password.isBlank()) {
+            _loginUiState.value = LoginUiState.Error(context.getString(R.string.user_or_password_not_set))
+            return
+        }
+
         _loginUiState.value = LoginUiState.Loading 
 
         viewModelScope.launch {
-            userRepository.saveCredentials(userId, password, remember) 
+            try {
+                userRepository.saveCredentials(userId, password, remember) 
 
-            val result = getCreditUseCase.execute() 
+                val result = getCreditUseCase.execute() 
 
-            result.onSuccess {
-                _loginUiState.value = LoginUiState.Success 
-            }.onFailure { e ->
-                if (e is AuthenticationException) {
-                    _loginUiState.value = LoginUiState.Error(context.getString(R.string.invalid_credentials))
-                } else {
-                    _loginUiState.value = LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
+                result.onSuccess {
+                    _loginUiState.value = LoginUiState.Success 
+                }.onFailure { e ->
+                    if (e is AuthenticationException) {
+                        _loginUiState.value = LoginUiState.Error(context.getString(R.string.invalid_credentials))
+                    } else {
+                        _loginUiState.value = LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
+                    }
                 }
+            } catch (e: Exception) {
+                
+                _loginUiState.value = LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
             }
+        }
+    }
+
+    fun onUserIdChanged() {
+        if (_loginUiState.value is LoginUiState.Error) {
+            _loginUiState.value = LoginUiState.Idle
+        }
+    }
+
+    fun onPasswordChanged() {
+        if (_loginUiState.value is LoginUiState.Error) {
+            _loginUiState.value = LoginUiState.Idle
         }
     }
 }

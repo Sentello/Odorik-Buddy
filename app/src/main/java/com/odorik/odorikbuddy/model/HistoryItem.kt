@@ -25,6 +25,8 @@ data class HistoryItem(
     val ringing_length: Int?,
     @SerializedName("price")
     val price: Double,
+    @SerializedName("price_per_minute")
+    val price_per_minute: Double?, 
     @SerializedName("status")
     val status: String?, 
     @SerializedName("destination_name")
@@ -32,7 +34,9 @@ data class HistoryItem(
     @SerializedName("redirection_parent_id")
     val redirection_parent_id: String?,
     @SerializedName("line")
-    val line: Int? 
+    val line: Int?, 
+    @SerializedName("recording")
+    val recording: String? 
 ) {
     val eventType: String
         get() = if (length != null) "call" else "sms"

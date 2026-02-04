@@ -1,5 +1,10 @@
 package com.odorik.odorikbuddy.ui.calls
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -29,10 +34,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.odorik.odorikbuddy.ui.theme.CallAccent
+import com.odorik.odorikbuddy.ui.theme.CallAccentLight
 import kotlin.math.roundToInt
 
 
@@ -51,18 +61,15 @@ fun DraggableTabs(
     onTabOrderChanged: (List<String>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    
     var currentTabOrder by remember { mutableStateOf<List<String>>(emptyList()) }
     val isDragging = remember { mutableStateOf(false) }
     val draggingIndex = remember { mutableStateOf(-1) }
     val dragOffset = remember { mutableStateOf(0f) }
     
-    
     LaunchedEffect(Unit) {
         currentTabOrder = tabItems.map { it.title }
     }
 
-    
     LaunchedEffect(tabItems) {
         val viewModelOrder = tabItems.map { it.title }
         if (currentTabOrder.isEmpty() || currentTabOrder.size != viewModelOrder.size) {
@@ -79,16 +86,18 @@ fun DraggableTabs(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
-                .background(MaterialTheme.colorScheme.surface)
+                .height(56.dp)
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(4.dp)
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragStart = { offset ->
-                                
                                 val tabWidth = size.width / currentTabOrder.size
                                 val tabIndex = (offset.x / tabWidth).toInt()
                                 if (tabIndex in currentTabOrder.indices) {
@@ -107,7 +116,6 @@ fun DraggableTabs(
                                         .coerceIn(0, currentTabOrder.size - 1)
                                     
                                     if (newIndex != currentDraggingIndex) {
-                                        
                                         val newOrder = currentTabOrder.toMutableList()
                                         val draggedTitle = newOrder.removeAt(currentDraggingIndex)
                                         newOrder.add(newIndex, draggedTitle)
@@ -120,7 +128,6 @@ fun DraggableTabs(
                                 isDragging.value = false
                                 draggingIndex.value = -1
                                 dragOffset.value = 0f
-                                
                                 val viewModelOrder = tabItems.map { it.title }
                                 if (currentTabOrder != viewModelOrder) {
                                     onTabOrderChanged(currentTabOrder)
@@ -130,7 +137,6 @@ fun DraggableTabs(
                                 isDragging.value = false
                                 draggingIndex.value = -1
                                 dragOffset.value = 0f
-                                
                                 currentTabOrder = tabItems.map { it.title }
                             }
                         )
@@ -163,7 +169,6 @@ fun DraggableTabs(
                 selectedItem.content()
             }
         } else {
-            
             tabItems.firstOrNull()?.content?.invoke()
         }
     }
@@ -181,18 +186,38 @@ fun DraggableTab(
 ) {
     val title = stringResource(titleResId)
     
+    val scale by animateFloatAsState(
+        targetValue = if (isDragging) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "tabScale"
+    )
+    
+    val textColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 200),
+        label = "tabTextColor"
+    )
+    
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .scale(scale)
+            .padding(2.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(
                 if (isSelected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    Brush.linearGradient(
+                        colors = listOf(CallAccent, CallAccentLight)
+                    )
                 } else {
-                    Color.Transparent
+                    Brush.linearGradient(
+                        colors = listOf(Color.Transparent, Color.Transparent)
+                    )
                 }
             )
-            .padding(horizontal = 16.dp)
             .clickable { onTabSelected(tabTitle) },
         contentAlignment = Alignment.Center
     ) {
@@ -202,26 +227,18 @@ fun DraggableTab(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                fontWeight = if (isSelected) {
-                    androidx.compose.ui.text.font.FontWeight.Bold
-                } else {
-                    androidx.compose.ui.text.font.FontWeight.Normal
-                }
+                style = MaterialTheme.typography.titleSmall,
+                color = textColor,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
             )
             
             if (isDragging) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Icon(
                     imageVector = Icons.Default.DragHandle,
                     contentDescription = "Drag to reorder",
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.size(14.dp),
+                    tint = textColor
                 )
             }
         }

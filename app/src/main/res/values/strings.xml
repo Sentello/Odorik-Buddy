@@ -69,6 +69,7 @@
     <string name="history_title">Call &amp; SMS History</string>
     <string name="number_coppied">Copied %s to clipboard</string>
     <string name="callback_title">Callback</string>
+    <string name="call_history_title">Call History</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Spending Summary</string>
     <string name="todays_spending">Today\'s Spending</string>
@@ -110,6 +111,13 @@
     <string name="a11y_language">App language</string>
     <string name="a11y_line_card">Line: %s</string>
     <string name="rang_duration">Rang %ds</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="recording_available">Recording available</string>
+    <string name="network_mobile">Mobile</string>
+    <string name="network_landline">Landline</string>
+    <string name="network_sms">SMS</string>
+    <string name="network_toll_free">Toll-free</string>
     <string name="history_period_label">History Period</string>
     <string name="history_period_7">7 days</string>
     <string name="history_period_30">30 days</string>

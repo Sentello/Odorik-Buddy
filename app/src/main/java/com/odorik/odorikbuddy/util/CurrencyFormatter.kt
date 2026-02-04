@@ -19,18 +19,21 @@ class CurrencyFormatter @Inject constructor(
                 
                 val czechFormat = NumberFormat.getNumberInstance(Locale("cs", "CZ"))
                 czechFormat.maximumFractionDigits = 2
+                czechFormat.minimumFractionDigits = if (amount == 0.0) 0 else 2
                 "${czechFormat.format(amount)} Kč"
             }
             "en" -> {
                 
                 val englishFormat = NumberFormat.getNumberInstance(Locale("en", "US"))
                 englishFormat.maximumFractionDigits = 2
+                englishFormat.minimumFractionDigits = if (amount == 0.0) 0 else 2
                 "${englishFormat.format(amount)} CZK"
             }
             else -> {
                 
                 val defaultFormat = NumberFormat.getNumberInstance(Locale("cs", "CZ"))
                 defaultFormat.maximumFractionDigits = 2
+                defaultFormat.minimumFractionDigits = if (amount == 0.0) 0 else 2
                 "${defaultFormat.format(amount)} Kč"
             }
         }
