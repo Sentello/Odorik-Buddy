@@ -45,6 +45,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
@@ -402,6 +404,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     val allowedSenders by viewModel.allowedSenders.collectAsState()
     val sendResult by viewModel.sendResult.collectAsState()
     val error by viewModel.error.collectAsState()
+    val recipientContactName by viewModel.recipientContactName.collectAsState()
 
     var recipient by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
@@ -435,7 +438,10 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             contactUri?.let {
                 val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, it)
                 if (numbers.size == 1) {
-                    recipient = numbers.first()
+                    val number = numbers.first()
+                    recipient = number
+                    viewModel.updateRecipient(number)
+                    viewModel.saveDraft(number, message, selectedSender)
                 } else if (numbers.size > 1) {
                     phoneNumbers = numbers
                     showPhoneNumberDialog = true
@@ -449,6 +455,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         onResult = { isGranted ->
             if (isGranted) {
                 launcher.launch(null)
+                viewModel.loadContacts(context.contentResolver)
             }
         }
     )
@@ -457,8 +464,12 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         viewModel.fetchAllowedSenders()
         val (draftRecipient, draftMessage, draftSender) = viewModel.loadDraft()
         recipient = draftRecipient
+        viewModel.updateRecipient(draftRecipient)
         message = draftMessage
         selectedSender = draftSender
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.loadContacts(context.contentResolver)
+        }
         contentVisible = true
     }
 
@@ -479,9 +490,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
     LaunchedEffect(sendResult) {
         if (sendResult?.startsWith("successfully") == true) {
-            recipient = ""
             message = ""
-            selectedSender = null
         }
     }
     
@@ -567,9 +576,23 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 value = recipient,
                                 onValueChange = {
                                     recipient = it
+                                    viewModel.updateRecipient(it)
                                     viewModel.saveDraft(it, message, selectedSender)
                                 },
-                                label = { Text(stringResource(R.string.recipient)) },
+                                label = { 
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Phone,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.padding(start = 4.dp))
+                                        Text(
+                                            text = if (recipientContactName != null) "${stringResource(R.string.recipient)} • $recipientContactName" else stringResource(R.string.recipient),
+                                            fontSize = getResponsiveBodyLargeSize()
+                                        )
+                                    }
+                                },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -613,7 +636,20 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     value = selectedSender ?: stringResource(R.string.select_sender),
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text(stringResource(R.string.sender)) },
+                                    label = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Person,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.padding(start = 4.dp))
+                                            Text(
+                                                text = stringResource(R.string.sender),
+                                                fontSize = getResponsiveBodyLargeSize()
+                                            ) 
+                                        }
+                                    },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp),
@@ -669,7 +705,20 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                         viewModel.saveDraft(recipient, it, selectedSender)
                                     }
                                 },
-                                label = { Text(stringResource(R.string.message)) },
+                                label = { 
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Sms,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.padding(start = 4.dp))
+                                        Text(
+                                            text = stringResource(R.string.message),
+                                            fontSize = getResponsiveBodyLargeSize()
+                                        ) 
+                                    }
+                                },
                                 modifier = Modifier.fillMaxWidth(),
                                 minLines = minLines,
                                 maxLines = getResponsiveMaxLines(),
@@ -753,6 +802,8 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                         items(phoneNumbers) {
                             TextButton(onClick = {
                                 recipient = it
+                                viewModel.updateRecipient(it)
+                                viewModel.saveDraft(it, message, selectedSender)
                                 showPhoneNumberDialog = false
                             }) {
                                 Text(it)

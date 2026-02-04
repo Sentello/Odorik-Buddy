@@ -38,11 +38,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -385,7 +388,9 @@ fun CallbackTab(
     val callResult by viewModel.callResult.collectAsState()
     val lines by viewModel.lines.collectAsState()
     val callerId by viewModel.callerId.collectAsState()
-    val recipient by viewModel.recipient.collectAsState()
+    val recipient by viewModel.callbackRecipient.collectAsState()
+    val callerContactName by viewModel.callerContactName.collectAsState()
+    val recipientContactName by viewModel.callbackRecipientContactName.collectAsState()
     val error by viewModel.error.collectAsState()
     val selectedLine by viewModel.selectedLine.collectAsState()
     var expanded by remember { mutableStateOf(false) }
@@ -407,7 +412,7 @@ fun CallbackTab(
                     val number = numbers.first()
                     when (currentContactField) {
                         ContactField.CALLER_ID -> viewModel.updateCallerId(number)
-                        ContactField.RECIPIENT -> viewModel.updateRecipient(number)
+                        ContactField.RECIPIENT -> viewModel.updateCallbackRecipient(number)
                         null -> {}
                     }
                 } else if (numbers.size > 1) {
@@ -424,6 +429,7 @@ fun CallbackTab(
             if (isGranted) {
                 launcherToTrigger?.invoke()
                 launcherToTrigger = null
+                viewModel.loadContacts(context.contentResolver)
             }
         }
     )
@@ -442,6 +448,9 @@ fun CallbackTab(
     LaunchedEffect(Unit) {
         viewModel.getCallList()
         viewModel.getLines()
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.loadContacts(context.contentResolver)
+        }
         contentVisible = true
     }
     
@@ -502,13 +511,13 @@ fun CallbackTab(
                             label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Default.Phone,
+                                        imageVector = Icons.Default.Person,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.padding(start = 4.dp))
                                     Text(
-                                        stringResource(R.string.caller_id),
+                                        text = if (callerContactName != null) "${stringResource(R.string.caller_id)} • $callerContactName" else stringResource(R.string.caller_id),
                                         fontSize = getResponsiveBodyLargeSize()
                                     )
                                 }
@@ -533,17 +542,17 @@ fun CallbackTab(
                         
                         OutlinedTextField(
                             value = recipient,
-                            onValueChange = { viewModel.updateRecipient(it) },
+                            onValueChange = { viewModel.updateCallbackRecipient(it) },
                             label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Default.Phone,
+                                        imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.padding(start = 4.dp))
                                     Text(
-                                        stringResource(R.string.called_number),
+                                        text = if (recipientContactName != null) "${stringResource(R.string.called_number)} • $recipientContactName" else stringResource(R.string.called_number),
                                         fontSize = getResponsiveBodyLargeSize()
                                     )
                                 }
@@ -578,12 +587,15 @@ fun CallbackTab(
                                 label = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = Icons.Default.Phone,
+                                            imageVector = Icons.Default.SimCard,
                                             contentDescription = null,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.padding(start = 4.dp))
-                                        Text(stringResource(R.string.line))
+                                        Text(
+                                            text = stringResource(R.string.line),
+                                            fontSize = getResponsiveBodyLargeSize()
+                                        )
                                     }
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -734,7 +746,7 @@ fun CallbackTab(
                             onClick = {
                                 when (currentContactField) {
                                     ContactField.CALLER_ID -> viewModel.updateCallerId(number)
-                                    ContactField.RECIPIENT -> viewModel.updateRecipient(number)
+                                    ContactField.RECIPIENT -> viewModel.updateCallbackRecipient(number)
                                     else -> {}
                                 }
                                 showPhoneNumberDialog = false
@@ -784,7 +796,8 @@ fun OneShotCallTab(
 ) {
     val context = LocalContext.current
     val lines by callViewModel.lines.collectAsState()
-    val recipient by callViewModel.recipient.collectAsState()
+    val recipient by callViewModel.oneShotRecipient.collectAsState()
+    val recipientContactName by callViewModel.oneShotRecipientContactName.collectAsState()
     val selectedLine by callViewModel.selectedLine.collectAsState()
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
@@ -811,7 +824,7 @@ fun OneShotCallTab(
                     val number = numbers.first()
                     when (currentContactField) {
                         ContactField.CALLER_ID -> callViewModel.updateCallerId(number)
-                        ContactField.RECIPIENT -> callViewModel.updateRecipient(number)
+                        ContactField.RECIPIENT -> callViewModel.updateOneShotRecipient(number)
                         null -> {}
                     }
                 } else if (numbers.size > 1) {
@@ -845,6 +858,9 @@ fun OneShotCallTab(
     
     LaunchedEffect(Unit) {
         callViewModel.getLines()
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            callViewModel.loadContacts(context.contentResolver)
+        }
         contentVisible = true
     }
 
@@ -931,17 +947,17 @@ fun OneShotCallTab(
                         
                         OutlinedTextField(
                             value = recipient,
-                            onValueChange = { callViewModel.updateRecipient(it) },
+                            onValueChange = { callViewModel.updateOneShotRecipient(it) },
                             label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Default.Phone,
+                                        imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.padding(start = 4.dp))
                                     Text(
-                                        stringResource(R.string.called_number),
+                                        text = if (recipientContactName != null) "${stringResource(R.string.called_number)} • $recipientContactName" else stringResource(R.string.called_number),
                                         fontSize = getResponsiveBodyLargeSize()
                                     )
                                 }
@@ -976,12 +992,15 @@ fun OneShotCallTab(
                                 label = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = Icons.Default.Phone,
+                                            imageVector = Icons.Default.SimCard,
                                             contentDescription = null,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.padding(start = 4.dp))
-                                        Text(stringResource(R.string.line))
+                                        Text(
+                                            text = stringResource(R.string.line),
+                                            fontSize = getResponsiveBodyLargeSize()
+                                        )
                                     }
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -1159,7 +1178,7 @@ fun OneShotCallTab(
                             onClick = {
                                 when (currentContactField) {
                                     ContactField.CALLER_ID -> callViewModel.updateCallerId(number)
-                                    ContactField.RECIPIENT -> callViewModel.updateRecipient(number)
+                                    ContactField.RECIPIENT -> callViewModel.updateOneShotRecipient(number)
                                     else -> {}
                                 }
                                 showPhoneNumberDialog = false

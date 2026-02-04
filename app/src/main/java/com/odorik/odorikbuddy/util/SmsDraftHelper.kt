@@ -31,9 +31,7 @@ class SmsDraftHelper @Inject constructor(@ApplicationContext context: Context) {
 
     fun clearDraft() {
         prefs.edit()
-            .remove(RECIPIENT_KEY)
             .remove(MESSAGE_KEY)
-            .remove(SENDER_KEY)
             .apply()
     }
 }

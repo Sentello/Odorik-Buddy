@@ -16,10 +16,14 @@ import com.odorik.odorikbuddy.domain.usecase.GetCallListUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -50,8 +54,76 @@ class CallViewModel @Inject constructor(
     private val _callerId = MutableStateFlow("")
     val callerId: StateFlow<String> = _callerId
 
-    private val _recipient = MutableStateFlow("")
-    val recipient: StateFlow<String> = _recipient
+    private val _callbackRecipient = MutableStateFlow("")
+    val callbackRecipient: StateFlow<String> = _callbackRecipient
+
+    private val _oneShotRecipient = MutableStateFlow("")
+    val oneShotRecipient: StateFlow<String> = _oneShotRecipient
+
+    
+    private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
+
+    val callerContactName: StateFlow<String?> = combine(_callerId, _contactsMap) { number, contacts ->
+        resolveContactName(number, contacts)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val callbackRecipientContactName: StateFlow<String?> = combine(_callbackRecipient, _contactsMap) { number, contacts ->
+        resolveContactName(number, contacts)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val oneShotRecipientContactName: StateFlow<String?> = combine(_oneShotRecipient, _contactsMap) { number, contacts ->
+        resolveContactName(number, contacts)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun loadContacts(contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            val projection = arrayOf(
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+            )
+            val contacts = mutableMapOf<String, String>()
+
+            contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+
+                if (numberIndex >= 0 && nameIndex >= 0) {
+                    while (cursor.moveToNext()) {
+                        val number = cursor.getString(numberIndex)
+                        val name = cursor.getString(nameIndex)
+                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
+                            val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
+                            if (!contacts.containsKey(normalizedNumber)) {
+                                contacts[normalizedNumber] = name
+                            }
+                        }
+                    }
+                }
+            }
+            _contactsMap.value = contacts
+        }
+    }
+
+    private fun resolveContactName(number: String, contacts: Map<String, String>): String? {
+        if (number.isBlank()) return null
+        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
+        for ((contactNumber, contactName) in contacts) {
+            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
+                return if (parsedInput.specialPrefix.isNotEmpty()) {
+                    "${parsedInput.specialPrefix} $contactName".trim()
+                } else {
+                    contactName
+                }
+            }
+        }
+        return null
+    }
 
     private val _selectedLine = MutableStateFlow<Int?>(null)
     val selectedLine: StateFlow<Int?> = _selectedLine
@@ -128,7 +200,8 @@ class CallViewModel @Inject constructor(
 
     init {
         _callerId.value = securePreferences.getString("caller_id", "") ?: ""
-        _recipient.value = securePreferences.getString("recipient", "") ?: ""
+        _callbackRecipient.value = securePreferences.getString("recipient", "") ?: ""
+        _oneShotRecipient.value = securePreferences.getString("oneshot_recipient", "") ?: ""
         _selectedLine.value = securePreferences.getString("selected_line", null)?.toIntOrNull()
         _useCallerIdPrefix.value = getUseCallerIdPrefix()
         _tabOrder.value = getTabOrder()
@@ -147,9 +220,14 @@ class CallViewModel @Inject constructor(
         securePreferences.saveString("caller_id", newCallerId)
     }
 
-    fun updateRecipient(newRecipient: String) {
-        _recipient.value = newRecipient
+    fun updateCallbackRecipient(newRecipient: String) {
+        _callbackRecipient.value = newRecipient
         securePreferences.saveString("recipient", newRecipient)
+    }
+
+    fun updateOneShotRecipient(newRecipient: String) {
+        _oneShotRecipient.value = newRecipient
+        securePreferences.saveString("oneshot_recipient", newRecipient)
     }
 
     fun updateSelectedLine(newLine: Int?) {

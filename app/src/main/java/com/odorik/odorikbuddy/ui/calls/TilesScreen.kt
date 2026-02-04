@@ -711,7 +711,22 @@ fun AddEditTileDialog(
     val context = LocalContext.current
     var label by remember { mutableStateOf(tile?.label ?: "") }
     var recipient by remember { mutableStateOf(tile?.recipient ?: "") }
-    var callType by remember { mutableStateOf(tile?.callType ?: "CALLBACK") }
+    
+    val tabOrder by callViewModel.tabOrder.collectAsState()
+    
+    
+    val callTypeOptions = remember(tabOrder) {
+        val callbackIndex = tabOrder.indexOf("callback_title").takeIf { it >= 0 } ?: Int.MAX_VALUE
+        val oneshotIndex = tabOrder.indexOf("oneshot_call").takeIf { it >= 0 } ?: Int.MAX_VALUE
+        
+        if (oneshotIndex < callbackIndex) {
+            listOf("ONESHOT" to R.string.call_type_oneshot, "CALLBACK" to R.string.call_type_callback)
+        } else {
+            listOf("CALLBACK" to R.string.call_type_callback, "ONESHOT" to R.string.call_type_oneshot)
+        }
+    }
+
+    var callType by remember { mutableStateOf(tile?.callType ?: callTypeOptions.first().first) }
     var selectedLineId by remember { mutableStateOf(tile?.lineId) }
     var callerId by remember { mutableStateOf(tile?.callerId ?: "") } 
     var useLineAsCallerId by remember { mutableStateOf(tile?.useLineAsCallerId ?: false) }
@@ -799,14 +814,12 @@ fun AddEditTileDialog(
                         expanded = typeDropdownExpanded,
                         onDismissRequest = { typeDropdownExpanded = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.call_type_callback)) },
-                            onClick = { callType = "CALLBACK"; typeDropdownExpanded = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.call_type_oneshot)) },
-                            onClick = { callType = "ONESHOT"; typeDropdownExpanded = false }
-                        )
+                        callTypeOptions.forEach { (typeKey, labelRes) ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(labelRes)) },
+                                onClick = { callType = typeKey; typeDropdownExpanded = false }
+                            )
+                        }
                     }
                 }
 

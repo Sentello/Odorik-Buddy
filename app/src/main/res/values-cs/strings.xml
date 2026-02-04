@@ -269,11 +269,11 @@
     <string name="call_type">Typ hovoru</string>
     <string name="call_type_callback">Zpětné volání</string>
     <string name="call_type_oneshot">Přesměrované volání</string>
-    <string name="label_optional">Popisek</string>
+    <string name="label_optional">Název</string>
     <string name="number">Číslo</string>
     <string name="default_line">Výchozí linka</string>
     <string name="caller_id_optional">ID volajícího</string>
-    <string name="color">Barva</string>
+    <string name="color">Barva dlaždice</string>
     <string name="text_color">Barva textu</string>
     <string name="save">Uložit</string>
     <string name="default_selection">Výchozí</string>

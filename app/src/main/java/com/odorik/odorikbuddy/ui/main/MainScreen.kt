@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -77,11 +78,12 @@ fun MainScreen(navController: NavController) {
                             }
                         } else null,
                         selected = when (screen) {
-                            is BottomNavItem.Settings -> {
-                                currentDestination?.route?.startsWith(BottomNavItem.Settings.route) == true
+                            BottomNavItem.Dashboard -> {
+                                currentDestination?.hierarchy?.any { it.route == screen.route } == true ||
+                                        currentDestination?.route == "date_range_picker"
                             }
                             else -> {
-                                currentDestination?.route == screen.route
+                                currentDestination?.hierarchy?.any { it.route == screen.route } == true
                             }
                         },
                         onClick = {

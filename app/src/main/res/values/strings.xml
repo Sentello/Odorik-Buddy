@@ -269,7 +269,7 @@
     <string name="number">Number</string>
     <string name="default_line">Default Line</string>
     <string name="caller_id_optional">Caller ID</string>
-    <string name="color">Color</string>
+    <string name="color">Tile Color</string>
     <string name="text_color">Text Color</string>
     <string name="save">Save</string>
     <string name="default_selection">Default</string>

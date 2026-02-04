@@ -14,11 +14,15 @@ import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import com.odorik.odorikbuddy.util.SmsDraftHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.format.DateTimeParseException
@@ -49,6 +53,71 @@ class SmsViewModel @Inject constructor(
 
     private val _delayedError = MutableStateFlow<Int?>(null)
     val delayedError: StateFlow<Int?> = _delayedError
+
+    
+    private val _recipient = MutableStateFlow("")
+    val recipient: StateFlow<String> = _recipient
+
+    fun updateRecipient(newRecipient: String) {
+        _recipient.value = newRecipient
+    }
+
+    
+    private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
+
+    val recipientContactName: StateFlow<String?> = combine(_recipient, _contactsMap) { number, contacts ->
+        resolveContactName(number, contacts)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun loadContacts(contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            val projection = arrayOf(
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+            )
+            val contacts = mutableMapOf<String, String>()
+
+            contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+
+                if (numberIndex >= 0 && nameIndex >= 0) {
+                    while (cursor.moveToNext()) {
+                        val number = cursor.getString(numberIndex)
+                        val name = cursor.getString(nameIndex)
+                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
+                            val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
+                            if (!contacts.containsKey(normalizedNumber)) {
+                                contacts[normalizedNumber] = name
+                            }
+                        }
+                    }
+                }
+            }
+            _contactsMap.value = contacts
+        }
+    }
+
+    private fun resolveContactName(number: String, contacts: Map<String, String>): String? {
+        if (number.isBlank()) return null
+        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
+        for ((contactNumber, contactName) in contacts) {
+            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
+                return if (parsedInput.specialPrefix.isNotEmpty()) {
+                    "${parsedInput.specialPrefix} $contactName".trim()
+                } else {
+                    contactName
+                }
+            }
+        }
+        return null
+    }
 
     
     private fun filterAllowedSenders(numbers: List<String>): List<String> {
