@@ -6,9 +6,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -54,13 +51,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -73,7 +68,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -89,13 +83,13 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.history.HistoryViewModel.HistoryDisplayItem
 import com.odorik.odorikbuddy.ui.theme.HistoryAccent
 import com.odorik.odorikbuddy.ui.theme.HistoryAccentLight
 import com.odorik.odorikbuddy.util.CurrencyFormatter
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
-import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -163,90 +157,6 @@ private fun getNetworkColor(destinationName: String?): androidx.compose.ui.graph
 
 
 
-@Composable
-private fun GradientHeader(
-    title: String,
-    onFilterClick: () -> Unit
-) {
-    var iconVisible by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        iconVisible = true
-    }
-    
-    val iconScale by animateFloatAsState(
-        targetValue = if (iconVisible) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "iconScale"
-    )
-    
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            HistoryAccent.copy(alpha = 0.15f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .scale(iconScale)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(HistoryAccent, HistoryAccentLight)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = title,
-                    fontSize = getResponsiveTitleLargeSize(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onFilterClick) {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = stringResource(R.string.filter_history),
-                        tint = HistoryAccent
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-
-
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HistoryScreen(
@@ -305,8 +215,22 @@ fun HistoryScreen(
             
             GradientHeader(
                 title = stringResource(R.string.history_title),
-                onFilterClick = { showFilterSheet = true }
+                iconVector = Icons.Default.History,
+                backgroundBrush = Brush.verticalGradient(
+                    colors = listOf(
+                        HistoryAccent.copy(alpha = 0.15f),
+                        Color.Transparent
+                    )
+                ),
+                iconGradientBrush = Brush.linearGradient(
+                    colors = listOf(HistoryAccent, HistoryAccentLight)
+                ),
+                onActionClick = { showFilterSheet = true },
+                actionIcon = Icons.Default.FilterList,
+                actionContentDescription = stringResource(R.string.filter_history),
+                actionTint = HistoryAccent
             )
+            
             
             Box(
                 modifier = Modifier
@@ -576,46 +500,22 @@ private fun FilterBottomSheet(
                 .padding(bottom = getResponsiveSpacing() * 5)
         ) {
             
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                HistoryAccent.copy(alpha = 0.15f),
-                                Color.Transparent
-                            )
-                        )
+            GradientHeader(
+                title = stringResource(R.string.filter_history),
+                iconVector = Icons.Default.FilterList,
+                backgroundBrush = Brush.verticalGradient(
+                    colors = listOf(
+                        HistoryAccent.copy(alpha = 0.15f),
+                        Color.Transparent
                     )
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(HistoryAccent, HistoryAccentLight)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.filter_history),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+                ),
+                iconGradientBrush = Brush.linearGradient(
+                    colors = listOf(HistoryAccent, HistoryAccentLight)
+                ),
+                iconSize = 20.dp,
+                iconContainerSize = 36.dp,
+                iconCornerRadius = 10.dp
+            )
             
             Column(
                 modifier = Modifier

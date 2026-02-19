@@ -91,12 +91,31 @@ object PhoneNumberUtils {
 
         
         if (parsed1.isValid && parsed2.isValid && parsed1.phoneNumber != null && parsed2.phoneNumber != null) {
-            return phoneNumberUtil.isNumberMatch(parsed1.phoneNumber, parsed2.phoneNumber) ==
-                   PhoneNumberUtil.MatchType.EXACT_MATCH
+            val matchType = phoneNumberUtil.isNumberMatch(parsed1.phoneNumber, parsed2.phoneNumber)
+            if (matchType == PhoneNumberUtil.MatchType.EXACT_MATCH || 
+                matchType == PhoneNumberUtil.MatchType.NSN_MATCH) {
+                return true
+            }
         }
 
         
-        return parsed1.normalizedNumber == parsed2.normalizedNumber
+        if (parsed1.normalizedNumber == parsed2.normalizedNumber) {
+            return true
+        }
+
+        
+        
+        
+        val n1 = parsed1.normalizedNumber.replace("+", "")
+        val n2 = parsed2.normalizedNumber.replace("+", "")
+        
+        if (n1.length > 8 && n2.length > 8) {
+             if (n1.endsWith(n2) || n2.endsWith(n1)) {
+                 return true
+             }
+        }
+        
+        return false
     }
 
     

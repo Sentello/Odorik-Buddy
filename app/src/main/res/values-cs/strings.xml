@@ -234,6 +234,7 @@
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
     <string name="sms_options_menu">Více možností</string>
     <string name="sms_delay_options_title">Naplánovat SMS</string>
+    <string name="schedule_sms_button">Naplánovat SMS</string>
 
     <string name="donate_button">Podpoř projekt kafem</string>
     

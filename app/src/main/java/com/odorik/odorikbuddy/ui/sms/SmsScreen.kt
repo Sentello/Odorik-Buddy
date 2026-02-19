@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,6 +51,8 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -71,7 +74,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -103,6 +105,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.theme.CounterGreen
 import com.odorik.odorikbuddy.ui.theme.CounterOrange
 import com.odorik.odorikbuddy.ui.theme.CounterRed
@@ -113,7 +116,6 @@ import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveMaxLines
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
-import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDateTime
@@ -314,89 +316,9 @@ private fun CircularCharacterCounter(
     }
 }
 
-@Composable
-private fun GradientHeader(
-    title: String,
-    onDelayClick: () -> Unit
-) {
-    var iconVisible by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        iconVisible = true
-    }
-    
-    val iconScale by animateFloatAsState(
-        targetValue = if (iconVisible) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "iconScale"
-    )
-    
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            SmsAccent.copy(alpha = 0.15f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .scale(iconScale)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(SmsAccent, SmsAccentLight)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Sms,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = title,
-                        fontSize = getResponsiveTitleLargeSize(),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                IconButton(onClick = onDelayClick) {
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = stringResource(R.string.sms_delay_options_title),
-                        tint = SmsAccent
-                    )
-                }
-            }
-        }
-    }
-}
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -539,7 +461,20 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             
             GradientHeader(
                 title = stringResource(R.string.sms_title),
-                onDelayClick = { showDelayOptions = true }
+                iconVector = Icons.Default.Sms,
+                backgroundBrush = Brush.verticalGradient(
+                    colors = listOf(
+                        SmsAccent.copy(alpha = 0.15f),
+                        Color.Transparent
+                    )
+                ),
+                iconGradientBrush = Brush.linearGradient(
+                    colors = listOf(SmsAccent, SmsAccentLight)
+                ),
+                onActionClick = { showDelayOptions = true },
+                actionIcon = Icons.Default.AccessTime,
+                actionContentDescription = stringResource(R.string.sms_delay_options_title),
+                actionTint = SmsAccent
             )
             
             AnimatedVisibility(
@@ -851,8 +786,9 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     DelayOptionsContent(
                         viewModel = viewModel,
                         delayMode = delayMode,
-                        onDelayModeChange = { newMode -> delayMode = newMode },
-                        showDatePicker = { showDatePicker = true }
+                        onDelayModeChange = { delayMode = it },
+                        showDatePicker = { showDatePicker = true },
+                        onDismiss = { showDelayOptions = false }
                     )
                 }
             }
@@ -911,159 +847,168 @@ private fun DelayOptionsContent(
     viewModel: SmsViewModel,
     delayMode: String,
     onDelayModeChange: (String) -> Unit,
-    showDatePicker: () -> Unit
+    showDatePicker: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     val delayed by viewModel.delayed.collectAsState()
     val delayedError by viewModel.delayedError.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveCardPadding()),
-        verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
+        modifier = Modifier.fillMaxWidth()
     ) {
         
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(SmsAccent, SmsAccentLight)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccessTime,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
+        GradientHeader(
+            title = stringResource(R.string.sms_delay_options_title),
+            iconVector = Icons.Default.AccessTime,
+            backgroundBrush = Brush.verticalGradient(
+                colors = listOf(
+                    SmsAccent.copy(alpha = 0.15f),
+                    Color.Transparent
                 )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = stringResource(R.string.sms_delay_options_title),
-                fontSize = getResponsiveTitleLargeSize(),
-                fontWeight = FontWeight.Bold
-            )
-        }
+            ),
+            iconGradientBrush = Brush.linearGradient(
+                colors = listOf(SmsAccent, SmsAccentLight)
+            ),
+            iconSize = 22.dp,
+            iconContainerSize = 40.dp,
+            iconCornerRadius = 10.dp
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = getResponsiveCardPadding()/2),
-            horizontalArrangement = Arrangement.Center
+                .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveCardPadding())
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
         ) {
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth(0.9f)
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = getResponsiveCardPadding()/2),
+                horizontalArrangement = Arrangement.Center
             ) {
-                SegmentedButton(
-                    selected = delayMode == "minutes",
-                    onClick = { onDelayModeChange("minutes"); viewModel.onMinutesDelayedInputChange("") },
-                    shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier.fillMaxWidth(0.9f)
                 ) {
-                    Text(
-                        stringResource(R.string.sms_minutes),
-                        fontSize = getResponsiveBodyLargeSize() * 0.9f
-                    )
-                }
-                SegmentedButton(
-                    selected = delayMode == "datetime",
-                    onClick = { onDelayModeChange("datetime"); viewModel.setDateTimeDelayed("") },
-                    shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.sms_specific_time),
-                        fontSize = getResponsiveBodyLargeSize() * 0.9f
-                    )
+                    SegmentedButton(
+                        selected = delayMode == "minutes",
+                        onClick = { onDelayModeChange("minutes"); viewModel.onMinutesDelayedInputChange("") },
+                        shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.sms_minutes),
+                            fontSize = getResponsiveBodyLargeSize() * 0.9f
+                        )
+                    }
+                    SegmentedButton(
+                        selected = delayMode == "datetime",
+                        onClick = { onDelayModeChange("datetime"); viewModel.setDateTimeDelayed("") },
+                        shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.sms_specific_time),
+                            fontSize = getResponsiveBodyLargeSize() * 0.9f
+                        )
+                    }
                 }
             }
-        }
 
-        val selectDateTimeText = stringResource(R.string.sms_select_date_time)
-        val displayDelayed = remember(delayed) {
-            if (delayed.isBlank()) selectDateTimeText
-            else try {
-                val instant = Instant.parse(delayed)
-                instant.atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'"))
-            } catch (e: Exception) { delayed }
-        }
+            val selectDateTimeText = stringResource(R.string.sms_select_date_time)
+            val displayDelayed = remember(delayed) {
+                if (delayed.isBlank()) selectDateTimeText
+                else try {
+                    val instant = Instant.parse(delayed)
+                    instant.atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'"))
+                } catch (e: Exception) { delayed }
+            }
 
-        if (delayMode == "minutes") {
-            OutlinedTextField(
-                value = delayed,
-                onValueChange = { viewModel.onMinutesDelayedInputChange(it) },
-                label = {
-                    Text(
-                        stringResource(R.string.sms_delay_minutes),
-                        fontSize = getResponsiveBodyLargeSize() * 0.9f
-                    )
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = delayedError != null,
-                supportingText = {
-                    delayedError?.let {
+            if (delayMode == "minutes") {
+                OutlinedTextField(
+                    value = delayed,
+                    onValueChange = { viewModel.onMinutesDelayedInputChange(it) },
+                    label = {
                         Text(
-                            stringResource(it),
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = getResponsiveBodyLargeSize() * 0.8f
+                            stringResource(R.string.sms_delay_minutes),
+                            fontSize = getResponsiveBodyLargeSize() * 0.9f
                         )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SmsAccent,
-                    focusedLabelColor = SmsAccent
-                ),
-                textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
-            )
-        } else {
-            OutlinedTextField(
-                value = displayDelayed,
-                onValueChange = {},
-                readOnly = true,
-                label = {
-                    Text(
-                        stringResource(R.string.sms_scheduled_time_utc),
-                        fontSize = getResponsiveBodyLargeSize() * 0.9f
-                    )
-                },
-                trailingIcon = {
-                    IconButton(onClick = showDatePicker) {
-                        Icon(
-                            Icons.Default.CalendarToday,
-                            contentDescription = "Select date",
-                            modifier = Modifier.size(20.dp),
-                            tint = SmsAccent
-                        )
-                    }
-                },
-                isError = delayedError != null,
-                supportingText = {
-                    delayedError?.let {
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = delayedError != null,
+                    supportingText = {
+                        delayedError?.let {
+                            Text(
+                                stringResource(it),
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = getResponsiveBodyLargeSize() * 0.8f
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SmsAccent,
+                        focusedLabelColor = SmsAccent
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
+                )
+            } else {
+                OutlinedTextField(
+                    value = displayDelayed,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = {
                         Text(
-                            stringResource(it),
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = getResponsiveBodyLargeSize() * 0.8f
+                            stringResource(R.string.sms_scheduled_time_utc),
+                            fontSize = getResponsiveBodyLargeSize() * 0.9f
                         )
-                    }
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = showDatePicker) {
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                contentDescription = "Select date",
+                                modifier = Modifier.size(20.dp),
+                                tint = SmsAccent
+                            )
+                        }
+                    },
+                    isError = delayedError != null,
+                    supportingText = {
+                        delayedError?.let {
+                            Text(
+                                stringResource(it),
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = getResponsiveBodyLargeSize() * 0.8f
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SmsAccent,
+                        focusedLabelColor = SmsAccent
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
+                )
+            }
+            
+            
+            Button(
+                onClick = { 
+                    onDelayModeChange(delayMode)
+                    onDismiss()
                 },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SmsAccent,
-                    focusedLabelColor = SmsAccent
-                ),
-                textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
-            )
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SmsAccent),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.schedule_sms_button),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = getResponsiveBodyLargeSize()
+                )
+            }
         }
     }
 }

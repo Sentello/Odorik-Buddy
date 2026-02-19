@@ -16,8 +16,8 @@ android {
         applicationId = "com.odorik.odorikbuddy"
         minSdk = 24
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.2.6"
+        versionCode = 9
+        versionName = "1.2.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -146,5 +146,9 @@ dependencies {
     // Glance
     implementation("androidx.glance:glance-appwidget:1.0.0")
     implementation("androidx.glance:glance-material3:1.0.0")
+}
+
+kapt {
+    correctErrorTypes = true
 }
 

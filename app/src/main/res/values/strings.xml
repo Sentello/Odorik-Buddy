@@ -230,6 +230,7 @@
     <string name="end_date_before_start_date">End date cannot be before start date.</string>
     <string name="sms_options_menu">More options</string>
     <string name="sms_delay_options_title">Schedule SMS</string>
+    <string name="schedule_sms_button">Schedule SMS</string>
 
     <string name="donate_button">Buy me a coffee</string>
     
