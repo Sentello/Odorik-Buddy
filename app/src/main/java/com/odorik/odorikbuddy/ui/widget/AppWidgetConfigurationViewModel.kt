@@ -66,7 +66,7 @@ class AppWidgetConfigurationViewModel @Inject constructor(
         }
     }
 
-    
+
     fun getContactName(number: String): String {
         val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 

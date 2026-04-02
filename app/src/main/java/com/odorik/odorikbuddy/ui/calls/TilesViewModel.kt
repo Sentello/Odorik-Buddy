@@ -93,7 +93,7 @@ class TilesViewModel @Inject constructor(
         viewModelScope.launch {
             val currentTiles = tiles.value
             val nextPosition = if (currentTiles.isEmpty()) 0 else currentTiles.maxOf { it.position } + 1
-            
+
             val newTile = TileEntity(
                 position = nextPosition,
                 label = label,
@@ -104,7 +104,7 @@ class TilesViewModel @Inject constructor(
                 useLineAsCallerId = useLineAsCallerId,
                 color = color,
                 textColor = textColor,
-                widgetStyle = "SQUARE" 
+                widgetStyle = "SQUARE"
             )
             tileRepository.insertTile(newTile)
         }
@@ -145,18 +145,18 @@ class TilesViewModel @Inject constructor(
 
     fun onTileReordered(fromIndex: Int, toIndex: Int) {
         if (fromIndex == toIndex) return
-        
+
         val currentList = tiles.value.sortedBy { it.position }.toMutableList()
         if (fromIndex !in currentList.indices || toIndex !in currentList.indices) return
-        
+
         val item = currentList.removeAt(fromIndex)
         currentList.add(toIndex, item)
-        
-        
+
+
         val updatedList = currentList.mapIndexed { index, tile ->
             tile.copy(position = index)
         }
-        
+
         viewModelScope.launch {
             tileRepository.updateTiles(updatedList)
         }

@@ -4,8 +4,8 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,10 +32,11 @@ class MainActivity : ComponentActivity() {
     private val callViewModel: CallViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         val lang = LanguagePreferences.getPreferredLanguage(this)
-        val locale = Locale(lang)
+        val locale = Locale.forLanguageTag(lang)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
         @Suppress("DEPRECATION")
@@ -43,23 +44,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Column {
-                        AppNavigation()
-
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                    }
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation()
                 }
             }
         }
@@ -67,7 +56,7 @@ class MainActivity : ComponentActivity() {
 
     fun updateLocale(lang: String) {
         localeManager.setPreferredLanguage(lang)
-        val locale = Locale(lang)
+        val locale = Locale.forLanguageTag(lang)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
         @Suppress("DEPRECATION")

@@ -12,6 +12,6 @@ class GetSmsListUseCase @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
-    
-    
+
+
 }

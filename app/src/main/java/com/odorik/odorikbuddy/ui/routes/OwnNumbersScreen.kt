@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,6 +40,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,6 +77,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.SettingsAccent
 import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
 import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
@@ -97,12 +101,13 @@ private fun GradientHeader(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            SettingsAccent.copy(alpha = 0.15f),
+                            SettingsAccent.copy(alpha = 0.35f),
                             Color.Transparent
                         )
                     )
                 )
-                .padding(horizontal = 4.dp, vertical = 16.dp)
+                .statusBarsPadding()
+                .padding(horizontal = 4.dp, vertical = 12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -114,7 +119,7 @@ private fun GradientHeader(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -133,9 +138,9 @@ private fun GradientHeader(
                         tint = Color.White
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Text(
                     text = title,
                     fontSize = getResponsiveTitleLargeSize(),
@@ -233,6 +238,7 @@ fun OwnNumbersScreen(
     })
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             GradientHeader(
                 title = stringResource(R.string.own_numbers),
@@ -261,146 +267,53 @@ fun OwnNumbersScreen(
                     )
                 }
                 is OwnNumbersViewModel.UiState.Success -> {
+
+                    val baseSpacing = getResponsiveSpacing()
+                    val cardPadding = getResponsiveCardPadding()
+                    val bodyLargeSize = getResponsiveBodyLargeSize()
+                    val bodySubtitleSize = bodyLargeSize * 0.85f
+
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = getResponsiveSpacing())
+                        contentPadding = PaddingValues(bottom = baseSpacing)
                     ) {
-                        items(currentState.data) { number ->
+                        items(
+                            items = currentState.data,
+                            key = { it.publicNumber }
+                        ) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
-                            
+
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
-                            ElevatedCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing() / 2),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.elevatedCardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                ),
-                                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column {
-                                    ListItem(
-                                        headlineContent = {
-                                            Text(
-                                                text = publicNumberDisplayName,
-                                                fontSize = getResponsiveBodyLargeSize(),
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        },
-                                        supportingContent = if (hasRules) {
-                                            {
-                                                Text(
-                                                    text = pluralStringResource(
-                                                        R.plurals.route_rules_count,
-                                                        routesForThisNumber.size,
-                                                        routesForThisNumber.size
-                                                    ),
-                                                    fontSize = getResponsiveBodyLargeSize() * 0.85f,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = SettingsAccent
-                                                )
-                                            }
-                                        } else null,
-                                        leadingContent = if (hasRules) {
-                                            {
-                                                Icon(
-                                                    imageVector = Icons.Default.Info,
-                                                    contentDescription = "Has rules",
-                                                    tint = SettingsAccent
-                                                )
-                                            }
-                                        } else null,
-                                        modifier = Modifier.clickable {
-                                            selectedPublicNumber =
-                                                if (selectedPublicNumber == number.publicNumber) null else number.publicNumber
-                                        }
-                                    )
-
-                                    AnimatedVisibility(visible = selectedPublicNumber == number.publicNumber) {
-                                        Column {
-                                            HorizontalDivider(
-                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                            )
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = 48.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                if (isLoading && selectedPublicNumber == number.publicNumber) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(24.dp),
-                                                        color = SettingsAccent
-                                                    )
-                                                } else {
-                                                    val routes = routesMap[number.publicNumber] ?: emptyList()
-                                                    LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                                                        items(routes) { route ->
-                                                            val sourceName = viewModel.getContactName(route.sourceNumber)
-                                                            val ringingName = viewModel.getContactName(route.ringingNumber)
-
-                                                            ListItem(
-                                                                headlineContent = { Text(sourceName) },
-                                                                supportingContent = { Text("→ $ringingName") },
-                                                                trailingContent = {
-                                                                    IconButton(onClick = {
-                                                                        viewModel.deleteRoute(
-                                                                            number.publicNumber,
-                                                                            route.id
-                                                                        )
-                                                                    }) {
-                                                                        Icon(
-                                                                            Icons.Default.Delete,
-                                                                            contentDescription = stringResource(R.string.delete_rule),
-                                                                            tint = MaterialTheme.colorScheme.error
-                                                                        )
-                                                                    }
-                                                                }
-                                                            )
-                                                            HorizontalDivider(
-                                                                modifier = Modifier.padding(horizontal = 16.dp),
-                                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            Button(
-                                                onClick = {
-                                                    viewModel.resetDialogState()
-                                                    showAddDialog = true
-                                                },
-                                                enabled = !isLoading,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(
-                                                        horizontal = getResponsiveCardPadding(),
-                                                        vertical = getResponsiveSpacing() / 2
-                                                    ),
-                                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                                    containerColor = SettingsAccent
-                                                )
-                                            ) {
-                                                Icon(Icons.Default.Add, contentDescription = null)
-                                                Spacer(modifier = Modifier.width(getResponsiveSpacing() / 2))
-                                                Text(stringResource(R.string.add_rule))
-                                            }
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                        }
-                                    }
+                            OwnNumberItem(
+                                publicNumberDisplayName = publicNumberDisplayName,
+                                number = number,
+                                hasRules = hasRules,
+                                routesForThisNumber = routesForThisNumber,
+                                selectedPublicNumber = selectedPublicNumber,
+                                onSelect = {
+                                    selectedPublicNumber = if (selectedPublicNumber == number.publicNumber) null else number.publicNumber
+                                },
+                                isLoading = isLoading,
+                                viewModel = viewModel,
+                                cardPadding = cardPadding,
+                                baseSpacing = baseSpacing,
+                                bodyLargeSize = bodyLargeSize,
+                                bodySubtitleSize = bodySubtitleSize,
+                                onAddRule = {
+                                    viewModel.resetDialogState()
+                                    showAddDialog = true
                                 }
-                            }
+                            )
                         }
                         item {
-                            Spacer(modifier = Modifier.height(getResponsiveSpacing()))
+                            Spacer(modifier = Modifier.height(baseSpacing))
                         }
                     }
                 }
             }
-            
+
             PullRefreshIndicator(
                 refreshing = isLoading && uiState !is OwnNumbersViewModel.UiState.Loading,
                 state = pullRefreshState,
@@ -411,6 +324,7 @@ fun OwnNumbersScreen(
     }
 
     if (showAddDialog && selectedPublicNumber != null) {
+
         AlertDialog(
             onDismissRequest = {
                 showAddDialog = false
@@ -454,8 +368,20 @@ fun OwnNumbersScreen(
                             }
                         }
                     )
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = dialogUseCallerIdPrefix, onCheckedChange = viewModel::onUseCallerIdPrefixChange)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { viewModel.onUseCallerIdPrefixChange(!dialogUseCallerIdPrefix) },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = dialogUseCallerIdPrefix,
+                            onCheckedChange = { viewModel.onUseCallerIdPrefixChange(it) },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = SettingsAccent
+                            )
+                        )
                         Text(
                             stringResource(R.string.use_line_number_as_caller_id),
                             fontSize = getResponsiveBodyLargeSize()
@@ -516,10 +442,146 @@ fun OwnNumbersScreen(
     }
 
     LaunchedEffect(error) {
-        
+
         if (uiState !is OwnNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
         }
     }
 }
+
+@Composable
+fun OwnNumberItem(
+    publicNumberDisplayName: String,
+    number: com.odorik.odorikbuddy.model.PublicNumber,
+    hasRules: Boolean,
+    routesForThisNumber: List<com.odorik.odorikbuddy.model.Route>,
+    selectedPublicNumber: String?,
+    onSelect: () -> Unit,
+    isLoading: Boolean,
+    viewModel: OwnNumbersViewModel,
+    cardPadding: androidx.compose.ui.unit.Dp,
+    baseSpacing: androidx.compose.ui.unit.Dp,
+    bodyLargeSize: androidx.compose.ui.unit.TextUnit,
+    bodySubtitleSize: androidx.compose.ui.unit.TextUnit,
+    onAddRule: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = cardPadding, vertical = baseSpacing / 2)
+            .darkModeBorder(RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = publicNumberDisplayName,
+                        fontSize = bodyLargeSize,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                supportingContent = if (hasRules) {
+                    {
+                        Text(
+                            text = pluralStringResource(
+                                R.plurals.route_rules_count,
+                                routesForThisNumber.size,
+                                routesForThisNumber.size
+                            ),
+                            fontSize = bodySubtitleSize,
+                            fontWeight = FontWeight.Bold,
+                            color = SettingsAccent
+                        )
+                    }
+                } else null,
+                leadingContent = if (hasRules) {
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Has rules",
+                            tint = SettingsAccent
+                        )
+                    }
+                } else null,
+                modifier = Modifier.clickable(onClick = onSelect)
+            )
+
+            AnimatedVisibility(visible = selectedPublicNumber == number.publicNumber) {
+                Column {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isLoading && selectedPublicNumber == number.publicNumber) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = SettingsAccent
+                            )
+                        } else {
+
+                            Column(modifier = Modifier.heightIn(max = 300.dp)) {
+                                routesForThisNumber.forEach { route ->
+                                    val sourceName = viewModel.getContactName(route.sourceNumber)
+                                    val ringingName = viewModel.getContactName(route.ringingNumber)
+
+                                    ListItem(
+                                        headlineContent = { Text(sourceName) },
+                                        supportingContent = { Text("→ $ringingName") },
+                                        trailingContent = {
+                                            IconButton(onClick = {
+                                                viewModel.deleteRoute(
+                                                    number.publicNumber,
+                                                    route.id
+                                                )
+                                            }) {
+                                                Icon(
+                                                    Icons.Default.Delete,
+                                                    contentDescription = stringResource(R.string.delete_rule),
+                                                    tint = MaterialTheme.colorScheme.error
+                                                )
+                                            }
+                                        }
+                                    )
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Button(
+                        onClick = onAddRule,
+                        enabled = !isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = cardPadding,
+                                vertical = baseSpacing / 2
+                            ),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = SettingsAccent
+                        )
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(baseSpacing / 2))
+                        Text(stringResource(R.string.add_rule))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
+

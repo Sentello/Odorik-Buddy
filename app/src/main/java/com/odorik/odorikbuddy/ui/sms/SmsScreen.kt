@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,7 +51,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -67,6 +67,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -106,6 +107,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.components.GradientHeader
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.CounterGreen
 import com.odorik.odorikbuddy.ui.theme.CounterOrange
 import com.odorik.odorikbuddy.ui.theme.CounterRed
@@ -127,14 +129,14 @@ import kotlin.math.ceil
 @Composable
 private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
     val message = when {
-        
+
         response.startsWith("successfully_sent") -> {
             val credit = response.substringAfter("successfully_sent ").trim()
             stringResource(R.string.sms_successfully_sent, credit)
         }
         response == "successfully_enqueued" -> stringResource(R.string.sms_successfully_enqueued)
 
-        
+
         response.startsWith("error missing_argument") -> {
             val args = response.substringAfter("error missing_argument ").trim()
             stringResource(R.string.sms_error_missing_argument, args)
@@ -147,24 +149,24 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
         response == "error invalid_delay_format" -> stringResource(R.string.sms_error_invalid_delay_format)
         response == "error delayed_into_past" -> stringResource(R.string.sms_error_delayed_into_past)
 
-        
+
         response == stringResource(R.string.error_network_unreachable) -> stringResource(R.string.error_network_unreachable)
         response == stringResource(R.string.error_host_unresolvable) -> stringResource(R.string.error_host_unresolvable)
 
-        
+
         response == stringResource(R.string.auth_credentials_not_set) -> stringResource(R.string.auth_credentials_not_set)
         response == stringResource(R.string.user_or_password_not_set) -> stringResource(R.string.user_or_password_not_set)
 
-        
+
         response.startsWith("HTTP error:") -> {
             val code = response.substringAfter("HTTP error: ").trim()
             stringResource(R.string.error_unknown) + " (HTTP $code)"
         }
 
-        
+
         else -> stringResource(R.string.sms_unknown_error)
     }
-    
+
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
@@ -179,7 +181,8 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
         ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+                .darkModeBorder(RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = if (isError) {
@@ -200,9 +203,9 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
                 Icon(
                     imageVector = if (isError) Icons.Default.Error else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isError) 
-                        MaterialTheme.colorScheme.onErrorContainer 
-                    else 
+                    tint = if (isError)
+                        MaterialTheme.colorScheme.onErrorContainer
+                    else
                         MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
@@ -224,7 +227,7 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
 
 
 private fun calculateSmsSegments(message: String): Int {
-    val isUnicode = message.any { it.code > 127 } 
+    val isUnicode = message.any { it.code > 127 }
     val singleLimit = if (isUnicode) 70 else 160
     val multiLimit = if (isUnicode) 67 else 153
     val charCount = message.length
@@ -244,19 +247,19 @@ private fun CircularCharacterCounter(
     onClick: () -> Unit
 ) {
     val progress = (charCount.toFloat() / maxChars).coerceIn(0f, 1f)
-    
+
     val targetColor = when {
         segments <= 1 -> CounterGreen
         segments <= 3 -> CounterOrange
         else -> CounterRed
     }
-    
+
     val animatedColor by animateColorAsState(
         targetValue = targetColor,
         animationSpec = tween(durationMillis = 300),
         label = "counterColor"
     )
-    
+
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec = spring(
@@ -278,7 +281,7 @@ private fun CircularCharacterCounter(
                 contentDescription = "$charCount characters, ${if (segments > 1) "$segments messages" else "1 message"}"
             }
     ) {
-        
+
         CircularProgressIndicator(
             progress = { 1f },
             modifier = Modifier.size(48.dp),
@@ -286,7 +289,7 @@ private fun CircularCharacterCounter(
             strokeWidth = 4.dp,
             trackColor = Color.Transparent
         )
-        
+
         CircularProgressIndicator(
             progress = { animatedProgress },
             modifier = Modifier.size(48.dp),
@@ -294,7 +297,7 @@ private fun CircularCharacterCounter(
             strokeWidth = 4.dp,
             trackColor = Color.Transparent
         )
-        
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -415,8 +418,8 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             message = ""
         }
     }
-    
-    
+
+
     val fabInteractionSource = remember { MutableInteractionSource() }
     val isFabPressed by fabInteractionSource.collectIsPressedAsState()
     val fabScale by animateFloatAsState(
@@ -450,7 +453,8 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     modifier = Modifier.size(24.dp)
                 )
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Column(
             modifier = Modifier
@@ -458,13 +462,13 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            
+
             GradientHeader(
                 title = stringResource(R.string.sms_title),
                 iconVector = Icons.Default.Sms,
                 backgroundBrush = Brush.verticalGradient(
                     colors = listOf(
-                        SmsAccent.copy(alpha = 0.15f),
+                        SmsAccent.copy(alpha = 0.35f),
                         Color.Transparent
                     )
                 ),
@@ -476,10 +480,10 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 actionContentDescription = stringResource(R.string.sms_delay_options_title),
                 actionTint = SmsAccent
             )
-            
+
             AnimatedVisibility(
                 visible = contentVisible,
-                enter = fadeIn(animationSpec = tween(400)) + 
+                enter = fadeIn(animationSpec = tween(400)) +
                         slideInVertically(
                             initialOffsetY = { it / 4 },
                             animationSpec = tween(400)
@@ -491,10 +495,10 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                         .padding(horizontal = 16.dp)
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    
+
+
                     ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.elevatedCardColors(
                             containerColor = MaterialTheme.colorScheme.surface
@@ -506,7 +510,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 .fillMaxWidth()
                                 .padding(16.dp)
                         ) {
-                            
+
                             OutlinedTextField(
                                 value = recipient,
                                 onValueChange = {
@@ -514,7 +518,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     viewModel.updateRecipient(it)
                                     viewModel.saveDraft(it, message, selectedSender)
                                 },
-                                label = { 
+                                label = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             imageVector = Icons.Default.Phone,
@@ -561,7 +565,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
                             Spacer(Modifier.height(12.dp))
 
-                            
+
                             ExposedDropdownMenuBox(
                                 expanded = expanded,
                                 onExpandedChange = { expanded = !expanded },
@@ -571,7 +575,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     value = selectedSender ?: stringResource(R.string.select_sender),
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { 
+                                    label = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(
                                                 imageVector = Icons.Default.Person,
@@ -582,11 +586,11 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                             Text(
                                                 text = stringResource(R.string.sender),
                                                 fontSize = getResponsiveBodyLargeSize()
-                                            ) 
+                                            )
                                         }
                                     },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = SmsAccent,
@@ -614,9 +618,9 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
                     Spacer(Modifier.height(16.dp))
 
-                    
+
                     ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.elevatedCardColors(
                             containerColor = MaterialTheme.colorScheme.surface
@@ -640,7 +644,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                         viewModel.saveDraft(recipient, it, selectedSender)
                                     }
                                 },
-                                label = { 
+                                label = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             imageVector = Icons.Default.Sms,
@@ -651,7 +655,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                         Text(
                                             text = stringResource(R.string.message),
                                             fontSize = getResponsiveBodyLargeSize()
-                                        ) 
+                                        )
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -669,7 +673,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -701,7 +705,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 } else {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
-                                
+
                                 CircularCharacterCounter(
                                     charCount = charCount,
                                     segments = segments,
@@ -713,21 +717,21 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    
+
                     if (error != null) {
                         ApiMessage(response = error!!, isError = true, visible = true)
                     }
                     if (sendResult != null) {
                         ApiMessage(response = sendResult!!, isError = false, visible = true)
                     }
-                    
-                    
+
+
                     Spacer(modifier = Modifier.height(80.dp))
                 }
             }
         }
 
-        
+
         if (showPhoneNumberDialog) {
             AlertDialog(
                 onDismissRequest = { showPhoneNumberDialog = false },
@@ -755,7 +759,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             )
         }
 
-        
+
         if (showMultipartInfo) {
             AlertDialog(
                 onDismissRequest = { showMultipartInfo = false },
@@ -769,15 +773,24 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             )
         }
 
-        
+
         if (showDelayOptions) {
             ModalBottomSheet(
                 onDismissRequest = { showDelayOptions = false },
                 sheetState = sheetState,
-                dragHandle = { BottomSheetDefaults.DragHandle() },
+                dragHandle = {
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .size(width = 36.dp, height = 5.dp)
+                            .clip(CircleShape)
+                            .background(Brush.horizontalGradient(colors = listOf(SmsAccent, SmsAccentLight)))
+                    )
+                },
                 containerColor = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
+                com.odorik.odorikbuddy.util.ConfigureBottomSheetWindow()
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -794,7 +807,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             }
         }
 
-        
+
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
@@ -812,7 +825,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             }
         }
 
-        
+
         if (showTimePicker) {
             AlertDialog(
                 onDismissRequest = { showTimePicker = false },
@@ -856,7 +869,7 @@ private fun DelayOptionsContent(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        
+
         GradientHeader(
             title = stringResource(R.string.sms_delay_options_title),
             iconVector = Icons.Default.AccessTime,
@@ -881,7 +894,7 @@ private fun DelayOptionsContent(
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
         ) {
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -992,10 +1005,10 @@ private fun DelayOptionsContent(
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
                 )
             }
-            
-            
+
+
             Button(
-                onClick = { 
+                onClick = {
                     onDelayModeChange(delayMode)
                     onDismiss()
                 },

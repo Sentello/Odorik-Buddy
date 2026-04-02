@@ -101,7 +101,7 @@ class DashboardViewModel @Inject constructor(
             }
 
             try {
-                
+
                 if (isInitialLoad && securePreferences.getString("dashboard_start_date") == null) {
                     val (start, end) = getCurrentWeekRange()
                     _startDate.value = start
@@ -141,13 +141,13 @@ class DashboardViewModel @Inject constructor(
                 _startDate.value = java.time.LocalDate.ofEpochDay(startEpoch)
                 _endDate.value = java.time.LocalDate.ofEpochDay(endEpoch)
             } catch (e: Exception) {
-                
+
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
                 _endDate.value = end
             }
         } else {
-            
+
             val (start, end) = getCurrentWeekRange()
             _startDate.value = start
             _endDate.value = end
@@ -161,18 +161,18 @@ class DashboardViewModel @Inject constructor(
 
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
         val (currentStart, currentEnd) = getCurrentWeekRange()
-        
-        
+
+
         if (newStartDate == currentStart && newEndDate == currentEnd) {
             securePreferences.clearString("dashboard_start_date")
             securePreferences.clearString("dashboard_end_date")
         } else {
             saveDateRange(newStartDate, newEndDate)
         }
-        
+
         _startDate.value = newStartDate
         _endDate.value = newEndDate
-        
+
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -184,7 +184,7 @@ class DashboardViewModel @Inject constructor(
         _endDate.value = end
         securePreferences.clearString("dashboard_start_date")
         securePreferences.clearString("dashboard_end_date")
-        
+
         viewModelScope.launch {
             fetchSpendingData()
         }

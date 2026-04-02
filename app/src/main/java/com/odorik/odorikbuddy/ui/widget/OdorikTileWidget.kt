@@ -49,13 +49,13 @@ class OdorikTileWidget : GlanceAppWidget() {
     }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        
-        
+
+
         provideContent {
             val prefs = currentState<androidx.datastore.preferences.core.Preferences>()
             val tileId = prefs[intPreferencesKey("tile_id")] ?: -1
             val widgetStyle = prefs[stringPreferencesKey("widget_style")] ?: "SQUARE"
-            
+
             var tile: TileEntity? = null
             var contactName: String = ""
 
@@ -78,7 +78,7 @@ class OdorikTileWidget : GlanceAppWidget() {
         val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber))
         val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
         var contactName = ""
-        
+
         try {
             val cursor: Cursor? = context.contentResolver.query(uri, projection, null, null, null)
             cursor?.use {
@@ -87,10 +87,10 @@ class OdorikTileWidget : GlanceAppWidget() {
                 }
             }
         } catch (e: Exception) {
-            
+
              e.printStackTrace()
         }
-        
+
         return if (contactName.isNotEmpty()) contactName else phoneNumber
     }
 
@@ -101,11 +101,11 @@ class OdorikTileWidget : GlanceAppWidget() {
         } else {
             Color.Transparent
         }
-        
+
         val textColor = if (tile?.textColor != null) {
             Color(tile.textColor)
         } else if (tile?.color != null) {
-            Color.White 
+            Color.White
         } else {
             androidx.glance.unit.ColorProvider(R.color.black).getColor(LocalContext.current)
         }
@@ -126,7 +126,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 )
             }
         } else if (widgetStyle == "CIRCLE") {
-            
+
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
@@ -134,8 +134,8 @@ class OdorikTileWidget : GlanceAppWidget() {
                     .applyTileClickAction(tile),
                 contentAlignment = Alignment.Center
             ) {
-                
-                
+
+
                 Box(
                     modifier = GlanceModifier
                         .size(64.dp)
@@ -156,7 +156,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 }
             }
         } else {
-            
+
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
@@ -175,7 +175,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 ) {
                     val titleText = if (tile.label.isNotEmpty()) tile.label else contactName
                     val subtitleText = if (tile.label.isNotEmpty()) contactName else if (contactName != tile.recipient) tile.recipient else ""
-                    
+
                     TextWithShadow(
                         text = titleText,
                         style = TextStyle(
@@ -186,7 +186,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                         ),
                         maxLines = 1
                     )
-                    
+
                     if (subtitleText.isNotEmpty()) {
                         TextWithShadow(
                             text = subtitleText,
@@ -220,7 +220,7 @@ class OdorikTileWidget : GlanceAppWidget() {
         maxLines: Int = 1
     ) {
         Box(contentAlignment = Alignment.Center) {
-            
+
             Text(
                 text = text,
                 style = style.copy(
@@ -229,7 +229,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 maxLines = maxLines,
                 modifier = GlanceModifier.padding(start = 1.dp, top = 1.dp)
             )
-            
+
             Text(
                 text = text,
                 style = style,
@@ -239,7 +239,7 @@ class OdorikTileWidget : GlanceAppWidget() {
     }
 
     private fun GlanceModifier.applyTileClickAction(tile: TileEntity): GlanceModifier {
-        
+
         return this.clickable(
             actionStartActivity<WidgetCallActivity>(
                 actionParametersOf(ActionParameters.Key<Int>("tile_id") to tile.id)

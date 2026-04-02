@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
@@ -83,6 +85,7 @@ import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.model.Line
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.theme.SettingsAccent
@@ -114,12 +117,13 @@ private fun GradientHeader() {
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            SettingsAccent.copy(alpha = 0.15f),
+                            SettingsAccent.copy(alpha = 0.35f),
                             Color.Transparent
                         )
                     )
                 )
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -167,7 +171,8 @@ private fun SettingsSection(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .darkModeBorder(RoundedCornerShape(20.dp)),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -234,47 +239,49 @@ fun SettingsScreen(
 
     val uriHandler = LocalUriHandler.current
 
-    
+
     val updateInfo by updateViewModel.updateInfo.collectAsState()
     val isUpdateLoading by updateViewModel.isLoading.collectAsState()
     val updateError by updateViewModel.error.collectAsState()
 
-    
+
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            
+
             viewModel.setAutoUpdateEnabled(true)
-            
+
             viewModel.performImmediateUpdateCheck()
         }
-        
+
     }
 
-    
+
     val callPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            
+
             viewModel.setDirectCallsEnabled(true)
         }
-        
+
     }
 
     LaunchedEffect(Unit) {
         viewModel.getLines()
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
             GradientHeader()
-            
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -283,134 +290,134 @@ fun SettingsScreen(
                     bottom = getResponsiveSpacing()
                 )
             ) {
-                
+
                 item {
-                SettingsSection(
-                    title = stringResource(R.string.section_display),
-                    icon = Icons.Default.Brightness6
-                ) {
-                    Column {
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.dark_mode)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = isDarkMode,
-                                    onCheckedChange = { viewModel.setDarkMode(it) },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = SettingsAccent,
-                                        checkedTrackColor = SettingsAccentLight.copy(alpha = 0.5f)
+                    SettingsSection(
+                        title = stringResource(R.string.section_account),
+                        icon = Icons.Default.Call
+                    ) {
+                        Column {
+                            lines.forEachIndexed { index, line ->
+                                ListItem(
+                                    headlineContent = { Text("${line.name} (${line.caller_id})") },
+                                    supportingContent = { Text(stringResource(R.string.line_id_label) + " " + line.id.toString()) },
+                                    modifier = Modifier.clickable { viewModel.onLineSelected(line) }
+                                )
+                                if (index < lines.lastIndex) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        color = MaterialTheme.colorScheme.outlineVariant
                                     )
-                                )
-                            },
-                            modifier = Modifier.clickable { viewModel.setDarkMode(!isDarkMode) }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-                        val languages = listOf(
-                            stringResource(R.string.lang_english) to "en",
-                            stringResource(R.string.lang_czech) to "cs"
-                        )
-                        val selectedLang = languages.find { it.second == language }?.first ?: ""
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.settings_language_label)) },
-                            supportingContent = { Text(selectedLang, color = MaterialTheme.colorScheme.primary) },
-                            modifier = Modifier.clickable { showLanguageDialog = true }
-                        )
-                    }
-                }
-            }
-
-            
-            item {
-                SettingsSection(
-                    title = stringResource(R.string.section_data),
-                    icon = Icons.Default.History
-                ) {
-                    val periods = listOf(
-                        7 to stringResource(R.string.history_period_7),
-                        30 to stringResource(R.string.history_period_30),
-                        90 to stringResource(R.string.history_period_90),
-                        180 to stringResource(R.string.history_period_180),
-                        365 to stringResource(R.string.history_period_365)
-                    )
-                    val selectedPeriod = periods.find { it.first == historyPeriod }?.second ?: ""
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.history_period_label)) },
-                        supportingContent = { Text(selectedPeriod, color = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.clickable { showHistoryPeriodDialog = true }
-                    )
-                }
-            }
-
-            
-            item {
-                SettingsSection(
-                    title = stringResource(R.string.section_personal),
-                    icon = Icons.Default.Person
-                ) {
-                    Column {
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.personal_phone_number)) },
-                            supportingContent = {
-                                Text(
-                                    if (currentPhoneNumber.isNotEmpty()) currentPhoneNumber
-                                    else stringResource(R.string.personal_phone_number_description),
-                                    color = if (currentPhoneNumber.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
-                            modifier = Modifier.clickable { showPhoneNumberDialog = true }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.section_routing)) },
-                            supportingContent = { Text(stringResource(R.string.routing_description)) },
-                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
-                            modifier = Modifier.clickable {
-                                internalNavController.navigate(SettingsRoutes.ROUTING_OPTIONS_SCREEN)
-                            }
-                        )
-                    }
-                }
-            }
-
-            
-            item {
-                SettingsSection(
-                    title = stringResource(R.string.section_account),
-                    icon = Icons.Default.Call
-                ) {
-                    Column {
-                        lines.forEachIndexed { index, line ->
-                            ListItem(
-                                headlineContent = { Text("${line.name} (${line.caller_id})") },
-                                supportingContent = { Text(stringResource(R.string.line_id_label) + " " + line.id.toString()) },
-                                modifier = Modifier.clickable { viewModel.onLineSelected(line) }
-                            )
-                            if (index < lines.lastIndex) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            
+
+                item {
+                    SettingsSection(
+                        title = stringResource(R.string.section_personal),
+                        icon = Icons.Default.Person
+                    ) {
+                        Column {
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.personal_phone_number)) },
+                                supportingContent = {
+                                    Text(
+                                        if (currentPhoneNumber.isNotEmpty()) currentPhoneNumber
+                                        else stringResource(R.string.personal_phone_number_description),
+                                        color = if (currentPhoneNumber.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                                modifier = Modifier.clickable { showPhoneNumberDialog = true }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.section_routing)) },
+                                supportingContent = { Text(stringResource(R.string.routing_description)) },
+                                trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                                modifier = Modifier.clickable {
+                                    internalNavController.navigate(SettingsRoutes.ROUTING_OPTIONS_SCREEN)
+                                }
+                            )
+                        }
+                    }
+                }
+
+
+                item {
+                    SettingsSection(
+                        title = stringResource(R.string.section_display),
+                        icon = Icons.Default.Brightness6
+                    ) {
+                        Column {
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.dark_mode)) },
+                                trailingContent = {
+                                    Switch(
+                                        checked = isDarkMode,
+                                        onCheckedChange = { viewModel.setDarkMode(it) },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = SettingsAccent,
+                                            checkedTrackColor = SettingsAccentLight.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.clickable { viewModel.setDarkMode(!isDarkMode) }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            val languages = listOf(
+                                stringResource(R.string.lang_english) to "en",
+                                stringResource(R.string.lang_czech) to "cs"
+                            )
+                            val selectedLang = languages.find { it.second == language }?.first ?: ""
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.settings_language_label)) },
+                                supportingContent = { Text(selectedLang, color = MaterialTheme.colorScheme.primary) },
+                                modifier = Modifier.clickable { showLanguageDialog = true }
+                            )
+                        }
+                    }
+                }
+
+
+                item {
+                    SettingsSection(
+                        title = stringResource(R.string.section_data),
+                        icon = Icons.Default.History
+                    ) {
+                        val periods = listOf(
+                            7 to stringResource(R.string.history_period_7),
+                            30 to stringResource(R.string.history_period_30),
+                            90 to stringResource(R.string.history_period_90),
+                            180 to stringResource(R.string.history_period_180),
+                            365 to stringResource(R.string.history_period_365)
+                        )
+                        val selectedPeriod = periods.find { it.first == historyPeriod }?.second ?: ""
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.history_period_label)) },
+                            supportingContent = { Text(selectedPeriod, color = MaterialTheme.colorScheme.primary) },
+                            modifier = Modifier.clickable { showHistoryPeriodDialog = true }
+                        )
+                    }
+                }
+
+
             item {
                 SettingsSection(
                     title = stringResource(R.string.section_app),
                     icon = Icons.Default.Apps
                 ) {
                     Column {
-                        
+
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.auto_update_checking)) },
                             supportingContent = { Text(stringResource(R.string.auto_update_checking_description)) },
@@ -448,10 +455,10 @@ fun SettingsScreen(
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
-                        
-                        
+
+
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.direct_calls)) },
                             supportingContent = { Text(stringResource(R.string.direct_calls_description)) },
@@ -481,10 +488,10 @@ fun SettingsScreen(
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
 
-                        
+
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.about_app)) },
                             trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
@@ -492,10 +499,10 @@ fun SettingsScreen(
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
 
-                        
+
                         val isUpdateAvailable = updateViewModel.isUpdateAvailable()
                         ListItem(
                             headlineContent = {
@@ -523,7 +530,7 @@ fun SettingsScreen(
                 }
             }
 
-            
+
             item {
                 androidx.compose.material3.OutlinedButton(
                     onClick = { showLogoutDialog = true },
@@ -538,7 +545,7 @@ fun SettingsScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.Logout, 
+                        Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
@@ -554,7 +561,7 @@ fun SettingsScreen(
     }
     }
 
-    
+
 
     selectedLine?.let {
         LineInfoDialog(line = it, onDismiss = { viewModel.onDismissLineDialog() })
@@ -611,8 +618,8 @@ fun SettingsScreen(
             onDismiss = { showPhoneNumberDialog = false }
         )
     }
-    
-    
+
+
     if (showUpdateDialog) {
         val isUpdateAvailable = updateViewModel.isUpdateAvailable()
         UpdateInfoDialog(
@@ -623,8 +630,8 @@ fun SettingsScreen(
             onDismiss = { showUpdateDialog = false }
         )
     }
-    
-    
+
+
     if (showAboutDialog) {
         AboutDialog(
             onDismiss = { showAboutDialog = false },
@@ -643,21 +650,21 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/2)) {
                 Text(
-                    "${stringResource(R.string.line_name_label)} ${line.name}", 
+                    "${stringResource(R.string.line_name_label)} ${line.name}",
                     fontSize = getResponsiveBodyLargeSize()
                 )
                 Text(
-                    "${stringResource(R.string.caller_id_label_settings)} ${line.caller_id}", 
+                    "${stringResource(R.string.caller_id_label_settings)} ${line.caller_id}",
                     fontSize = getResponsiveBodyLargeSize()
                 )
                 line.public_number?.let {
                     Text(
-                        "${stringResource(R.string.public_number_label)} ${it}", 
+                        "${stringResource(R.string.public_number_label)} ${it}",
                         fontSize = getResponsiveBodyLargeSize()
                     )
                 }
                 Text(
-                    "${stringResource(R.string.password_label_settings)} ${line.sip_password}", 
+                    "${stringResource(R.string.password_label_settings)} ${line.sip_password}",
                     fontSize = getResponsiveBodyLargeSize()
                 )
 
@@ -669,7 +676,7 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
                 )
                 if (line.connected_devices.isEmpty()) {
                     Text(
-                        stringResource(R.string.none), 
+                        stringResource(R.string.none),
                         fontSize = getResponsiveBodyLargeSize()
                     )
                 } else {
@@ -678,13 +685,13 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
                             val ipAddress = device.publicSocket.substringBefore(':')
                             Column {
                                 Text(
-                                    "• ${device.userAgent}", 
+                                    "• ${device.userAgent}",
                                     fontSize = getResponsiveBodyLargeSize(),
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    "  IP: $ipAddress", 
-                                    fontSize = getResponsiveBodyLargeSize() * 0.85f, 
+                                    "  IP: $ipAddress",
+                                    fontSize = getResponsiveBodyLargeSize() * 0.85f,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -706,7 +713,7 @@ fun PhoneNumberInputDialog(
     onDismiss: () -> Unit
 ) {
     var phoneNumberInput by remember { mutableStateOf(currentNumber) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.personal_phone_number)) },
@@ -720,11 +727,11 @@ fun PhoneNumberInputDialog(
                 OutlinedTextField(
                     value = phoneNumberInput,
                     onValueChange = { phoneNumberInput = it },
-                    label = { 
+                    label = {
                         Text(
                             stringResource(R.string.personal_phone_number),
                             fontSize = getResponsiveBodyLargeSize()
-                        ) 
+                        )
                     },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -863,10 +870,10 @@ fun UpdateInfoDialog(
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-    
-    
+
+
     val cannotOpenUrlString = stringResource(R.string.cannot_open_url)
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.app_update)) },
@@ -886,7 +893,7 @@ fun UpdateInfoDialog(
                             "${stringResource(R.string.latest_version)}: ${updateInfo.version}",
                             fontSize = getResponsiveBodyLargeSize()
                         )
-                        
+
                         if (isUpdateAvailable) {
                             Text(
                                 stringResource(R.string.update_available),
@@ -918,14 +925,14 @@ fun UpdateInfoDialog(
         confirmButton = {
             if (updateInfo != null && isUpdateAvailable) {
                 TextButton(
-                    onClick = { 
+                    onClick = {
                         try {
                             uriHandler.openUri(updateInfo.downloadUrl)
                         } catch (e: Exception) {
-                            
+
                             android.widget.Toast.makeText(
-                                context, 
-                                cannotOpenUrlString, 
+                                context,
+                                cannotOpenUrlString,
                                 android.widget.Toast.LENGTH_LONG
                             ).show()
                         }
@@ -949,7 +956,7 @@ fun UpdateInfoDialog(
             }
         }
     )
-    
+
 }
 
 @Composable
@@ -969,22 +976,31 @@ fun AboutDialog(
                     fontSize = getResponsiveBodyLargeSize(),
                     modifier = Modifier.padding(bottom = getResponsiveSpacing()/2)
                 )
-                
+
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.github_repository)) },
                     leadingContent = { Icon(Icons.Default.Code, contentDescription = null) },
+                    colors = androidx.compose.material3.ListItemDefaults.colors(
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    ),
                     modifier = Modifier.clickable { onOpenGitHub() }
                 )
-                
+
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.discussion_forum)) },
                     leadingContent = { Icon(Icons.Default.Forum, contentDescription = null) },
+                    colors = androidx.compose.material3.ListItemDefaults.colors(
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    ),
                     modifier = Modifier.clickable { onOpenForum() }
                 )
 
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.donate_button)) },
                     leadingContent = { Icon(Icons.Default.LocalCafe, contentDescription = null) },
+                    colors = androidx.compose.material3.ListItemDefaults.colors(
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    ),
                     modifier = Modifier.clickable { onSupport() }
                 )
             }

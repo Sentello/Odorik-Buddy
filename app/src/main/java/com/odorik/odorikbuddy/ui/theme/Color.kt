@@ -11,31 +11,31 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 
-val SmsAccent = Color(0xFF4A90D9)       
-val SmsAccentLight = Color(0xFF7EB6F6)  
-val SmsAccentDark = Color(0xFF2D5A8A)   
-val SmsSend = Color(0xFF34C759)         
-val SmsSendLight = Color(0xFF5DD879)    
+val SmsAccent = Color(0xFF3B82F6)
+val SmsAccentLight = Color(0xFF7EB6F6)
+val SmsAccentDark = Color(0xFF2D5A8A)
+val SmsSend = SmsAccent
+val SmsSendLight = SmsAccentLight
 
 
-val CounterGreen = Color(0xFF34C759)    
-val CounterOrange = Color(0xFFFF9500)   
-val CounterRed = Color(0xFFFF3B30)      
+val CounterGreen = Color(0xFF34C759)
+val CounterOrange = Color(0xFFFF9500)
+val CounterRed = Color(0xFFFF3B30)
 
 
-val CallAccent = SmsAccent              
-val CallAccentLight = SmsAccentLight    
-val CallButton = SmsSend                
-val CallButtonLight = SmsSendLight      
+val CallAccent = Color(0xFFFF5722)
+val CallAccentLight = Color(0xFFFF8A65)
+val CallButton = CallAccent
+val CallButtonLight = CallAccentLight
 
 
-val HistoryAccent = Color(0xFF8B5CF6)   
-val HistoryAccentLight = Color(0xFFA78BFA) 
+val HistoryAccent = Color(0xFF7C3AED)
+val HistoryAccentLight = Color(0xFFA78BFA)
 
 
-val SettingsAccent = Color(0xFF14B8A6)   
-val SettingsAccentLight = Color(0xFF5EEAD4) 
+val SettingsAccent = Color(0xFF0D9488)
+val SettingsAccentLight = Color(0xFF5EEAD4)
 
 
-val DashboardAccent = Color(0xFFF59E0B)       
-val DashboardAccentLight = Color(0xFFFCD34D)  
+val DashboardAccent = Color(0xFFF59E0B)
+val DashboardAccentLight = Color(0xFFFCD34D)

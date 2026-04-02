@@ -54,7 +54,7 @@ class SmsViewModel @Inject constructor(
     private val _delayedError = MutableStateFlow<Int?>(null)
     val delayedError: StateFlow<Int?> = _delayedError
 
-    
+
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
 
@@ -62,7 +62,7 @@ class SmsViewModel @Inject constructor(
         _recipient.value = newRecipient
     }
 
-    
+
     private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
 
     val recipientContactName: StateFlow<String?> = combine(_recipient, _contactsMap) { number, contacts ->
@@ -119,13 +119,13 @@ class SmsViewModel @Inject constructor(
         return null
     }
 
-    
+
     private fun filterAllowedSenders(numbers: List<String>): List<String> {
         return numbers.filter { !it.trim().startsWith("00") }
     }
 
     fun fetchAllowedSenders() = viewModelScope.launch {
-        _error.value = null 
+        _error.value = null
         try {
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
@@ -143,7 +143,7 @@ class SmsViewModel @Inject constructor(
                 } else {
                     val allNumbers = body?.split(",") ?: emptyList()
                     _allowedSenders.value = filterAllowedSenders(allNumbers)
-                    _error.value = null 
+                    _error.value = null
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"
@@ -155,8 +155,8 @@ class SmsViewModel @Inject constructor(
     }
 
     fun sendSms(recipient: String, message: String, sender: String?) = viewModelScope.launch {
-        _sendResult.value = null 
-        _error.value = null      
+        _sendResult.value = null
+        _error.value = null
         try {
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
@@ -172,8 +172,8 @@ class SmsViewModel @Inject constructor(
                 if (body?.startsWith("error") == true) {
                     _error.value = body
                 } else {
-                    _sendResult.value = body  
-                    clearDraft() 
+                    _sendResult.value = body
+                    clearDraft()
                 }
             } else {
                 _error.value = "HTTP error: ${response.code()}"
@@ -201,7 +201,7 @@ class SmsViewModel @Inject constructor(
                 )?.use { phoneCursor ->
                     while (phoneCursor.moveToNext()) {
                         var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                        number = number.replace(Regex("[^0-9+]"), "") 
+                        number = number.replace(Regex("[^0-9+]"), "")
                         if (number.isNotBlank()) {
                             numbers.add(number)
                         }
@@ -225,12 +225,12 @@ class SmsViewModel @Inject constructor(
             return
         }
 
-        
+
         try {
             val minutes = delayed.toInt()
             _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
         } catch (e: NumberFormatException) {
-            
+
             try {
                 val scheduled = Instant.parse(delayed)
                 val now = Instant.now()

@@ -34,17 +34,17 @@ class CustomMarkerView(context: Context, layoutResource: Int, private val dates:
         val spending = spendingData[index].spending
         if (spending > 0) {
             tvContent.text = context.getString(R.string.spending_for_date, date, spending)
-            
+
             tvContent.measure(
                 android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED),
                 android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED)
             )
-            
+
             measure(
-                android.view.View.MeasureSpec.makeMeasureSpec(tvContent.measuredWidth + 32, android.view.View.MeasureSpec.EXACTLY), 
+                android.view.View.MeasureSpec.makeMeasureSpec(tvContent.measuredWidth + 32, android.view.View.MeasureSpec.EXACTLY),
                 android.view.View.MeasureSpec.makeMeasureSpec(tvContent.measuredHeight + 32, android.view.View.MeasureSpec.EXACTLY)
             )
-            
+
             layout(0, 0, measuredWidth, measuredHeight)
             visibility = View.VISIBLE
         } else {

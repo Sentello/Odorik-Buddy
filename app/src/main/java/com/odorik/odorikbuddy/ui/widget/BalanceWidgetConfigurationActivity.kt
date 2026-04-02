@@ -138,7 +138,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                
+
                 item {
                     Text(
                         text = stringResource(R.string.widget_preview),
@@ -146,8 +146,8 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    
-                    
+
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -164,13 +164,13 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                                 }
                             )
                             .border(
-                                1.dp, 
-                                if(selectedBackground == "TRANSPARENT") MaterialTheme.colorScheme.outline else Color.Transparent, 
+                                1.dp,
+                                if(selectedBackground == "TRANSPARENT") MaterialTheme.colorScheme.outline else Color.Transparent,
                                 RoundedCornerShape(16.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        
+
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
@@ -217,7 +217,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-                
+
                 item {
                     ConfigSection(title = stringResource(R.string.widget_config_background)) {
                         val backgrounds = listOf(
@@ -242,7 +242,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-                
+
                 item {
                     ConfigSection(title = stringResource(R.string.text_color)) {
                          val colors = listOf(
@@ -265,7 +265,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-                
+
                 item {
                      ConfigSection(title = stringResource(R.string.widget_config_text_size)) {
                          val sizes = listOf(
@@ -303,14 +303,14 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
             content()
         }
     }
-    
-    
+
+
     @Composable
     fun FlowRowCompat(content: @Composable () -> Unit) {
-        
-        
-        
-        
+
+
+
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
@@ -326,8 +326,8 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
     private fun saveWidgetState(background: String, textColor: String, textSize: String) {
         lifecycleScope.launch {
             val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
-            
-            
+
+
             updateAppWidgetState(applicationContext, glanceId) { prefs ->
                 prefs[BalanceWidget.backgroundKey] = background
                 prefs[BalanceWidget.textColorKey] = textColor
@@ -336,15 +336,15 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                 prefs.remove(BalanceWidget.errorKey)
             }
             BalanceWidget().update(applicationContext, glanceId)
-            
-            
+
+
             val result = getCreditUseCase.execute()
-            
-            
+
+
             updateAppWidgetState(applicationContext, glanceId) { prefs ->
                 prefs[BalanceWidget.isLoadingKey] = false
                 prefs[BalanceWidget.lastUpdatedKey] = System.currentTimeMillis()
-                
+
                 result.onSuccess { balance ->
                     prefs[BalanceWidget.balanceKey] = balance
                     prefs.remove(BalanceWidget.errorKey)
@@ -353,7 +353,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                 }
             }
             BalanceWidget().update(applicationContext, glanceId)
-            
+
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
             finish()

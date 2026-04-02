@@ -43,15 +43,15 @@ class UpdateWorkManager @Inject constructor(
             .build()
 
         val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-            7, TimeUnit.DAYS 
+            7, TimeUnit.DAYS
         )
             .setConstraints(constraints)
-            .setInitialDelay(1, TimeUnit.HOURS) 
+            .setInitialDelay(1, TimeUnit.HOURS)
             .build()
 
         workManager.enqueueUniquePeriodicWork(
             UPDATE_CHECK_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP, 
+            ExistingPeriodicWorkPolicy.KEEP,
             updateWorkRequest
         )
     }
@@ -79,16 +79,16 @@ class UpdateWorkManager @Inject constructor(
     fun performImmediateUpdateCheck() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                
+
                 val result = updateRepository.getAppUpdateInfo()
 
                 result.onSuccess { updateInfo ->
-                    
-                    updateRepository.getCachedUpdateInfo() 
 
-                    
+                    updateRepository.getCachedUpdateInfo()
+
+
             } catch (e: Exception) {
-                
+
             }
         }
     }
@@ -97,7 +97,7 @@ class UpdateWorkManager @Inject constructor(
         val currentVersion = BuildConfig.VERSION_NAME
         val latestVersion = updateInfo.version
 
-        
+
         return try {
             val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
             val latestParts = latestVersion.split(".").map { it.toIntOrNull() ?: 0 }
@@ -120,15 +120,15 @@ class UpdateWorkManager @Inject constructor(
     }
 
     private fun showImmediateUpdateNotification(updateInfo: AppUpdateInfo) {
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-                return 
+                return
             }
         }
 
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = android.app.NotificationChannel(
                 "update_notifications",
@@ -141,7 +141,7 @@ class UpdateWorkManager @Inject constructor(
             notificationManager.createNotificationChannel(channel)
         }
 
-        
+
         val intent = android.content.Intent(context, com.odorik.odorikbuddy.MainActivity::class.java).apply {
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -166,7 +166,7 @@ class UpdateWorkManager @Inject constructor(
         try {
             androidx.core.app.NotificationManagerCompat.from(context).notify(1002, notification)
         } catch (e: SecurityException) {
-            
+
         }
     }
 }

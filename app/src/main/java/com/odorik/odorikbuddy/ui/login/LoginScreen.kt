@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.SmsAccent
 import com.odorik.odorikbuddy.ui.theme.SmsAccentLight
 
@@ -67,7 +68,7 @@ fun LoginScreen(
     val loginUiState by viewModel.loginUiState.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    
+
     LaunchedEffect(loginUiState) {
         if (loginUiState is LoginUiState.Success) {
             onLoginSuccess()
@@ -87,7 +88,8 @@ fun LoginScreen(
         ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(24.dp)
+                .darkModeBorder(RoundedCornerShape(24.dp)),
             shape = RoundedCornerShape(24.dp)
         ) {
             Column(
@@ -106,7 +108,7 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = userId,
-                    onValueChange = { 
+                    onValueChange = {
                         userId = it
                         viewModel.onUserIdChanged()
                     },
@@ -131,7 +133,7 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { 
+                    onValueChange = {
                         password = it
                         viewModel.onPasswordChanged()
                     },
@@ -174,7 +176,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                
+
                 if (loginUiState is LoginUiState.Error) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
@@ -188,7 +190,7 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.Lock, 
+                                imageVector = androidx.compose.material.icons.Icons.Default.Lock,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp)

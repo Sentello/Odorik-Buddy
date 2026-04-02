@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.theme.SettingsAccent
 import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
@@ -67,12 +70,13 @@ private fun GradientHeader(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            SettingsAccent.copy(alpha = 0.15f),
+                            SettingsAccent.copy(alpha = 0.35f),
                             Color.Transparent
                         )
                     )
                 )
-                .padding(horizontal = 4.dp, vertical = 16.dp)
+                .statusBarsPadding()
+                .padding(horizontal = 4.dp, vertical = 12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -84,7 +88,7 @@ private fun GradientHeader(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -103,9 +107,9 @@ private fun GradientHeader(
                         tint = Color.White
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Text(
                     text = title,
                     fontSize = getResponsiveTitleLargeSize(),
@@ -123,6 +127,7 @@ fun RoutingOptionsScreen(
     internalNavController: NavHostController
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             GradientHeader(
                 title = stringResource(R.string.section_routing),
@@ -142,7 +147,8 @@ fun RoutingOptionsScreen(
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing()/2),
+                        .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing()/2)
+                        .darkModeBorder(RoundedCornerShape(16.dp)),
                     shape = RoundedCornerShape(16.dp),
                      colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -150,7 +156,7 @@ fun RoutingOptionsScreen(
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
                     Column {
-                        
+
                         ListItem(
                             headlineContent = {
                                 Text(
@@ -182,13 +188,13 @@ fun RoutingOptionsScreen(
                             },
                             modifier = Modifier.clickable { internalNavController.navigate(SettingsRoutes.ROUTES_SCREEN) }
                         )
-                        
+
                         HorizontalDivider(
                              modifier = Modifier.padding(horizontal = 16.dp),
-                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
 
-                        
+
                         ListItem(
                             headlineContent = {
                                 Text(

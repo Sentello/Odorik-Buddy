@@ -1,16 +1,25 @@
 package com.odorik.odorikbuddy.ui.main
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -46,6 +55,7 @@ fun MainScreen(navController: NavController) {
     val bottomNavController = rememberNavController()
 
     Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars),
         bottomBar = {
             NavigationBar {
                 val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
@@ -61,11 +71,31 @@ fun MainScreen(navController: NavController) {
                     val label = stringResource(screen.titleRes)
                     val showLabels = shouldShowNavigationLabels()
                     val labelFontSize = getResponsiveNavigationLabelSize()
+                    val isSelected = when (screen) {
+                        BottomNavItem.Dashboard -> {
+                            currentDestination?.hierarchy?.any { it.route == screen.route } == true ||
+                                    currentDestination?.route == "date_range_picker"
+                        }
+                        else -> {
+                            currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                        }
+                    }
+
+                    val scale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.25f else 1.0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "IconScale"
+                    )
+
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                screen.icon,
-                                contentDescription = label 
+                                if (isSelected) screen.selectedIcon else screen.unselectedIcon,
+                                contentDescription = label,
+                                modifier = Modifier.scale(scale)
                             )
                         },
                         label = if (showLabels) {
@@ -77,24 +107,30 @@ fun MainScreen(navController: NavController) {
                                 )
                             }
                         } else null,
-                        selected = when (screen) {
-                            BottomNavItem.Dashboard -> {
-                                currentDestination?.hierarchy?.any { it.route == screen.route } == true ||
-                                        currentDestination?.route == "date_range_picker"
-                            }
-                            else -> {
-                                currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                            }
-                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = screen.accentColor.copy(alpha = 0.2f),
+                            selectedIconColor = screen.accentColor,
+                            selectedTextColor = screen.accentColor
+                        ),
+                        selected = isSelected,
                         onClick = {
-                            bottomNavController.navigate(screen.route) {
-                                popUpTo(bottomNavController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (isSelected) {
+                                val tabDestination = currentDestination?.hierarchy?.firstOrNull { it.route == screen.route }
+                                if (tabDestination is androidx.navigation.NavGraph) {
+                                    bottomNavController.popBackStack(tabDestination.startDestinationId, inclusive = false)
+                                } else if (currentDestination?.route == "date_range_picker" && screen.route == BottomNavItem.Dashboard.route) {
+                                    bottomNavController.popBackStack(BottomNavItem.Dashboard.route, inclusive = false)
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                            } else {
+                                bottomNavController.navigate(screen.route) {
+                                    popUpTo(bottomNavController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                                viewModel.saveLastScreen(screen.route)
                             }
-                            viewModel.saveLastScreen(screen.route)
                         },
                         modifier = Modifier.semantics {
                             role = Role.Tab

@@ -68,6 +68,7 @@ import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.repository.TileRepository
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
 import com.odorik.odorikbuddy.ui.theme.SettingsAccent
 import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
@@ -95,7 +96,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        
+
         val intent = intent
         val extras = intent.extras
         if (extras != null) {
@@ -105,19 +106,19 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             )
         }
 
-        
+
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
         }
-        
-        
+
+
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_CANCELED, resultValue)
 
         setContent {
             val context = LocalContext.current
-            
+
             val readContactsPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
                 onResult = { isGranted ->
@@ -192,7 +193,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    
+
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -211,9 +212,9 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             tint = Color.White
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(12.dp))
-                    
+
                     Text(
                         text = title,
                         fontSize = getResponsiveTitleLargeSize(),
@@ -224,7 +225,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             }
         }
     }
-    
+
     @Composable
     fun TileSelectionScreen(
         modifier: Modifier = Modifier,
@@ -234,7 +235,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         val tiles by viewModel.tiles.collectAsState()
         val contactsMap by viewModel.contactsMap.collectAsState()
         var selectedStyle by remember { mutableStateOf("SQUARE") }
-        
+
         androidx.compose.runtime.key(contactsMap) {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
@@ -251,8 +252,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                
+
+
                 item {
                     Column(
                         modifier = Modifier
@@ -270,7 +271,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            
+
                             StyleOption(
                                 label = stringResource(R.string.style_square),
                                 isSelected = selectedStyle == "SQUARE",
@@ -278,8 +279,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             )
-                            
-                            
+
+
                             StyleOption(
                                 label = stringResource(R.string.style_circle),
                                 isSelected = selectedStyle == "CIRCLE",
@@ -293,11 +294,12 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
 
                 items(tiles, key = { it.id }) { tile ->
                     val contactName = viewModel.getContactName(tile.recipient)
-                    
+
                     ElevatedCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing() / 2)
+                            .darkModeBorder(RoundedCornerShape(16.dp))
                             .clickable { onTileSelected(tile.id, selectedStyle) },
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.elevatedCardColors(
@@ -331,7 +333,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            
+
                             Text(
                                 text = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
                                 fontSize = getResponsiveBodyLargeSize() * 0.8f,
@@ -357,14 +359,14 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         val primaryColor = SettingsAccent
         val outlineColor = MaterialTheme.colorScheme.outlineVariant
         val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-        
+
         Column(
             modifier = modifier
                 .clickable(onClick = onClick)
                 .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            
+
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -377,21 +379,21 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
-                
+
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .background(
-                            if (isSelected) primaryColor.copy(alpha = 0.3f) 
-                            else outlineColor.copy(alpha = 0.3f), 
+                            if (isSelected) primaryColor.copy(alpha = 0.3f)
+                            else outlineColor.copy(alpha = 0.3f),
                             shape
                         )
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            
+
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
@@ -408,14 +410,14 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
     private fun saveWidgetState(tileId: Int, style: String) {
         lifecycleScope.launch {
             val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
-            
+
             updateAppWidgetState(applicationContext, glanceId) { prefs ->
                 prefs[intPreferencesKey("tile_id")] = tileId
                 prefs[stringPreferencesKey("widget_style")] = style
             }
-            
+
             OdorikTileWidget().update(applicationContext, glanceId)
-            
+
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
             finish()

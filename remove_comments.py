@@ -5,23 +5,24 @@ Handles both single-line (//) and multi-line (/* */) comments
 """
 
 import re
-import os
+import logging
+import argparse
 from pathlib import Path
 
 
-def remove_comments(content):
+def remove_comments(content: str) -> str:
     """
     Remove both single-line and multi-line comments from Kotlin code,
     being careful not to remove comments inside string literals.
     """
-    # First, identify all string literals and replace them temporarily to avoid modifying comments inside them
     temp_strings = []
     string_counter = 0
     
     # Pattern to match string literals: regular strings, character literals, and triple-quoted strings
-    string_pattern = r'("""(?:[^\\]|\\.)*?(?:""")|"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\')'
+    # We use (?:.|\n) for raw strings to match across multiple lines without enabling DOTALL globally
+    string_pattern = r'("""(?:.|\n)*?"""|"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\')'
     
-    def replace_string(match):
+    def replace_string(match: re.Match) -> str:
         nonlocal string_counter
         string_val = match.group(0)
         placeholder = f"__STRING_PLACEHOLDER_{string_counter}__"
@@ -30,17 +31,20 @@ def remove_comments(content):
         return placeholder
     
     # Temporarily replace string literals to avoid modifying comments inside strings
-    content_with_placeholders = re.sub(string_pattern, replace_string, content, flags=re.DOTALL)
+    content_with_placeholders = re.sub(string_pattern, replace_string, content)
     
     # Remove single-line comments: // followed by any characters until end of line
-    # Use MULTILINE flag so $ matches end of each line
     content_no_single_comments = re.sub(r'//.*$', '', content_with_placeholders, flags=re.MULTILINE)
     
     # Remove multi-line comments: /* ... */
+    # Note: This will not properly handle nested Kotlin block comments like /* /* ... */ */
     content_no_comments = re.sub(r'/\*.*?\*/', '', content_no_single_comments, flags=re.DOTALL)
     
+    # Clean up trailing spaces left on lines where inline comments were removed
+    content_cleaned = re.sub(r'[ \t]+$', '', content_no_comments, flags=re.MULTILINE)
+    
     # Restore string literals from placeholders
-    final_content = content_no_comments
+    final_content = content_cleaned
     for i, string_literal in enumerate(temp_strings):
         placeholder = f"__STRING_PLACEHOLDER_{i}__"
         final_content = final_content.replace(placeholder, string_literal)
@@ -48,46 +52,57 @@ def remove_comments(content):
     return final_content
 
 
-def process_kotlin_file(file_path):
+def process_kotlin_file(file_path: Path) -> bool:
     """Process a single Kotlin file to remove comments."""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    new_content = remove_comments(content)
-    
-    # Only write if content has changed
-    if new_content != content:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(new_content)
-        print(f"Removed comments from {file_path}")
-        return True
-    else:
-        print(f"No comments to remove from {file_path}")
+    try:
+        content = file_path.read_text(encoding='utf-8')
+        new_content = remove_comments(content)
+        
+        # Only write if content has changed
+        if new_content != content:
+            file_path.write_text(new_content, encoding='utf-8')
+            logging.info(f"Removed comments from {file_path}")
+            return True
+        else:
+            logging.debug(f"No comments to remove from {file_path}")
+            return False
+            
+    except Exception as e:
+        logging.error(f"Failed to process {file_path}: {e}")
         return False
 
 
-def main():
+def main() -> None:
     """Main function to process all Kotlin files in the project."""
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python remove_comments.py <directory>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Remove comments from Kotlin (.kt) files")
+    parser.add_argument("directory", type=Path, help="Directory containing Kotlin files to process")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
     
-    directory = Path(sys.argv[1])
+    args = parser.parse_args()
+    
+    # Configure logging
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=log_level, format='%(message)s')
+    
+    if not args.directory.exists() or not args.directory.is_dir():
+        logging.error(f"Error: Directory '{args.directory}' does not exist or is not a directory.")
+        return
+    
+    logging.info(f"Searching for .kt files in {args.directory}...")
     
     # Find all .kt files - use rglob for recursive search
-    kt_files = []
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith('.kt'):
-                kt_files.append(Path(os.path.join(root, file)))
+    kt_files = list(args.directory.rglob('*.kt'))
     
+    if not kt_files:
+        logging.info("No Kotlin files found in the specified directory.")
+        return
+        
     processed_count = 0
     for kt_file in kt_files:
         if process_kotlin_file(kt_file):
             processed_count += 1
     
-    print(f"Processing complete. Modified {processed_count} files.")
+    logging.info(f"Processing complete. Modified {processed_count} out of {len(kt_files)} files.")
 
 
 if __name__ == "__main__":

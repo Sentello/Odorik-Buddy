@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,12 +21,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
@@ -76,6 +76,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -91,12 +92,14 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.renderer.BarChartRenderer
+import com.github.mikephil.charting.renderer.CombinedChartRenderer
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.DashboardAccent
 import com.odorik.odorikbuddy.ui.theme.DashboardAccentLight
 import com.odorik.odorikbuddy.util.CurrencyFormatter
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
-import com.odorik.odorikbuddy.util.getResponsiveChartHeight
 import com.odorik.odorikbuddy.util.getResponsiveHeadlineLargeSize
 import com.odorik.odorikbuddy.util.getResponsivePadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
@@ -108,8 +111,8 @@ import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
 
-class TwoDecimalValueFormatter : ValueFormatter() {
-    private val symbols = java.text.DecimalFormatSymbols(java.util.Locale("cs", "CZ"))
+class TwoDecimalValueFormatter(locale: java.util.Locale) : ValueFormatter() {
+    private val symbols = java.text.DecimalFormatSymbols(locale)
     private val format = java.text.DecimalFormat("0.00", symbols)
 
     override fun getFormattedValue(value: Float): String {
@@ -137,10 +140,10 @@ fun DashboardScreen(
     val error by viewModel.error.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
-    
+
     val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
 
-    
+
     val context = LocalContext.current
     val currentLanguage = remember {
         val locale = context.resources.configuration.locales[0]
@@ -154,12 +157,12 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         viewModel.loadData(true)
     }
-    
-    
+
+
     LaunchedEffect(isCriticalError) {
         if (isCriticalError) {
             while (true) {
-                delay(5000) 
+                delay(5000)
                 if (isCriticalError) {
                     viewModel.refresh()
                 }
@@ -167,24 +170,24 @@ fun DashboardScreen(
         }
     }
 
-    
+
     val currentStartDate by viewModel.startDate.collectAsState()
     val currentEndDate by viewModel.endDate.collectAsState()
-    
+
     LaunchedEffect(Unit) {
-        snapshotFlow { 
+        snapshotFlow {
             navController.currentBackStackEntry?.savedStateHandle?.get<Long>("startDate") to
             navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate")
         }.collect { (startDateValue, endDateValue) ->
             if (startDateValue != null && endDateValue != null) {
                 val newStartDate = java.time.LocalDate.ofEpochDay(startDateValue)
                 val newEndDate = java.time.LocalDate.ofEpochDay(endDateValue)
-                
-                
+
+
                 if (newStartDate != currentStartDate || newEndDate != currentEndDate) {
                     viewModel.updateDateRange(newStartDate, newEndDate)
-                    
-                    
+
+
                     navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("startDate")
                     navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("endDate")
                 }
@@ -193,7 +196,7 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(error) {
-        
+
         if (!isCriticalError && error != null) {
             snackbarHostState.showSnackbar(
                 message = error!!,
@@ -211,13 +214,13 @@ fun DashboardScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .windowInsetsPadding(WindowInsets.systemBars)
                 .pullRefresh(pullRefreshState)
         ) {
             if (isInitialLoading) {
@@ -230,13 +233,23 @@ fun DashboardScreen(
                     onRetry = { viewModel.loadData(true) }
                 )
             } else {
-                LazyColumn(
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(getResponsivePadding()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(getResponsivePadding())
                 ) {
-                    item {
+
+
+
+                    val chartOverhead = 430.dp
+                    val dynamicChartHeight = (maxHeight - chartOverhead).coerceAtLeast(180.dp)
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         val currentCreditState = creditState
                         if (currentCreditState is DashboardViewModel.UiState.Success) {
                             val balance = currentCreditState.data
@@ -245,7 +258,8 @@ fun DashboardScreen(
                                 enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
                             ) {
                                 ElevatedCard(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
+                                    shape = RoundedCornerShape(20.dp),
                                     colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
                                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                                 ) {
@@ -287,21 +301,16 @@ fun DashboardScreen(
                                 }
                             }
                         }
-                    }
-                    
-                    item {
+
                         Spacer(modifier = Modifier.height(getResponsiveSpacing()))
                         SpendingSummary(todaysSpending, selectedPeriodSpending, currentLanguage, currencyFormatter)
-                    }
-                    
-                    item {
+
                         Spacer(modifier = Modifier.height(getResponsiveSpacing()))
-                        SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel, currentLanguage, currencyFormatter)
-                        Spacer(modifier = Modifier.height(getResponsiveSpacing() * 2))
+                        SpendingChart(spendingChartData, spendingChartAverage, startDate, endDate, navController, viewModel, currentLanguage, currencyFormatter, dynamicChartHeight)
                     }
                 }
             }
-            
+
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
@@ -328,10 +337,12 @@ fun SpendingSummary(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .darkModeBorder(RoundedCornerShape(20.dp))
             .semantics {
                 contentDescription = summaryDesc
                 heading()
             },
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
@@ -403,7 +414,8 @@ fun SpendingChart(
     navController: NavController,
     viewModel: DashboardViewModel,
     language: String,
-    currencyFormatter: CurrencyFormatter
+    currencyFormatter: CurrencyFormatter,
+    chartHeight: Dp = 220.dp
 ) {
     val context = LocalContext.current
     val primaryColor = DashboardAccent.toArgb()
@@ -441,8 +453,9 @@ fun SpendingChart(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .darkModeBorder(RoundedCornerShape(20.dp))
             .semantics {
-                val valuesDesc = spendingChartData.joinToString(", ") { 
+                val valuesDesc = spendingChartData.joinToString(", ") {
                     val formattedValue = currencyFormatter.formatCurrency(it.spending, language)
                     "${it.date}: $formattedValue"
                 }
@@ -450,6 +463,7 @@ fun SpendingChart(
                 contentDescription = "Weekly spending chart for last 7 days. $valuesDesc. Average: $formattedAverage"
                 heading()
             },
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
@@ -494,19 +508,37 @@ fun SpendingChart(
             if (spendingChartData.isNotEmpty()) {
                 val maxSpending = spendingChartData.maxOfOrNull { it.spending } ?: 0.0
                 if (maxSpending > 0) {
-                    val chartHeight = getResponsiveChartHeight(maxSpending) - 40.dp
+
                     val chartKey = listOf(startDate, endDate, spendingChartData.size)
                     key(chartKey) {
                         AndroidView(
                             factory = { ctx ->
                                 CombinedChart(ctx).apply {
+
                                     xAxis.position = XAxis.XAxisPosition.BOTTOM
                                     xAxis.granularity = 1f
                                     xAxis.isGranularityEnabled = true
+                                    xAxis.setDrawAxisLine(false)
+                                    xAxis.setDrawGridLines(false)
+                                    xAxis.yOffset = 8f
+
+
+                                    axisLeft.setDrawAxisLine(false)
+                                    axisLeft.setDrawGridLines(true)
+                                    axisLeft.gridColor = android.graphics.Color.parseColor("#22888888")
+                                    axisLeft.gridLineWidth = 0.5f
+                                    axisLeft.enableGridDashedLine(8f, 4f, 0f)
+                                    axisLeft.setLabelCount(5, false)
                                     axisRight.isEnabled = false
+
+
                                     description.isEnabled = false
                                     legend.isEnabled = true
                                     legend.textColor = secondaryColor
+                                    legend.yOffset = 8f
+                                    setExtraOffsets(4f, 8f, 4f, 20f)
+
+
                                     setTouchEnabled(true)
                                     isDragEnabled = true
                                     setScaleEnabled(true)
@@ -520,6 +552,8 @@ fun SpendingChart(
                             update = { chart ->
                                 chart.xAxis.textColor = onSurfaceColor
                                 chart.axisLeft.textColor = onSurfaceColor
+                                chart.legend.textColor = onSurfaceColor
+
                                 val barEntries = spendingChartData.mapIndexed { index, day ->
                                     BarEntry(index.toFloat(), day.spending.toFloat())
                                 }
@@ -528,12 +562,15 @@ fun SpendingChart(
                                     color = primaryColor
                                     setGradientColor(primaryColor, primaryContainerColor)
                                     valueTypeface = Typeface.DEFAULT_BOLD
-                                    valueTextSize = 10f
+                                    valueTextSize = 11f
                                     valueTextColor = primaryColor
-                                    valueFormatter = TwoDecimalValueFormatter()
+                                    valueFormatter = TwoDecimalValueFormatter(currentLocale)
                                     setDrawValues(true)
+                                    highLightColor = primaryColor
+                                    highLightAlpha = 40
                                 }
                                 val barData = BarData(barDataSet)
+                                barData.barWidth = 0.6f
 
                                 val lineEntries = listOf(
                                     Entry(-0.5f, spendingChartAverage.toFloat()),
@@ -544,8 +581,9 @@ fun SpendingChart(
                                 )
                                 val averageLabel = chart.context.getString(R.string.chart_average)
                                 val lineDataSet = LineDataSet(lineEntries, averageLabel).apply {
-                                    color = secondaryColor
-                                    lineWidth = 1.5f
+                                    color = android.graphics.Color.parseColor("#99F59E0B")
+                                    lineWidth = 2f
+                                    enableDashedLine(10f, 5f, 0f)
                                     setDrawCircles(false)
                                     setDrawValues(false)
                                     setDrawFilled(false)
@@ -559,12 +597,27 @@ fun SpendingChart(
                                 combinedData.setData(lineData)
                                 chart.data = combinedData
 
+
+                                val combinedRenderer = chart.renderer as? CombinedChartRenderer
+                                combinedRenderer?.let { cr ->
+                                    val subRenderers = cr.subRenderers.toMutableList()
+                                    val barIndex = subRenderers.indexOfFirst { it is BarChartRenderer }
+                                    if (barIndex >= 0) {
+                                        val roundedRenderer = RoundedBarChartRenderer(
+                                            chart, chart.animator, chart.viewPortHandler, 16f
+                                        )
+                                        roundedRenderer.initBuffers()
+                                        subRenderers[barIndex] = roundedRenderer
+                                        cr.subRenderers = subRenderers
+                                    }
+                                }
+
                                 chart.xAxis.valueFormatter = IndexAxisValueFormatter(days)
-                                chart.axisLeft.setAxisMaximum((maxSpending * 1.1).toFloat())
-                                chart.axisLeft.setAxisMinimum(0f)
+                                chart.axisLeft.axisMaximum = (maxSpending * 1.15).toFloat()
+                                chart.axisLeft.axisMinimum = 0f
 
                                 chart.xAxis.axisMinimum = -0.5f
-                                chart.xAxis.axisMaximum = (spendingChartData.size - 1).toFloat()
+                                chart.xAxis.axisMaximum = (spendingChartData.size - 0.5f)
 
                                 val marker = CustomMarkerView(chart.context, R.layout.chart_marker_view, days, spendingChartData)
                                 chart.marker = marker
@@ -632,13 +685,13 @@ private fun GradientHeader(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        DashboardAccentLight.copy(alpha = 0.1f),
+                        DashboardAccentLight.copy(alpha = 0.35f),
                         MaterialTheme.colorScheme.background
                     )
                 )
             )
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -687,6 +740,7 @@ fun DashboardErrorState(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ElevatedCard(
+            modifier = Modifier.darkModeBorder(RoundedCornerShape(20.dp)),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer

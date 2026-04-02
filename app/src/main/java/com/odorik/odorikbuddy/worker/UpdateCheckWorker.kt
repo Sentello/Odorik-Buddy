@@ -41,20 +41,20 @@ class UpdateCheckWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            
+
             val result = updateRepository.getAppUpdateInfo()
 
             result.onSuccess { updateInfo ->
-                
+
                 saveUpdateInfo(updateInfo)
 
-                
-                
+
+
             }
 
             Result.success()
         } catch (e: Exception) {
-            
+
             Result.failure()
         }
     }
@@ -69,7 +69,7 @@ class UpdateCheckWorker @AssistedInject constructor(
         val currentVersion = BuildConfig.VERSION_NAME
         val latestVersion = updateInfo.version
 
-        
+
         return try {
             val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
             val latestParts = latestVersion.split(".").map { it.toIntOrNull() ?: 0 }
@@ -92,18 +92,18 @@ class UpdateCheckWorker @AssistedInject constructor(
     }
 
     private fun showUpdateNotification(updateInfo: AppUpdateInfo) {
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-                
+
                 return
             }
         }
 
         createNotificationChannel()
 
-        
+
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -128,7 +128,7 @@ class UpdateCheckWorker @AssistedInject constructor(
         try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         } catch (e: SecurityException) {
-            
+
         }
     }
 

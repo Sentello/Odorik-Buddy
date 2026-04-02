@@ -224,6 +224,7 @@
     <string name="chart_spending">Útrata</string>
     <string name="chart_average">Průměr</string>
     <string name="select_date_range">Vyberte časové období</string>
+    <string name="quick_select">Rychlý výběr</string>
     <string name="start_date">Počáteční datum: %s</string>
     <string name="end_date">Koncové datum: %s</string>
     <string name="apply">Použít</string>

@@ -2,6 +2,7 @@
 # You can find more details about customizing this file at
 # https://developer.android.com/studio/build/shrink-code
 
+
 # Remove all logging calls (Log.d, Log.e, etc.) in release builds
 -assumenosideeffects class android.util.Log {
     public static boolean isLoggable(java.lang.String, int);

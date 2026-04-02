@@ -16,7 +16,7 @@ fun AppNavigation(navController: NavHostController, userRepository: UserReposito
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") {
-            LoginScreen(onLoginSuccess = { 
+            LoginScreen(onLoginSuccess = {
                 navController.navigate("main") {
                     popUpTo("login") { inclusive = true }
                 }

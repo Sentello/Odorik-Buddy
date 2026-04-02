@@ -21,6 +21,6 @@ class TileRepository @Inject constructor(
     suspend fun deleteTile(tile: TileEntity) = tileDao.deleteTile(tile)
 
     suspend fun updateTilePosition(tileId: Int, newPosition: Int) = tileDao.updateTilePosition(tileId, newPosition)
-    
+
     suspend fun updateTiles(tiles: List<TileEntity>) = tileDao.updateTiles(tiles)
 }
