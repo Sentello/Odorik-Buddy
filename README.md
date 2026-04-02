@@ -1,5 +1,7 @@
 # Odorik Buddy
 
+> **Disclaimer:** Odorik Buddy is an **unofficial** companion app for [Odorik.cz](https://www.odorik.cz/) services. It is not affiliated with, endorsed by, or sponsored by Odorik.cz.
+
 Odorik Buddy is a modern Android application for interacting with the ODORIK.CZ API. It allows you to manage your account, make calls, send SMS, and more, all from a clean and intuitive interface.
 
 ## Features
@@ -21,17 +23,17 @@ Odorik Buddy is a modern Android application for interacting with the ODORIK.CZ 
 *   **Material 3**: For modern UI components and theming.
 *   **Navigation Compose**: For in-app navigation and routing.
 *   **MVVM Architecture**: For clean separation of concerns and maintainable codebase.
-*   **Retrofit**: For REST API communication with ODORIK.CZ.
+*   **Retrofit**: For REST API communication with ODORIK.CZ, with Gson and Scalars converters.
+*   **OkHttp**: HTTP client with logging interceptor for network debugging.
 *   **Coroutines & Flow**: For asynchronous operations and reactive data streams.
-*   **Hilt**: For dependency injection and service management.
-*   **Room**: For local SQLite database storage.
+*   **Hilt**: For dependency injection, including WorkManager and Navigation Compose integration.
+*   **Room**: For local SQLite database storage (tiles, history caching).
 *   **Jetpack Security**: For encrypted storage of sensitive data like API keys.
 *   **WorkManager**: For scheduling background tasks like update checks.
+*   **Glance**: For building modern home screen widgets (Balance & Tile widgets).
 *   **MPAndroidChart**: For interactive data visualization and charts.
-*   **Lottie**: For vector animations and loading indicators.
 *   **Libphonenumber**: For phone number parsing, formatting, and validation.
-*   **Gson**: For JSON serialization and deserialization.
-*   **Material PullRefresh**: For pull-to-refresh functionality across screens.
+*   **Core Library Desugaring**: For modern Java API support on older Android versions.
 
 ## License
 
