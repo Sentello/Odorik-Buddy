@@ -38,6 +38,3 @@ Odorik Buddy is a modern Android application for interacting with the ODORIK.CZ 
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for more details.
-
-
-<a href="https://www.buymeacoffee.com/sentello"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="200" alt="Buy me a coffee"></a>
