@@ -43,10 +43,10 @@ object AppModule {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://www.odorik.cz/api/v1/") 
+            .baseUrl("https://www.odorik.cz/api/v1/")
             .client(httpClient)
-            .addConverterFactory(ScalarsConverterFactory.create()) 
-            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create())) 
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()))
             .build()
             .create(OdorikApi::class.java)
     }
@@ -131,7 +131,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSharedPreferences(app: Application): SharedPreferences = app.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    
+
     @Provides
     @Singleton
     fun provideCurrencyFormatter(context: Context): CurrencyFormatter {

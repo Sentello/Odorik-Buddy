@@ -49,9 +49,11 @@ class RoutesViewModel @Inject constructor(
     private val _routesMap = MutableStateFlow<Map<String, List<Route>>>(emptyMap())
     val routesMap: StateFlow<Map<String, List<Route>>> = _routesMap.asStateFlow()
 
-    
+
     private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
+
+    private val contactNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
 
 
     private val _isLoading = MutableStateFlow(false)
@@ -191,10 +193,10 @@ class RoutesViewModel @Inject constructor(
         _error.value = null
     }
 
-    
 
 
-    
+
+
     fun loadContacts(contentResolver: ContentResolver) {
         viewModelScope.launch {
             val projection = arrayOf(
@@ -218,41 +220,27 @@ class RoutesViewModel @Inject constructor(
                         val number = cursor.getString(numberIndex)
                         val name = cursor.getString(nameIndex)
                         if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
-                            
+
                             val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
-                            
-                            if (!contacts.containsKey(normalizedNumber)) {
-                                contacts[normalizedNumber] = name
-                            }
-                        }
+
+            var foundMatch = number
+            val n1 = parsedInput.normalizedNumber.replace("+", "")
+            for ((contactNumber, contactName) in _contactsMap.value) {
+                val n2 = contactNumber.replace("+", "")
+                if (n1 == n2 || (n1.length > 8 && n2.length > 8 && (n1.endsWith(n2) || n2.endsWith(n1)))) {
+                    val numberPart = if (parsedInput.specialPrefix.isNotEmpty()) {
+                        "${parsedInput.specialPrefix} ${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)}"
+                    } else {
+                        PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)
                     }
+                    foundMatch = "$contactName ($numberPart)"
+                    break
                 }
             }
-            _contactsMap.value = contacts
-        }
-    }
-    
-    
-    fun getContactName(number: String): String {
-        
-        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
-        
-        for ((contactNumber, contactName) in _contactsMap.value) {
-            
-            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
-                
-                val numberPart = if (parsedInput.specialPrefix.isNotEmpty()) {
-                    "${parsedInput.specialPrefix} ${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)}"
-                } else {
-                    PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)
-                }
-                return "$contactName ($numberPart)"
-            }
-        }
 
-        
-        return number
+            foundMatch
+        }
     }
 
 
@@ -282,8 +270,8 @@ class RoutesViewModel @Inject constructor(
                 if (numberColumnIndex >= 0) {
                     while (phoneCursor.moveToNext()) {
                         val number = phoneCursor.getString(numberColumnIndex)
-                        
-                        
+
+
                         number?.let { numbers.add(it) }
                     }
                 }
@@ -291,7 +279,7 @@ class RoutesViewModel @Inject constructor(
         }
         return numbers.distinct()
     }
-    
+
 
     suspend fun <T> retryWithExponentialBackoff(
         times: Int = 3,

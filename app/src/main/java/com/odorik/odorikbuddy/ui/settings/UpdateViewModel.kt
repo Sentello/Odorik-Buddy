@@ -26,7 +26,7 @@ class UpdateViewModel @Inject constructor(
     val error: StateFlow<String?> = _error
 
     init {
-        
+
         loadCachedUpdateInfo()
     }
 
@@ -37,7 +37,7 @@ class UpdateViewModel @Inject constructor(
     }
 
     fun checkForUpdates() {
-        
+
         if (_isLoading.value) return
 
         viewModelScope.launch {
@@ -50,8 +50,8 @@ class UpdateViewModel @Inject constructor(
                     _isLoading.value = false
                 }
                 .onFailure { exception ->
-                    
-                    
+
+
                     _error.value = exception.message?.takeIf { it.isNotBlank() }
                         ?: "Failed to check for updates."
                     _isLoading.value = false
@@ -61,23 +61,23 @@ class UpdateViewModel @Inject constructor(
 
     fun isUpdateAvailable(): Boolean {
         val latestVersion = _updateInfo.value?.version
-        
+
         return latestVersion?.let { compareVersions(it, BuildConfig.VERSION_NAME) > 0 } ?: false
     }
 
     private fun compareVersions(version1: String, version2: String): Int {
         val v1Parts = version1.split(".").map { it.toIntOrNull() ?: 0 }
         val v2Parts = version2.split(".").map { it.toIntOrNull() ?: 0 }
-        
+
         for (i in 0 until maxOf(v1Parts.size, v2Parts.size)) {
             val part1 = if (i < v1Parts.size) v1Parts[i] else 0
             val part2 = if (i < v2Parts.size) v2Parts[i] else 0
-            
+
             if (part1 != part2) {
                 return part1.compareTo(part2)
             }
         }
-        
+
         return 0
     }
 }

@@ -15,10 +15,10 @@ fun getResponsivePadding(): PaddingValues {
     val screenWidthDp = configuration.screenWidthDp
 
     val responsiveHorizontalPadding = when {
-        screenWidthDp < 320 -> 8.dp 
-        screenWidthDp < 360 -> 12.dp 
-        screenWidthDp < 412 -> 16.dp 
-        else -> 24.dp 
+        screenWidthDp < 320 -> 8.dp
+        screenWidthDp < 360 -> 12.dp
+        screenWidthDp < 412 -> 16.dp
+        else -> 24.dp
     }
 
     val responsiveVerticalPadding = when {
@@ -60,14 +60,19 @@ fun getResponsiveCardPadding(): Dp {
 }
 
 @Composable
-fun getResponsiveChartHeight(maxSpending: Double): Dp {
+fun getResponsiveChartHeight(): Dp {
     val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
+    val screenHeightDp = configuration.screenHeightDp
 
-    val baseHeight = if (screenWidthDp < 412) 180.dp else 200.dp
-    val additionalHeight = (maxSpending * 3).coerceAtMost(80.0).dp
 
-    return baseHeight + additionalHeight
+
+
+    val uiOverhead = 440
+    val availableHeight = (screenHeightDp - uiOverhead).coerceAtLeast(0)
+
+
+    val fraction = if (screenHeightDp < 800) 0.40 else 0.55
+    return ((availableHeight * fraction).dp).coerceIn(120.dp, 320.dp)
 }
 
 @Composable
@@ -107,15 +112,15 @@ fun getResponsiveBodyLargeSize(): androidx.compose.ui.unit.TextUnit {
 }
 
 @Composable
-fun getResponsiveMessageFieldHeight(): Dp {  
+fun getResponsiveMessageFieldHeight(): Dp {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
 
     return when {
-        screenHeightDp < 680 -> 200.dp  
-        screenHeightDp < 840 -> 360.dp  
-        screenHeightDp < 1000 -> 400.dp 
-        else -> 440.dp                  
+        screenHeightDp < 680 -> 200.dp
+        screenHeightDp < 840 -> 360.dp
+        screenHeightDp < 1000 -> 400.dp
+        else -> 440.dp
     }
 }
 
@@ -125,10 +130,10 @@ fun getResponsiveMinMessageHeight(): Dp {
     val screenHeightDp = configuration.screenHeightDp
 
     return when {
-        screenHeightDp < 680 -> 120.dp  
-        screenHeightDp < 840 -> 240.dp  
-        screenHeightDp < 1000 -> 320.dp 
-        else -> 360.dp                  
+        screenHeightDp < 680 -> 120.dp
+        screenHeightDp < 840 -> 240.dp
+        screenHeightDp < 1000 -> 320.dp
+        else -> 360.dp
     }
 }
 
@@ -164,7 +169,7 @@ fun shouldShowNavigationLabels(): Boolean {
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
 
-    
+
     return screenWidthDp >= 400
 }
 
@@ -174,7 +179,7 @@ fun getResponsiveNavigationLabelSize(): androidx.compose.ui.unit.TextUnit {
     val screenWidthDp = configuration.screenWidthDp
 
     return when {
-        screenWidthDp < 412 -> 12.sp 
-        else -> 14.sp 
+        screenWidthDp < 412 -> 12.sp
+        else -> 14.sp
     }
 }

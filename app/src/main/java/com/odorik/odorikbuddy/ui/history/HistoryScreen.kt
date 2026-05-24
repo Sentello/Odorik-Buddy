@@ -5,10 +5,6 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -18,9 +14,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,6 +50,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -84,10 +83,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.model.HistoryItem
 import com.odorik.odorikbuddy.ui.components.GradientHeader
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.history.HistoryViewModel.HistoryDisplayItem
 import com.odorik.odorikbuddy.ui.theme.HistoryAccent
 import com.odorik.odorikbuddy.ui.theme.HistoryAccentLight
 import com.odorik.odorikbuddy.util.CurrencyFormatter
+import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import java.text.SimpleDateFormat
@@ -98,11 +99,28 @@ import java.util.TimeZone
 
 
 
+private var cachedTimeFormat: SimpleDateFormat? = null
+private var cachedFullFormat: SimpleDateFormat? = null
+private var cachedApiDateFormat: SimpleDateFormat? = null
+private var cachedLocale: Locale? = null
+
+private fun getFormatters(): Triple<SimpleDateFormat, SimpleDateFormat, SimpleDateFormat> {
+    val currentLocale = Locale.getDefault()
+    if (cachedLocale != currentLocale || cachedTimeFormat == null || cachedFullFormat == null || cachedApiDateFormat == null) {
+        cachedLocale = currentLocale
+        cachedApiDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", currentLocale).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        cachedTimeFormat = SimpleDateFormat("HH:mm:ss", currentLocale)
+        cachedFullFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", currentLocale)
+    }
+    return Triple(cachedApiDateFormat!!, cachedTimeFormat!!, cachedFullFormat!!)
+}
+
 private fun parseApiDate(isoDate: String): java.util.Date? {
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-    inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+    val (apiFormat, _, _) = getFormatters()
     return try {
-        inputFormat.parse(isoDate)
+        apiFormat.parse(isoDate)
     } catch (_: Exception) {
         null
     }
@@ -110,10 +128,9 @@ private fun parseApiDate(isoDate: String): java.util.Date? {
 
 private fun formatRelativeTime(isoDate: String, context: android.content.Context): String {
     val date = parseApiDate(isoDate) ?: return isoDate
-    
-    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-    val fullFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
-    
+
+    val (_, timeFormat, fullFormat) = getFormatters()
+
     val calendar = java.util.Calendar.getInstance()
     val todayStart = calendar.apply {
         set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -121,10 +138,10 @@ private fun formatRelativeTime(isoDate: String, context: android.content.Context
         set(java.util.Calendar.SECOND, 0)
         set(java.util.Calendar.MILLISECOND, 0)
     }.timeInMillis
-    
+
     calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
     val yesterdayStart = calendar.timeInMillis
-    
+
     return when {
         date.time >= todayStart -> context.getString(R.string.today) + " " + timeFormat.format(date)
         date.time >= yesterdayStart -> context.getString(R.string.yesterday) + " " + timeFormat.format(date)
@@ -145,11 +162,11 @@ private fun formatDuration(seconds: Int): String {
 private fun getNetworkColor(destinationName: String?): androidx.compose.ui.graphics.Color? {
     return when {
         destinationName == null -> null
-        destinationName.contains("mobil", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF2196F3) 
-        destinationName.contains("pevná", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF4CAF50) 
-        destinationName.contains("SMS", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF9C27B0) 
-        destinationName.contains("800", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF009688) 
-        else -> androidx.compose.ui.graphics.Color(0xFF757575) 
+        destinationName.contains("mobil", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF2196F3)
+        destinationName.contains("pevná", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+        destinationName.contains("SMS", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF9C27B0)
+        destinationName.contains("800", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF009688)
+        else -> androidx.compose.ui.graphics.Color(0xFF757575)
     }
 }
 
@@ -171,17 +188,17 @@ fun HistoryScreen(
     val eventTypeFilter by viewModel.eventTypeFilter.collectAsState()
     val eventDirectionFilter by viewModel.eventDirectionFilter.collectAsState()
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory(isRefresh = true) })
-    
+
     val context = LocalContext.current
     val currentLanguage = remember {
         context.resources.configuration.locales[0].language
     }
     val currencyFormatter = remember { CurrencyFormatter(context) }
-    
+
     var showFilterSheet by remember { mutableStateOf(false) }
     var filtersApplied by remember { mutableStateOf(false) }
-    
-    
+
+
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -206,19 +223,21 @@ fun HistoryScreen(
         }
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            
+
             GradientHeader(
                 title = stringResource(R.string.history_title),
                 iconVector = Icons.Default.History,
                 backgroundBrush = Brush.verticalGradient(
                     colors = listOf(
-                        HistoryAccent.copy(alpha = 0.15f),
+                        HistoryAccent.copy(alpha = 0.35f),
                         Color.Transparent
                     )
                 ),
@@ -230,8 +249,8 @@ fun HistoryScreen(
                 actionContentDescription = stringResource(R.string.filter_history),
                 actionTint = HistoryAccent
             )
-            
-            
+
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -249,7 +268,7 @@ fun HistoryScreen(
                     }
                 }
 
-                
+
                 HistoryContent(
                     historyItems = historyItems,
                     isRefreshing = isRefreshing,
@@ -258,7 +277,7 @@ fun HistoryScreen(
                     language = currentLanguage,
                     currencyFormatter = currencyFormatter
                 )
-                
+
                 PullRefreshIndicator(
                     refreshing = isRefreshing,
                     state = pullRefreshState,
@@ -266,8 +285,8 @@ fun HistoryScreen(
                 )
             }
         }
-        
-        
+
+
         if (showFilterSheet) {
             FilterBottomSheet(
                 lines = lines,
@@ -299,7 +318,7 @@ private fun HistoryContent(
 
     when {
         isRefreshing && historyItems.isEmpty() && !hasError -> {
-            
+
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -308,7 +327,7 @@ private fun HistoryContent(
             }
         }
         hasError -> {
-            
+
             ErrorState(
                 error = error!!,
                 onRetry = { viewModel.fetchHistory(isRefresh = true) },
@@ -316,11 +335,11 @@ private fun HistoryContent(
             )
         }
         historyItems.isEmpty() -> {
-            
+
             EmptyState(onRetry = { viewModel.fetchHistory(isRefresh = true) })
         }
         else -> {
-            
+
             val horizontalPadding = getResponsiveCardPadding()
             val bottomPadding = getResponsiveSpacing()
             LazyColumn(
@@ -331,22 +350,18 @@ private fun HistoryContent(
                     bottom = bottomPadding
                 )
             ) {
-                itemsIndexed(historyItems) { index, displayItem ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(animationSpec = tween(300, delayMillis = index * 30)) +
-                                slideInVertically(
-                                    initialOffsetY = { it / 4 },
-                                    animationSpec = tween(300, delayMillis = index * 30)
-                                )
-                    ) {
-                        HistoryListItem(
-                            displayItem = displayItem,
-                            viewModel = viewModel,
-                            language = language,
-                            currencyFormatter = currencyFormatter
-                        )
+                itemsIndexed(
+                    items = historyItems,
+                    key = { _, displayItem ->
+                        displayItem.item.id + if (displayItem.isChild) "_child" else ""
                     }
+                ) { _, displayItem ->
+                    HistoryListItem(
+                        displayItem = displayItem,
+                        viewModel = viewModel,
+                        language = language,
+                        currencyFormatter = currencyFormatter
+                    )
                 }
             }
         }
@@ -371,6 +386,7 @@ private fun ErrorState(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ElevatedCard(
+            modifier = Modifier.darkModeBorder(RoundedCornerShape(20.dp)),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer
@@ -481,7 +497,7 @@ private fun FilterBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
     var lineExpanded by remember { mutableStateOf(false) }
     var tempSelectedLine by remember { mutableStateOf(selectedLine) }
     var tempFilterNumber by remember { mutableStateOf(filterNumber) }
@@ -489,17 +505,29 @@ private fun FilterBottomSheet(
     var tempEventDirectionFilter by remember { mutableStateOf(eventDirectionFilter) }
     var eventTypeExpanded by remember { mutableStateOf(false) }
     var eventDirectionExpanded by remember { mutableStateOf(false) }
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = 12.dp)
+                    .size(width = 36.dp, height = 5.dp)
+                    .clip(CircleShape)
+                    .background(Brush.horizontalGradient(colors = listOf(HistoryAccent, HistoryAccentLight)))
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
+        com.odorik.odorikbuddy.util.ConfigureBottomSheetWindow()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = getResponsiveSpacing() * 5)
+                .padding(bottom = getResponsiveSpacing() * 2)
         ) {
-            
+
             GradientHeader(
                 title = stringResource(R.string.filter_history),
                 iconVector = Icons.Default.FilterList,
@@ -512,18 +540,22 @@ private fun FilterBottomSheet(
                 iconGradientBrush = Brush.linearGradient(
                     colors = listOf(HistoryAccent, HistoryAccentLight)
                 ),
-                iconSize = 20.dp,
-                iconContainerSize = 36.dp,
+                iconSize = 22.dp,
+                iconContainerSize = 40.dp,
                 iconCornerRadius = 10.dp
             )
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = getResponsiveCardPadding()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(
+                        horizontal = getResponsiveCardPadding(),
+                        vertical = getResponsiveCardPadding()
+                    )
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
             ) {
-                
+
                 ExposedDropdownMenuBox(
                     expanded = lineExpanded,
                     onExpandedChange = { lineExpanded = !lineExpanded }
@@ -534,7 +566,7 @@ private fun FilterBottomSheet(
                         readOnly = true,
                         label = { Text(stringResource(R.string.line_filter)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = lineExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = HistoryAccent,
@@ -563,8 +595,8 @@ private fun FilterBottomSheet(
                         }
                     }
                 }
-                
-                
+
+
                 OutlinedTextField(
                     value = tempFilterNumber,
                     onValueChange = { tempFilterNumber = it },
@@ -576,8 +608,8 @@ private fun FilterBottomSheet(
                         focusedLabelColor = HistoryAccent
                     )
                 )
-                
-                
+
+
                 ExposedDropdownMenuBox(
                     expanded = eventTypeExpanded,
                     onExpandedChange = { eventTypeExpanded = !eventTypeExpanded }
@@ -592,7 +624,7 @@ private fun FilterBottomSheet(
                         readOnly = true,
                         label = { Text(stringResource(R.string.event_type_filter)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = eventTypeExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = HistoryAccent,
@@ -614,8 +646,8 @@ private fun FilterBottomSheet(
                         }
                     }
                 }
-                
-                
+
+
                 ExposedDropdownMenuBox(
                     expanded = eventDirectionExpanded,
                     onExpandedChange = { eventDirectionExpanded = !eventDirectionExpanded }
@@ -630,7 +662,7 @@ private fun FilterBottomSheet(
                         readOnly = true,
                         label = { Text(stringResource(R.string.event_direction_filter)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = eventDirectionExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = HistoryAccent,
@@ -652,10 +684,10 @@ private fun FilterBottomSheet(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -666,7 +698,7 @@ private fun FilterBottomSheet(
                             val numberChanged = tempFilterNumber != filterNumber
                             val eventTypeChanged = tempEventTypeFilter != eventTypeFilter
                             val eventDirectionChanged = tempEventDirectionFilter != eventDirectionFilter
-                            
+
                             if (lineChanged || numberChanged || eventTypeChanged || eventDirectionChanged) {
                                 viewModel.setSelectedLine(tempSelectedLine)
                                 viewModel.setFilterNumber(tempFilterNumber)
@@ -677,13 +709,17 @@ private fun FilterBottomSheet(
                             }
                             onDismiss()
                         },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = HistoryAccent),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(stringResource(R.string.apply_filters))
+                        Text(
+                            text = stringResource(R.string.apply_filters),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = getResponsiveBodyLargeSize()
+                        )
                     }
-                    
+
                     if (selectedLine != null || filterNumber.isNotEmpty() || eventTypeFilter != "all" || eventDirectionFilter != "all") {
                         Button(
                             onClick = {
@@ -696,13 +732,18 @@ private fun FilterBottomSheet(
                                 viewModel.setEventTypeFilter("all")
                                 viewModel.setEventDirectionFilter("all")
                             },
+                            modifier = Modifier.height(50.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(stringResource(R.string.clear_filters))
+                            Text(
+                                text = stringResource(R.string.clear_filters),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = getResponsiveBodyLargeSize()
+                            )
                         }
                     }
                 }
@@ -726,7 +767,7 @@ fun HistoryListItem(
     val item = displayItem.item
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
-    
+
     val statusColor = when {
         item.status == "missed" -> MaterialTheme.colorScheme.error
         item.direction == "in" -> MaterialTheme.colorScheme.primary
@@ -739,6 +780,7 @@ fun HistoryListItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+            .darkModeBorder(RoundedCornerShape(16.dp))
             .combinedClickable(
                 onClick = {  },
                 onLongClick = {
@@ -765,7 +807,7 @@ fun HistoryListItem(
         )
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            
+
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -780,16 +822,16 @@ fun HistoryListItem(
                     )
                     .align(Alignment.CenterVertically)
             ) {
-                
+
                 Spacer(modifier = Modifier.width(4.dp))
             }
-            
+
             Column(modifier = Modifier.weight(1f)) {
-                
+
                 if (displayItem.isChild) {
                     ChildConnector()
                 }
-                
+
                 Row(
                     modifier = Modifier
                         .padding(
@@ -801,11 +843,11 @@ fun HistoryListItem(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    
+
                     EventIcon(item = item, statusColor = statusColor)
                     Spacer(modifier = Modifier.width(12.dp))
-                    
-                    
+
+
                     ItemDetails(
                         item = item,
                         displayItem = displayItem,
@@ -815,8 +857,8 @@ fun HistoryListItem(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    
-                    
+
+
                     PriceAndDuration(
                         item = item,
                         displayItem = displayItem,
@@ -874,7 +916,7 @@ private fun EventIcon(
     val isCall = item.length != null
     val icon: ImageVector
     val backgroundColor: Color
-    
+
     if (isCall) {
         icon = when {
             item.status == "missed" -> Icons.AutoMirrored.Filled.PhoneMissed
@@ -888,7 +930,7 @@ private fun EventIcon(
         icon = Icons.Default.Sms
         backgroundColor = HistoryAccent
     }
-    
+
     Box(
         modifier = Modifier
             .size(36.dp)
@@ -926,15 +968,15 @@ private fun ItemDetails(
     } else {
         contactName
     }
-    
-    
+
+
     val relativeTime = formatRelativeTime(item.date, context)
-    
-    
+
+
     val networkColor = getNetworkColor(item.destination_name)
-    
+
     Column(modifier = modifier) {
-        
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "${stringResource(R.string.from_history)} $sourceDisplayName",
@@ -943,7 +985,7 @@ private fun ItemDetails(
                 color = if (displayItem.isChild) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f, fill = false)
             )
-            
+
             if (item.recording != null) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
@@ -954,8 +996,8 @@ private fun ItemDetails(
                 )
             }
         }
-        
-        
+
+
         Text(
             text = "${stringResource(R.string.to_history)} $destinationDisplayName",
             fontSize = if (displayItem.isChild) 12.sp else 14.sp,
@@ -976,13 +1018,13 @@ private fun ItemDetails(
                 }
             )
         )
-        
-        
+
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 4.dp)
         ) {
-            
+
             if (networkColor != null && item.destination_name != null) {
                 val networkLabelResId = when {
                     item.destination_name.contains("mobil", ignoreCase = true) -> R.string.network_mobile
@@ -1008,8 +1050,8 @@ private fun ItemDetails(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
-            
-            
+
+
             Text(
                 text = relativeTime,
                 style = MaterialTheme.typography.bodySmall,
@@ -1027,9 +1069,9 @@ private fun PriceAndDuration(
     language: String
 ) {
     val formattedPrice = currencyFormatter.formatCurrency(item.price, language)
-    
+
     Column(horizontalAlignment = Alignment.End) {
-        
+
         Text(
             text = formattedPrice,
             color = MaterialTheme.colorScheme.primary,
@@ -1037,8 +1079,8 @@ private fun PriceAndDuration(
             fontSize = 16.sp,
             textAlign = TextAlign.End
         )
-        
-        
+
+
         if (item.price_per_minute != null && item.price_per_minute > 0) {
             Text(
                 text = currencyFormatter.formatCurrency(item.price_per_minute, language) + "/min",
@@ -1047,7 +1089,7 @@ private fun PriceAndDuration(
                 textAlign = TextAlign.End
             )
         }
-        
+
         when {
             item.length != null && item.length > 0 -> {
                 DurationIndicator(
@@ -1060,7 +1102,7 @@ private fun PriceAndDuration(
                     modifier = Modifier.padding(top = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    
+
                     Box(
                         modifier = Modifier
                             .height(6.dp)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
@@ -34,6 +37,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -53,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.DashboardAccent
 import com.odorik.odorikbuddy.ui.theme.DashboardAccentLight
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
@@ -83,17 +88,19 @@ fun DateRangePickerScreen(navController: NavController) {
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(getResponsiveSpacing()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            
+
             AnimatedVisibility(
                 visible = true,
                 enter = fadeIn()
@@ -101,13 +108,15 @@ fun DateRangePickerScreen(navController: NavController) {
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = getResponsiveSpacing()),
+                        .padding(bottom = getResponsiveSpacing())
+                        .darkModeBorder(RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
                         Text(
-                            text = "Quick Select",
+                            text = stringResource(R.string.quick_select),
                             fontSize = getResponsiveTitleLargeSize(),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -187,9 +196,10 @@ fun DateRangePickerScreen(navController: NavController) {
                     }
                 }
             }
-            
+
             ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
@@ -201,7 +211,7 @@ fun DateRangePickerScreen(navController: NavController) {
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = getResponsiveSpacing())
                     )
-                    
+
                     OutlinedButton(
                         onClick = { showStartDatePicker = true },
                         modifier = Modifier.fillMaxWidth(),
@@ -273,8 +283,8 @@ fun DateRangePickerScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
-                TextButton(onClick = { 
-                    showStartDatePicker = false 
+                TextButton(onClick = {
+                    showStartDatePicker = false
                     startDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0).atZone(ZoneId.systemDefault()).toLocalDate()
                 }) {
                     Text(stringResource(R.string.ok))
@@ -295,7 +305,7 @@ fun DateRangePickerScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
-                TextButton(onClick = { 
+                TextButton(onClick = {
                     showEndDatePicker = false
                     endDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0).atZone(ZoneId.systemDefault()).toLocalDate()
                 }) {
@@ -317,43 +327,64 @@ private fun GradientHeader(
     title: String,
     onBackClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        DashboardAccentLight.copy(alpha = 0.1f),
-                        MaterialTheme.colorScheme.background
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = androidx.compose.ui.graphics.Color.Transparent,
+        shadowElevation = 4.dp
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            DashboardAccentLight.copy(alpha = 0.35f),
+                            androidx.compose.ui.graphics.Color.Transparent
+                        )
                     )
                 )
-            )
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+                .statusBarsPadding()
+                .padding(horizontal = 4.dp, vertical = 12.dp)
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                    .size(40.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(DashboardAccent, DashboardAccentLight)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = androidx.compose.ui.graphics.Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = title,
+                    fontSize = com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize(),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = title,
-                fontSize = com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize(),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
         }
     }
 }

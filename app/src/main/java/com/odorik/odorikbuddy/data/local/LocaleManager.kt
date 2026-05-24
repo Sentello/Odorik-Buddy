@@ -24,16 +24,16 @@ class LocaleManager @Inject constructor(
 
     fun createLocaleContext(base: Context): Context {
         val lang = LanguagePreferences.getPreferredLanguage(base)
-        val locale = Locale(lang)
+        val locale = Locale.forLanguageTag(lang)
         val config = Configuration(base.resources.configuration)
         config.setLocale(locale)
         return base.createConfigurationContext(config)
     }
 
-    
+
     fun updateLocale(context: Context, lang: String): Context {
         setPreferredLanguage(lang)
-        val locale = Locale(lang)
+        val locale = Locale.forLanguageTag(lang)
         val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
         return context.createConfigurationContext(config)

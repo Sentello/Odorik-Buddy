@@ -26,7 +26,7 @@ class OdorikBuddyApplication : Application(), androidx.work.Configuration.Provid
 
     override fun attachBaseContext(base: Context) {
         val lang = LanguagePreferences.getPreferredLanguage(base)
-        val locale = Locale(lang)
+        val locale = Locale.forLanguageTag(lang)
         val config = Configuration(base.resources.configuration)
         config.setLocale(locale)
         super.attachBaseContext(base.createConfigurationContext(config))
@@ -34,7 +34,7 @@ class OdorikBuddyApplication : Application(), androidx.work.Configuration.Provid
 
     override fun onCreate() {
         super.onCreate()
-        
+
         updateWorkManager.scheduleUpdateCheck()
     }
 }

@@ -40,7 +40,7 @@ class HistoryViewModel @Inject constructor(
         val item: HistoryItem,
         val isChild: Boolean = false
     )
-    
+
     private val _history = MutableStateFlow<List<HistoryDisplayItem>>(emptyList())
     val history: StateFlow<List<HistoryDisplayItem>> = _history
 
@@ -62,22 +62,24 @@ class HistoryViewModel @Inject constructor(
     private val _filterNumber = MutableStateFlow<String>("")
     val filterNumber: StateFlow<String> = _filterNumber
 
-    private val _eventTypeFilter = MutableStateFlow<String>("all") 
+    private val _eventTypeFilter = MutableStateFlow<String>("all")
     val eventTypeFilter: StateFlow<String> = _eventTypeFilter
 
-    private val _eventDirectionFilter = MutableStateFlow<String>("all") 
+    private val _eventDirectionFilter = MutableStateFlow<String>("all")
     val eventDirectionFilter: StateFlow<String> = _eventDirectionFilter
 
-    
+
     private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
 
+    private val contactNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
     init {
         viewModelScope.launch {
-            
-            fetchLines() 
-            kotlinx.coroutines.delay(100) 
-            fetchHistory() 
+
+            fetchLines()
+            kotlinx.coroutines.delay(100)
+            fetchHistory()
         }
     }
 
@@ -85,7 +87,7 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             if (isRefresh) {
-                _error.value = null 
+                _error.value = null
             }
             val user = securePreferences.getUser()
             val password = securePreferences.getPassword()
@@ -96,12 +98,12 @@ class HistoryViewModel @Inject constructor(
                 return@launch
             }
 
-            
+
             if (!isRefresh) {
                 try {
                     val cachedHistory = repository.getCachedHistory()
                     if (cachedHistory.isNotEmpty()) {
-                        
+
                         val grouped = cachedHistory.groupBy { it.redirection_parent_id }
                         val parents = grouped[null] ?: emptyList()
                         val displayItems = mutableListOf<HistoryDisplayItem>()
@@ -118,13 +120,13 @@ class HistoryViewModel @Inject constructor(
                         }
                         _history.value = displayItems
                         applyFilters()
-                        _error.value = null 
-                        _isRefreshing.value = false 
-                        return@launch 
+                        _error.value = null
+                        _isRefreshing.value = false
+                        return@launch
                 if (_history.value.isEmpty()) {
                     _error.value = it.message ?: "Failed to fetch lines"
                 }
-                
+
                             if (!contacts.containsKey(normalizedNumber)) {
                                 contacts[normalizedNumber] = name
                             }
@@ -133,30 +135,44 @@ class HistoryViewModel @Inject constructor(
                 }
             }
             _contactsMap.value = contacts
+            contactNameCache.clear()
         }
     }
-    
-    
-    fun getContactName(number: String): String {
-        
-        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
-        
-        for ((contactNumber, contactName) in _contactsMap.value) {
-            
-            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
-                
-                return if (parsedInput.specialPrefix.isNotEmpty()) {
-                    "${parsedInput.specialPrefix} $contactName".trim()
+
+    fun getContactName(number: String): String {
+        return contactNameCache.getOrPut(number) {
+
+            val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
+
+
+            val exactName = _contactsMap.value[parsedInput.normalizedNumber]
+            if (exactName != null) {
+                return@getOrPut if (parsedInput.specialPrefix.isNotEmpty()) {
+                    "${parsedInput.specialPrefix} $exactName".trim()
                 } else {
-                    contactName
+                    exactName
                 }
             }
-        }
 
-        
-        return number
+
+            val n1 = parsedInput.normalizedNumber.replace("+", "")
+            var foundMatch = number
+            for ((contactNumber, contactName) in _contactsMap.value) {
+                val n2 = contactNumber.replace("+", "")
+                if (n1 == n2 || (n1.length > 8 && n2.length > 8 && (n1.endsWith(n2) || n2.endsWith(n1)))) {
+                    foundMatch = if (parsedInput.specialPrefix.isNotEmpty()) {
+                        "${parsedInput.specialPrefix} $contactName".trim()
+                    } else {
+                        contactName
+                    }
+                    break
+                }
+            }
+
+            foundMatch
+        }
     }
 
-    
+
 }

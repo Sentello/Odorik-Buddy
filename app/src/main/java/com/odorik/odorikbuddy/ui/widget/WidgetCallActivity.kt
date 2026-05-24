@@ -104,7 +104,7 @@ class WidgetCallActivity : ComponentActivity() {
             handleTileAction(tileId)
         }
     }
-    
+
     private suspend fun handleTileAction(tileId: Int) {
         val tile = tileRepository.getTileById(tileId)
         if (tile == null) {
@@ -118,18 +118,18 @@ class WidgetCallActivity : ComponentActivity() {
             handleOneShotCall(tile)
         }
     }
-    
+
     private suspend fun handleCallback(tile: TileEntity) {
         try {
-             
+
             val globalLineIdStr = securePreferences.getString("selected_line", null)
             val targetLineIdStr = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLineIdStr
-            
+
             val selectedLineInfo = if (targetLineIdStr != null) {
                 lines.find { it.id.toString() == targetLineIdStr }
             } else null
 
-            
+
             val result = if (selectedLineInfo != null) {
                 createRouteUseCase.executeWithLineCredentials(
                     publicNumber = lastSharedNumber,

@@ -52,6 +52,8 @@ class OwnNumbersViewModel @Inject constructor(
     private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
 
+    private val contactNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -218,30 +220,45 @@ class OwnNumbersViewModel @Inject constructor(
                 }
             }
             _contactsMap.value = contacts
+            contactNameCache.clear()
         }
     }
-    
-    
-    fun getContactName(number: String): String {
-        
-        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
-        
-        for ((contactNumber, contactName) in _contactsMap.value) {
-            
-            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
-                
-                val numberPart = if (parsedInput.specialPrefix.isNotEmpty()) {
+
+    fun getContactName(number: String): String {
+        return contactNameCache.getOrPut(number) {
+
+            val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
+
+
+            val exactName = _contactsMap.value[parsedInput.normalizedNumber]
+            if (exactName != null) {
+                return@getOrPut if (parsedInput.specialPrefix.isNotEmpty()) {
                     "${parsedInput.specialPrefix} ${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)}"
                 } else {
-                    PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)
+                    "$exactName (${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)})"
                 }
-                return "$contactName ($numberPart)"
             }
-        }
 
-        
-        return number
+
+            var foundMatch = number
+            val n1 = parsedInput.normalizedNumber.replace("+", "")
+            for ((contactNumber, contactName) in _contactsMap.value) {
+                val n2 = contactNumber.replace("+", "")
+                if (n1 == n2 || (n1.length > 8 && n2.length > 8 && (n1.endsWith(n2) || n2.endsWith(n1)))) {
+                    val numberPart = if (parsedInput.specialPrefix.isNotEmpty()) {
+                        "${parsedInput.specialPrefix} ${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)}"
+                    } else {
+                        PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)
+                    }
+                    foundMatch = "$contactName ($numberPart)"
+                    break
+                }
+            }
+
+
+            foundMatch
+        }
     }
 
 

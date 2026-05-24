@@ -10,7 +10,7 @@ class GetUserInfoUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
     suspend fun execute(): Result<UserInfo> {
-        
+
         return Result.success(UserInfo("Stub Name", "stub@example.com", "123456789"))
     }
 }

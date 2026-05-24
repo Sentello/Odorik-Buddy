@@ -24,13 +24,13 @@ abstract class OdorikDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE history ADD COLUMN redirection_parent_id TEXT")
             }
         }
-        
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE history ADD COLUMN line INTEGER")
             }
         }
-        
+
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE history ADD COLUMN price_per_minute REAL")
