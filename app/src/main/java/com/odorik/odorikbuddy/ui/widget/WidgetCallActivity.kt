@@ -84,7 +84,7 @@ class WidgetCallActivity : ComponentActivity() {
                 val oneShotResult by callViewModel.oneShotCallResult.collectAsStateWithLifecycle()
                 val oneShotError by callViewModel.oneShotCallError.collectAsStateWithLifecycle()
 
-                // Handle one-shot result
+
                 LaunchedEffect(oneShotResult, oneShotError) {
                     if (oneShotResult.isNotEmpty()) {
                         PhoneCallLauncher.launch(
@@ -96,105 +96,45 @@ class WidgetCallActivity : ComponentActivity() {
                         finish()
                     } else if (!oneShotError.isNullOrEmpty()) {
                         showErrorAndFinish(oneShotError!!)
-                        callViewModel.resetOneShotCallError() // We'll add this method
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = stringResource(R.string.widget_call_connecting),
-                                color = Color.White,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        } else {
-                            // Fallback / initial state
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            // Only proceed if not already loading (extra safety)
-            if (!callViewModel.isOneShotCallLoading.value) {
-                handleTileAction(tileId)
-            } else {
-                finish()
-            }
-        }
-    }
-    
-    private suspend fun handleTileAction(tileId: Int) {
-        val tile = tileRepository.getTileById(tileId)
-        if (tile == null) {
-            showErrorAndFinish(getString(R.string.widget_error_tile_not_found))
-            return
-        }
-
-        if (tile.callType == "CALLBACK") {
-            handleCallback(tile)
-        } else {
-            handleOneShotCall(tile)
-        }
-    }
-    
-    private suspend fun handleCallback(tile: TileEntity) {
-        try {
-             // Resolve Caller ID (User's number or overridden in Tile)
+                        callViewModel.resetOneShotCallError()
             val globalCallerId = securePreferences.getString("caller_id", "") ?: ""
             val callerId = if (!tile.callerId.isNullOrBlank()) tile.callerId else globalCallerId
 
-            // Resolve Line (Tile specific or Global)
+
             val globalLine = securePreferences.getString("selected_line", null)
             val lineId = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLine
-            
+
             if (callerId.isBlank()) {
                 showErrorAndFinish(getString(R.string.callback_error_no_caller_id))
                 return
             }
-            
+
             val result = callUseCase.execute(
                 callerId = callerId,
                 recipient = tile.recipient,
                 line = lineId ?: ""
             )
-            
+
             result.onSuccess {
                 Toast.makeText(this, getString(R.string.callback_success_notification, tile.recipient), Toast.LENGTH_SHORT).show()
                 finish()
             }.onFailure {
-                // Simplified error handling for now (using Toast instead of LocaleManager/ErrorMessageUtil complexity)
+
                 showErrorAndFinish(it.message ?: getString(R.string.widget_error_callback_failed))
             }
-            
+
         } catch (e: Exception) {
              showErrorAndFinish(e.message ?: getString(R.string.widget_error_unknown))
         }
     }
 
     private suspend fun handleOneShotCall(tile: TileEntity) {
-        // Resolve which line ID to use: Tile's lineId > Global selected_line
+
         val globalLineIdStr = securePreferences.getString("selected_line", null)
         val targetLineIdStr = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLineIdStr
         val targetLineId = targetLineIdStr?.toIntOrNull()
 
-        // Delegate to CallViewModel so we get proper loading state management
+
         callViewModel.makeOneShotCall(
             targetRecipient = tile.recipient,
             useLineAsCallerId = tile.useLineAsCallerId,

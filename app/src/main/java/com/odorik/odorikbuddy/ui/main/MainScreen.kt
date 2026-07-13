@@ -96,7 +96,7 @@ fun MainScreen(navController: NavController) {
                         icon = {
                             Icon(
                                 if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                                contentDescription = label, // Accessibility: Spoken label for icon
+                                contentDescription = label,
                                 modifier = Modifier.scale(scale)
                             )
                         },

@@ -73,7 +73,7 @@ class CallViewModel @Inject constructor(
     val directCallsEnabled: Boolean
         get() = appPreferences.directCallsEnabled
 
-    // --- Contacts Logic ---
+
     val callerContactName: StateFlow<String?> = combine(_callerId, contactNameResolver.contactsMap) { number, _ ->
         if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -92,7 +92,7 @@ class CallViewModel @Inject constructor(
     private val _oneShotCallResult = MutableStateFlow<String>("")
     val oneShotCallResult: StateFlow<String> = _oneShotCallResult
 
-    // One-shot event for launching the dialer (better than watching result in UI)
+
     private val _dialerLaunchRequest = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val dialerLaunchRequest = _dialerLaunchRequest.asSharedFlow()
 
@@ -114,17 +114,17 @@ class CallViewModel @Inject constructor(
 
     private fun getSelectedTab(): String {
         val savedString = securePreferences.getString("calls_selected_tab", null)
-        val defaultTitle = "callback_title" // Fallback to first tab
+        val defaultTitle = "callback_title"
         val tabOrder = getTabOrder()
         return if (savedString?.toIntOrNull() != null) {
-            // Migrate legacy index to title
+
             val oldIndex = savedString.toInt()
             val migratedTitle = if (oldIndex in tabOrder.indices) tabOrder[oldIndex] else defaultTitle
-            // Save the migrated title for future use
+
             securePreferences.saveString("calls_selected_tab", migratedTitle)
             migratedTitle
         } else {
-            // Already a title, validate it exists in order
+
             savedString?.takeIf { it in tabOrder } ?: defaultTitle
         }
     }
@@ -135,15 +135,15 @@ class CallViewModel @Inject constructor(
     private fun getTabOrder(): List<String> {
         val savedOrder = securePreferences.getString("calls_tab_order", null)
         val defaultOrder = listOf("callback_title", "oneshot_call", "tiles_title")
-        
+
         if (savedOrder == null) return defaultOrder
-        
+
         val currentList = savedOrder.split(",").filter { it.isNotBlank() }.toMutableList()
-        // Ensure new tabs are added if missing (for existing users)
+
         if (!currentList.contains("tiles_title")) {
             currentList.add("tiles_title")
         }
-        
+
         return currentList
     }
 
@@ -174,7 +174,7 @@ class CallViewModel @Inject constructor(
     }
 
     init {
-        // Automatically manage error retry when error state changes
+
         viewModelScope.launch {
             error.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -191,9 +191,9 @@ class CallViewModel @Inject constructor(
         _selectedLine.value = securePreferences.getString("selected_line", null)?.toIntOrNull()
         _useCallerIdPrefix.value = getUseCallerIdPrefix()
         _tabOrder.value = getTabOrder()
-        // _selectedTab is already initialized with getSelectedTab() in the property declaration
 
-        // Perform initial data load
+
+
         getCallList()
         getLines()
     }
@@ -254,15 +254,8 @@ class CallViewModel @Inject constructor(
     }
 
     fun getCallList() {
-        // Commented out again as GetCallListUseCase.execute() is commented out
-        /*
-        viewModelScope.launch {
-            val result = getCallListUseCase.execute()
-            result.onSuccess {
-                _callList.value = it
-            }
-        }
-        */
+
+
     }
 
     fun getLines() {
@@ -270,7 +263,7 @@ class CallViewModel @Inject constructor(
             val result = getLinesUseCase.execute()
             result.onSuccess {
                 _lines.value = it
-                _error.value = null // Clear error on success
+                _error.value = null
                 _oneShotCallError.value = null
                 _callResult.value = ""
                 if (_selectedLine.value == null && it.isNotEmpty()) {
@@ -285,8 +278,8 @@ class CallViewModel @Inject constructor(
 
     fun makeCall(callerId: String, recipient: String, line: String) {
         viewModelScope.launch {
-            _error.value = null // Clear previous errors
-            _callResult.value = "" // Clear previous results
+            _error.value = null
+            _callResult.value = ""
             val result = callUseCase.execute(callerId, recipient, line)
             result.onSuccess {
                 _callResult.value = it
@@ -302,14 +295,7 @@ class CallViewModel @Inject constructor(
         return getPhoneNumbersForContactUseCase(contentResolver, contactUri)
     }
 
-    /**
-     * Initiates a one-shot call.
-     *
-     * @param targetRecipient The number to call.
-     * @param useLineAsCallerId Whether to use the selected line's caller ID.
-     * @param selectedLineId Optional specific line ID (used by widgets that have per-tile line configuration).
-     *                       If null, falls back to the globally selected line.
-     */
+
     fun makeOneShotCall(
         targetRecipient: String,
         useLineAsCallerId: Boolean,
@@ -317,11 +303,11 @@ class CallViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _oneShotCallError.value = null
-            _oneShotCallResult.value = ""  // Clear previous result
+            _oneShotCallResult.value = ""
             _isOneShotCallLoading.value = true
 
             try {
-                // Use provided line ID (for widgets) or fall back to global selection
+
                 val lineIdToUse = selectedLineId ?: _selectedLine.value
 
                 val result = oneShotCallCoordinatorUseCase.execute(
@@ -332,7 +318,7 @@ class CallViewModel @Inject constructor(
 
                 result.onSuccess { lastSharedNumber ->
                     _oneShotCallResult.value = lastSharedNumber
-                    _dialerLaunchRequest.tryEmit(lastSharedNumber) // Notify UI to launch dialer
+                    _dialerLaunchRequest.tryEmit(lastSharedNumber)
                 }.onFailure { e ->
                     val localizedContext = localeManager.createLocaleContext(context)
                     _oneShotCallError.value = when (e) {
@@ -350,11 +336,11 @@ class CallViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun resetCallResult() {
         _callResult.value = ""
     }
-    
+
     fun resetOneShotCallResult() {
         _oneShotCallResult.value = ""
     }

@@ -28,7 +28,7 @@ interface TileDao {
 
     @Query("UPDATE tiles SET position = :newPosition WHERE id = :tileId")
     suspend fun updateTilePosition(tileId: Int, newPosition: Int)
-    
+
     @Update
     suspend fun updateTiles(tiles: List<TileEntity>)
 }

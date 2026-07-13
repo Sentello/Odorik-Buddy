@@ -33,7 +33,7 @@ class UpdateViewModel @Inject constructor(
     val error: StateFlow<String?> = _error
 
     init {
-        // Load cached update info on initialization
+
         loadCachedUpdateInfo()
     }
 
@@ -44,7 +44,7 @@ class UpdateViewModel @Inject constructor(
     }
 
     fun checkForUpdates() {
-        // Avoid parallel requests
+
         if (_isLoading.value) return
 
         viewModelScope.launch {
@@ -57,8 +57,8 @@ class UpdateViewModel @Inject constructor(
                     _isLoading.value = false
                 }
                 .onFailure { exception ->
-                    // Optionally keep previous _updateInfo to avoid losing last known good state
-                    // Map to a safe, user-visible message
+
+
                     _error.value = ErrorMessageUtil.standardizeError(
                         exception.message ?: context.getString(R.string.error_checking_for_updates),
                         context,
@@ -71,23 +71,23 @@ class UpdateViewModel @Inject constructor(
 
     fun isUpdateAvailable(): Boolean {
         val latestVersion = _updateInfo.value?.version
-        // BuildConfig.VERSION_NAME is non-null; only guard on latestVersion
+
         return latestVersion?.let { compareVersions(it, BuildConfig.VERSION_NAME) > 0 } ?: false
     }
 
     private fun compareVersions(version1: String, version2: String): Int {
         val v1Parts = version1.split(".").map { it.toIntOrNull() ?: 0 }
         val v2Parts = version2.split(".").map { it.toIntOrNull() ?: 0 }
-        
+
         for (i in 0 until maxOf(v1Parts.size, v2Parts.size)) {
             val part1 = if (i < v1Parts.size) v1Parts[i] else 0
             val part2 = if (i < v2Parts.size) v2Parts[i] else 0
-            
+
             if (part1 != part2) {
                 return part1.compareTo(part2)
             }
         }
-        
+
         return 0
     }
 }

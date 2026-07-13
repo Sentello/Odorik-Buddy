@@ -86,7 +86,7 @@ fun RoutingOptionsScreen(
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
                     Column {
-                        // Shared Numbers Item
+
                         ListItem(
                             headlineContent = {
                                 Text(
@@ -118,13 +118,13 @@ fun RoutingOptionsScreen(
                             },
                             modifier = Modifier.clickable { internalNavController.navigate(SettingsRoutes.ROUTES_SCREEN) }
                         )
-                        
+
                         HorizontalDivider(
                              modifier = Modifier.padding(horizontal = 16.dp),
                              color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
 
-                        // Own Numbers Item
+
                         ListItem(
                             headlineContent = {
                                 Text(

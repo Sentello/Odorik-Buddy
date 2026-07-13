@@ -16,8 +16,8 @@ class ContactNameResolver @Inject constructor(
     val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
 
     suspend fun loadContacts(contentResolver: ContentResolver) {
-        // Always refresh in case contacts changed, or we can check if empty. 
-        // Let's just reload whenever called to ensure it's up to date.
+
+
         _contactsMap.value = loadContactsUseCase(contentResolver)
     }
 

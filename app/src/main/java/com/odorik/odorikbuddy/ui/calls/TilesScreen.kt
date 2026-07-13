@@ -1,6 +1,6 @@
 package com.odorik.odorikbuddy.ui.calls
 
-// Imports for Contact Picker and other functionalities
+
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -98,32 +98,32 @@ import com.odorik.odorikbuddy.util.getResponsivePadding
 @Composable
 fun TilesScreen(
     viewModel: TilesViewModel = hiltViewModel(),
-    callViewModel: CallViewModel, // Injected from CallScreen
+    callViewModel: CallViewModel,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val tiles by viewModel.tiles.collectAsState()
     val lines by callViewModel.lines.collectAsState()
     val contactsMap by viewModel.contactsMap.collectAsState()
-    
-    // Call Status States from CallViewModel
+
+
     val callResult by callViewModel.callResult.collectAsState()
     val error by callViewModel.error.collectAsState()
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
-    
+
     var showAddDialog by remember { mutableStateOf(false) }
     var tileToEdit by remember { mutableStateOf<TileEntity?>(null) }
     var tileToDelete by remember { mutableStateOf<TileEntity?>(null) }
-    
-    // Explicitly destructure state values to use in Composable context safely
+
+
     val currentCallResult = callResult
     val currentError = error
     val currentOneShotCallResult = oneShotCallResult
     val currentOneShotCallError = oneShotCallError
 
-    // Animation state
+
     var contentVisible by remember { mutableStateOf(false) }
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -134,9 +134,9 @@ fun TilesScreen(
             }
         }
     )
-    
-    
-    
+
+
+
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             viewModel.loadContacts(context.contentResolver)
@@ -146,11 +146,11 @@ fun TilesScreen(
         callViewModel.getLines()
         contentVisible = true
     }
-    
+
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(400)) + 
+            enter = fadeIn(animationSpec = tween(400)) +
                     slideInVertically(
                         initialOffsetY = { it / 4 },
                         animationSpec = tween(400)
@@ -168,7 +168,7 @@ fun TilesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            // Feedback Messages Section (Top of Grid)
+
                             item(span = { GridItemSpan(2) }) {
                                 Column {
                                     if (currentCallResult.isNotEmpty()) {
@@ -176,7 +176,7 @@ fun TilesScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
 
-                                     // OneShot Call response messages
+
                                     if (currentOneShotCallResult.isNotEmpty()) {
                                          AnimatedVisibility(
                                             visible = true,
@@ -223,7 +223,7 @@ fun TilesScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
 
-                                    // Consolidated Error Message
+
                                     val activeError = if (!currentOneShotCallError.isNullOrEmpty()) {
                                         currentOneShotCallError
                                     } else {
@@ -242,10 +242,10 @@ fun TilesScreen(
                                     tile = tile,
                                     contactName = viewModel.getContactName(tile.recipient),
                                     onClick = {
-                                        // Initiate Call
+
                                         if (tile.callType == "CALLBACK") {
                                             callViewModel.makeCall(
-                                                callerId = tile.callerId ?: "", // Pass empty if not set
+                                                callerId = tile.callerId ?: "",
                                                 recipient = tile.recipient,
                                                 line = tile.lineId ?: ""
                                             )
@@ -267,15 +267,15 @@ fun TilesScreen(
                                     onMoveDown = { viewModel.moveTileDown(tile) }
                                 )
                             }
-                            
-                            // Spacer for FAB
-                            item { 
-                                Spacer(modifier = Modifier.height(72.dp)) 
+
+
+                            item {
+                                Spacer(modifier = Modifier.height(72.dp))
                             }
                         }
                     }
                 }
-                
+
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
                     modifier = Modifier
@@ -288,8 +288,8 @@ fun TilesScreen(
                 }
             }
         }
-        
-        // Auto-dismiss Call result after delay
+
+
         LaunchedEffect(currentCallResult) {
             if (currentCallResult.isNotEmpty() && !currentCallResult.startsWith("error")) {
                 kotlinx.coroutines.delay(5000L)
@@ -297,7 +297,7 @@ fun TilesScreen(
             }
         }
     }
-    
+
     if (tileToDelete != null) {
         AlertDialog(
             onDismissRequest = { tileToDelete = null },
@@ -324,13 +324,13 @@ fun TilesScreen(
             }
         )
     }
-    
+
     if (showAddDialog || tileToEdit != null) {
         AddEditTileDialog(
             tile = tileToEdit,
             lines = lines,
             callViewModel = callViewModel,
-            onDismiss = { 
+            onDismiss = {
                 showAddDialog = false
                 tileToEdit = null
             },
@@ -390,7 +390,7 @@ fun EmptyTilesState(onAddClick: () -> Unit) {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.no_tiles_yet), // Needs to be added to strings.xml or use generic text
+            text = stringResource(R.string.no_tiles_yet),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold
@@ -438,10 +438,10 @@ fun TileItem(
 ) {
     val isSystemDark = isSystemInDarkTheme()
     val containerColor = TileColorHelper.resolveColor(tile.color, isSystemDark) ?: MaterialTheme.colorScheme.surface
-    
+
     val isCustomColor = tile.color != null
-    // Text Color Logic: Use explicit textColor if set. 
-    // Otherwise fallback to existing logic: White if Dark Mode & Custom Color; Black if Light Mode & Custom Color; else Surface
+
+
     val titleColor = if (tile.textColor != null) {
         Color(tile.textColor)
     } else if (isCustomColor) {
@@ -449,7 +449,7 @@ fun TileItem(
     } else {
         MaterialTheme.colorScheme.onSurface
     }
-    
+
     val bodyColor = if (tile.textColor != null) {
         Color(tile.textColor).copy(alpha = 0.7f)
     } else if (isCustomColor) {
@@ -473,7 +473,7 @@ fun TileItem(
     } else {
         MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
     }
-    
+
     val iconTint = if (tile.textColor != null) {
         Color(tile.textColor)
     } else if (isCustomColor) {
@@ -503,7 +503,7 @@ fun TileItem(
                 .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header: Icon + Type
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -523,8 +523,8 @@ fun TileItem(
                         tint = iconTint
                     )
                 }
-                
-                // Edit/Delete Controls (Smaller)
+
+
                 Row {
                     IconButton(
                         onClick = onEdit,
@@ -552,13 +552,13 @@ fun TileItem(
                 }
             }
 
-            // Content: Label & Number
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 val callTypeText = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot)
-                
+
                 if (tile.label.isNotEmpty()) {
                     Text(
                         text = tile.label,
@@ -611,7 +611,7 @@ fun TileItem(
                 }
             }
 
-            // Footer: Move Controls
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -655,14 +655,14 @@ fun AddEditTileDialog(
     val context = LocalContext.current
     var label by remember { mutableStateOf(tile?.label ?: "") }
     var recipient by remember { mutableStateOf(tile?.recipient ?: "") }
-    
+
     val tabOrder by callViewModel.tabOrder.collectAsState()
-    
-    // Determine sort order for Call Type dropdown based on Tab Order
+
+
     val callTypeOptions = remember(tabOrder) {
         val callbackIndex = tabOrder.indexOf("callback_title").takeIf { it >= 0 } ?: Int.MAX_VALUE
         val oneshotIndex = tabOrder.indexOf("oneshot_call").takeIf { it >= 0 } ?: Int.MAX_VALUE
-        
+
         if (oneshotIndex < callbackIndex) {
             listOf("ONESHOT" to R.string.call_type_oneshot, "CALLBACK" to R.string.call_type_callback)
         } else {
@@ -672,21 +672,21 @@ fun AddEditTileDialog(
 
     var callType by remember { mutableStateOf(tile?.callType ?: callTypeOptions.first().first) }
     var selectedLineId by remember { mutableStateOf(tile?.lineId) }
-    var callerId by remember { mutableStateOf(tile?.callerId ?: "") } 
+    var callerId by remember { mutableStateOf(tile?.callerId ?: "") }
     var useLineAsCallerId by remember { mutableStateOf(tile?.useLineAsCallerId ?: false) }
     var selectedColor by remember { mutableStateOf(tile?.color) }
     var selectedTextColor by remember { mutableStateOf(tile?.textColor) }
 
     var contactFieldToUpdate by remember { mutableStateOf<ContactField?>(null) }
-    
+
     var lineDropdownExpanded by remember { mutableStateOf(false) }
     var typeDropdownExpanded by remember { mutableStateOf(false) }
-    
+
     var validationError by remember { mutableStateOf<String?>(null) }
-    
+
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
-    
+
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
@@ -727,7 +727,7 @@ fun AddEditTileDialog(
             requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
-    
+
     val colors = TileColorHelper.allBaseColors
     val textColors = TileColorHelper.textColors
 
@@ -741,7 +741,7 @@ fun AddEditTileDialog(
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Call Type
+
                 ExposedDropdownMenuBox(
                     expanded = typeDropdownExpanded,
                     onExpandedChange = { typeDropdownExpanded = !typeDropdownExpanded }
@@ -767,19 +767,19 @@ fun AddEditTileDialog(
                     }
                 }
 
-                // Label
+
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
                     label = { Text(stringResource(R.string.label_optional)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 val recipientField = @Composable {
                     OutlinedTextField(
                         value = recipient,
                         onValueChange = { recipient = it },
-                        label = { Text(stringResource(R.string.called_number)) }, 
+                        label = { Text(stringResource(R.string.called_number)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
@@ -858,8 +858,8 @@ fun AddEditTileDialog(
                         Text(stringResource(R.string.use_line_number_as_caller_id))
                     }
                 }
-                
-                // Background Color Selection
+
+
                 Text(stringResource(R.string.color), style = MaterialTheme.typography.bodySmall)
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -867,7 +867,7 @@ fun AddEditTileDialog(
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
                     item {
-                         // Default / Transparent Option
+
                          Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -877,7 +877,7 @@ fun AddEditTileDialog(
                                 .clickable { selectedColor = null }
                         )
                     }
-                    
+
                     items(colors) { color ->
                         val displayColor = TileColorHelper.resolveColor(color, isSystemInDarkTheme())!!
                         Box(
@@ -891,7 +891,7 @@ fun AddEditTileDialog(
                     }
                 }
 
-                // Text Color Selection
+
                 Text(stringResource(R.string.text_color), style = MaterialTheme.typography.bodySmall)
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -899,7 +899,7 @@ fun AddEditTileDialog(
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
                     item {
-                         // Default Option
+
                          Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -909,7 +909,7 @@ fun AddEditTileDialog(
                                 .clickable { selectedTextColor = null }
                         )
                     }
-                    
+
                     items(textColors) { color ->
                         Box(
                             modifier = Modifier
@@ -921,7 +921,7 @@ fun AddEditTileDialog(
                         )
                     }
                 }
-                
+
                 if (validationError != null) {
                     Text(
                         text = validationError!!,
@@ -938,7 +938,7 @@ fun AddEditTileDialog(
                     val isLineSelected = selectedLineId != null
                     val isRecipientValid = recipient.isNotBlank()
                     val isCallerIdValid = if (callType == "CALLBACK") callerId.isNotBlank() else true
-                    
+
                     if (isLineSelected && isRecipientValid && isCallerIdValid) {
                          onSave(
                             TileData(
@@ -971,7 +971,7 @@ fun AddEditTileDialog(
             }
         }
     )
-    
+
     if (showPhoneNumberDialog) {
         AlertDialog(
             onDismissRequest = { showPhoneNumberDialog = false },

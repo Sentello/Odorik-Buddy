@@ -15,7 +15,7 @@ class GetPhoneNumbersForContactUseCase @Inject constructor() {
         val numbers = mutableListOf<String>()
         var displayName = ""
 
-        // Get display name
+
         contentResolver.query(
             ContactsContract.Contacts.CONTENT_URI,
             null,
@@ -29,7 +29,7 @@ class GetPhoneNumbersForContactUseCase @Inject constructor() {
             }
         }
 
-        // Get phone numbers for this contact
+
         contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
             null,

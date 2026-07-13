@@ -99,7 +99,7 @@ import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 import kotlinx.coroutines.delay
 
-// Shared helper functions
+
 fun mapApiArgumentToStringId(apiArgument: String): Int {
     return when (apiArgument) {
         "caller" -> R.string.argument_caller
@@ -131,9 +131,9 @@ fun CallApiMessage(response: String, visible: Boolean) {
         response == "error invalid_line" -> stringResource(R.string.call_error_invalid_line)
         else -> if (response.isNotEmpty()) stringResource(R.string.call_unknown_error) else ""
     }
-    
+
     if (message.isEmpty()) return
-    
+
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
@@ -170,9 +170,9 @@ fun CallApiMessage(response: String, visible: Boolean) {
                 Icon(
                     imageVector = if (isError) Icons.Default.Error else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isError) 
-                        MaterialTheme.colorScheme.onErrorContainer 
-                    else 
+                    tint = if (isError)
+                        MaterialTheme.colorScheme.onErrorContainer
+                    else
                         MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
@@ -245,11 +245,11 @@ fun ErrorMessage(errorText: String, visible: Boolean) {
 @Composable
 private fun GradientHeader(title: String) {
     var iconVisible by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(Unit) {
         iconVisible = true
     }
-    
+
     val iconScale by animateFloatAsState(
         targetValue = if (iconVisible) 1f else 0f,
         animationSpec = spring(
@@ -258,7 +258,7 @@ private fun GradientHeader(title: String) {
         ),
         label = "iconScale"
     )
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Transparent
@@ -327,11 +327,11 @@ fun CallScreen(
     val context = LocalContext.current
     val directCallsEnabled = viewModel.directCallsEnabled
 
-    // Clean one-shot dialer launch using dedicated event from ViewModel
+
     LaunchedEffect(Unit) {
         viewModel.dialerLaunchRequest.collect { phoneNumber ->
             try {
-                // Small delay to let user see success feedback in UI
+
                 kotlinx.coroutines.delay(1200L)
 
                 PhoneCallLauncher.launch(
@@ -347,7 +347,7 @@ fun CallScreen(
         }
     }
 
-    
+
     val tabItems = remember(tabOrder) {
         tabOrder.map { title ->
             when (title) {
@@ -374,7 +374,7 @@ fun CallScreen(
             }
         }
     }
-    
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
@@ -383,10 +383,10 @@ fun CallScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Gradient Header
+
             GradientHeader(title = stringResource(R.string.calls))
-            
-            // Draggable Tabs
+
+
             DraggableTabs(
                 tabItems = tabItems,
                 selectedTabTitle = selectedTab,
@@ -463,22 +463,22 @@ fun CallbackTab(
             requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
-    
+
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             viewModel.loadContacts(context.contentResolver)
         }
         contentVisible = true
     }
-    
+
     LaunchedEffect(callResult) {
         if (callResult.isNotEmpty() && !callResult.startsWith("error")) {
             delay(5000L)
             viewModel.resetCallResult()
         }
     }
-    
-    // Button animation
+
+
     val buttonInteractionSource = remember { MutableInteractionSource() }
     val isPressed by buttonInteractionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
@@ -499,14 +499,14 @@ fun CallbackTab(
     ) {
         AnimatedVisibility(
             visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(400)) + 
+            enter = fadeIn(animationSpec = tween(400)) +
                     slideInVertically(
                         initialOffsetY = { it / 4 },
                         animationSpec = tween(400)
                     )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Main Form Card
+
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                     shape = RoundedCornerShape(20.dp),
@@ -521,11 +521,11 @@ fun CallbackTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
                     ) {
-                        // Caller ID input
+
                         OutlinedTextField(
                             value = callerId,
                             onValueChange = { viewModel.updateCallerId(it) },
-                            label = { 
+                            label = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Person,
@@ -548,19 +548,19 @@ fun CallbackTab(
                             trailingIcon = {
                                 IconButton(onClick = { pickContact(ContactField.CALLER_ID) }) {
                                     Icon(
-                                        Icons.Default.Contacts, 
+                                        Icons.Default.Contacts,
                                         contentDescription = stringResource(R.string.pick_caller_id),
                                         tint = CallAccent
                                     )
                                 }
                             }
                         )
-                        
-                        // Recipient input
+
+
                         OutlinedTextField(
                             value = recipient,
                             onValueChange = { viewModel.updateCallbackRecipient(it) },
-                            label = { 
+                            label = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
@@ -583,15 +583,15 @@ fun CallbackTab(
                             trailingIcon = {
                                 IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
                                     Icon(
-                                        Icons.Default.Contacts, 
+                                        Icons.Default.Contacts,
                                         contentDescription = stringResource(R.string.pick_recipient),
                                         tint = CallAccent
                                     )
                                 }
                             }
                         )
-                        
-                        // Line selection
+
+
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
@@ -638,10 +638,10 @@ fun CallbackTab(
                                 }
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Call button
+
+
                         Button(
                             onClick = {
                                 selectedLine?.let { lineId ->
@@ -671,8 +671,8 @@ fun CallbackTab(
                         }
                     }
                 }
-                
-                // API response messages
+
+
                 if (callResult.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     CallApiMessage(response = callResult, visible = true)
@@ -681,18 +681,18 @@ fun CallbackTab(
                     Spacer(modifier = Modifier.height(8.dp))
                     ErrorMessage(errorText = error ?: "", visible = true)
                 }
-                
-                // Call history section
+
+
                 if (callList.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    
+
                     Text(
                         text = stringResource(R.string.call_history_title),
                         fontSize = getResponsiveTitleLargeSize(),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
-                    
+
                     callList.forEach { call ->
                         ElevatedCard(
                             modifier = Modifier
@@ -742,7 +742,7 @@ fun CallbackTab(
         }
     }
 
-    // Phone number selection dialog
+
     if (showPhoneNumberDialog) {
         AlertDialog(
             onDismissRequest = { showPhoneNumberDialog = false },
@@ -828,7 +828,7 @@ fun OneShotCallTab(
     var currentContactField by remember { mutableStateOf<ContactField?>(null) }
     var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
     var contentVisible by remember { mutableStateOf(false) }
-    
+
     val useCallerIdPrefix by callViewModel.useCallerIdPrefix.collectAsState()
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
@@ -871,7 +871,7 @@ fun OneShotCallTab(
             requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
-    
+
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             callViewModel.loadContacts(context.contentResolver)
@@ -879,8 +879,8 @@ fun OneShotCallTab(
         contentVisible = true
     }
 
-    
-    // Button animation
+
+
     val buttonInteractionSource = remember { MutableInteractionSource() }
     val isPressed by buttonInteractionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
@@ -901,14 +901,14 @@ fun OneShotCallTab(
     ) {
         AnimatedVisibility(
             visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(400)) + 
+            enter = fadeIn(animationSpec = tween(400)) +
                     slideInVertically(
                         initialOffsetY = { it / 4 },
                         animationSpec = tween(400)
                     )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Main Form Card
+
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                     shape = RoundedCornerShape(20.dp),
@@ -923,11 +923,11 @@ fun OneShotCallTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
                     ) {
-                        // Recipient input
+
                         OutlinedTextField(
                             value = recipient,
                             onValueChange = { callViewModel.updateOneShotRecipient(it) },
-                            label = { 
+                            label = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
@@ -950,15 +950,15 @@ fun OneShotCallTab(
                             trailingIcon = {
                                 IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
                                     Icon(
-                                        Icons.Default.Contacts, 
+                                        Icons.Default.Contacts,
                                         contentDescription = stringResource(R.string.pick_recipient),
                                         tint = CallAccent
                                     )
                                 }
                             }
                         )
-                        
-                        // Line selection
+
+
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
@@ -1005,8 +1005,8 @@ fun OneShotCallTab(
                                 }
                             }
                         }
-                        
-                        // Use line number as caller ID checkbox
+
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1027,10 +1027,10 @@ fun OneShotCallTab(
                                 fontSize = getResponsiveBodyLargeSize()
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
-                        // Call button
+
+
                         Button(
                             onClick = {
                                 callViewModel.makeOneShotCall(recipient, useCallerIdPrefix)
@@ -1072,8 +1072,8 @@ fun OneShotCallTab(
                         }
                     }
                 }
-                
-                // OneShot Call response messages
+
+
                 if (oneShotCallResult.isNotEmpty() && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(12.dp))
                     AnimatedVisibility(
@@ -1119,14 +1119,14 @@ fun OneShotCallTab(
                         }
                     }
                 }
-                
-                // Consolidated Error Message
+
+
                 val activeError = if (!oneShotCallError.isNullOrEmpty()) {
                     oneShotCallError
                 } else {
                     error
                 }
-                
+
                 if (!activeError.isNullOrEmpty() && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(8.dp))
                     ErrorMessage(errorText = activeError, visible = true)
@@ -1135,7 +1135,7 @@ fun OneShotCallTab(
         }
     }
 
-    // Phone number selection dialog
+
     if (showPhoneNumberDialog) {
         AlertDialog(
             onDismissRequest = { showPhoneNumberDialog = false },

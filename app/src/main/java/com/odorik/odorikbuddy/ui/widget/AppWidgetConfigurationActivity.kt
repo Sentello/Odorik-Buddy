@@ -101,7 +101,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // 1. Get the App Widget ID from the Intent
+
         val intent = intent
         val extras = intent.extras
         if (extras != null) {
@@ -111,19 +111,19 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             )
         }
 
-        // If this activity was started with an intent without an app widget ID, finish with an error.
+
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
         }
-        
-        // Return cancelled by default
+
+
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_CANCELED, resultValue)
 
         setContent {
             val context = LocalContext.current
-            
+
             val readContactsPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
                 onResult = { isGranted ->
@@ -207,8 +207,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                // Style Selector
+
+
                 item {
                     Column(
                         modifier = Modifier
@@ -226,7 +226,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Square Option
+
                             StyleOption(
                                 label = stringResource(R.string.style_square),
                                 isSelected = selectedStyle == "SQUARE",
@@ -234,8 +234,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             )
-                            
-                            // Circle Option
+
+
                             StyleOption(
                                 label = stringResource(R.string.style_circle),
                                 isSelected = selectedStyle == "CIRCLE",
@@ -247,7 +247,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-                // Live Preview (greatly improved in this version)
+
                 if (selectedTile != null) {
                     item {
                         Column(
@@ -275,7 +275,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-                // Hybrid coloring section - only shown after user selects a tile
+
                 if (selectedTileId != null) {
                     item {
                         Column(
@@ -291,7 +291,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
-                            // Toggle
+
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -318,7 +318,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                                 )
 
-                                // Background color swatches (reuse palette)
+
                                 Text(stringResource(R.string.color), style = MaterialTheme.typography.labelSmall)
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -344,7 +344,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Text color swatches
+
                                 Text(stringResource(R.string.text_color), style = MaterialTheme.typography.labelSmall)
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -375,8 +375,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 items(tiles, key = { it.id }) { tile ->
                     val contactName = viewModel.getContactName(tile.recipient)
                     val isSelected = selectedTileId == tile.id
-                    
-                    // Show actual tile colors (big improvement)
+
+
                     val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
                     val tileBg = TileColorHelper.resolveColor(tile.color, isSystemDark)
                         ?: MaterialTheme.colorScheme.surface
@@ -395,7 +395,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             .darkModeBorder(RoundedCornerShape(16.dp))
                             .clickable {
                                 selectedTileId = tile.id
-                                // Reset custom colors when changing tile
+
                                 if (!useTileColors) {
                                     customColor = tile.color
                                     customTextColor = tile.textColor
@@ -435,7 +435,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            
+
                             Text(
                                 text = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
                                 fontSize = getResponsiveBodyLargeSize() * 0.8f,
@@ -443,7 +443,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
-                            
+
                             if (isSelected) {
                                 Text(
                                     text = "✓ Selected",
@@ -456,7 +456,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-                // Save button - always at bottom, respects navigation insets
+
                 item {
                     val canSave = selectedTileId != null
                     Button(
@@ -497,14 +497,14 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         val primaryColor = SettingsAccent
         val outlineColor = MaterialTheme.colorScheme.outlineVariant
         val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-        
+
         Column(
             modifier = modifier
                 .clickable(onClick = onClick)
                 .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Shape Preview
+
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -517,21 +517,21 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
-                // Inner dummy content
+
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .background(
-                            if (isSelected) primaryColor.copy(alpha = 0.3f) 
-                            else outlineColor.copy(alpha = 0.3f), 
+                            if (isSelected) primaryColor.copy(alpha = 0.3f)
+                            else outlineColor.copy(alpha = 0.3f),
                             shape
                         )
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
-            // Label
+
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
@@ -578,10 +578,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * High quality preview that closely mimics the real Glance widget.
-     * This is a big improvement over the previous minimal style selector.
-     */
+
     @Composable
     fun QuickDialWidgetPreview(
         tile: com.odorik.odorikbuddy.data.local.entity.TileEntity,
@@ -593,7 +590,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
     ) {
         val isSystemDark = isSystemInDarkTheme()
 
-        // Same resolution logic as the real widget + TileColorHelper
+
         val bgColor = when {
             !useTileColors && customColor != null -> Color(customColor)
             tile.color != null -> TileColorHelper.resolveColor(tile.color, isSystemDark)
@@ -621,7 +618,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             contentAlignment = Alignment.Center
         ) {
             if (style == "CIRCLE") {
-                // CIRCLE style preview
+
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -644,7 +641,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     )
                 }
             } else {
-                // SQUARE style preview
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,

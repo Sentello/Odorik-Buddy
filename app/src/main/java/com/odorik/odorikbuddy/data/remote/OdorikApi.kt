@@ -19,7 +19,7 @@ interface OdorikApi {
     suspend fun getAllowedSenders(
         @Query("user") user: String,
         @Query("password") password: String
-    ): Response<String>  // Comma-separated string
+    ): Response<String>
 
     @FormUrlEncoded
     @POST("sms")
@@ -30,7 +30,7 @@ interface OdorikApi {
         @Field("message") message: String,
         @Field("sender") sender: String? = null,
         @Field("delayed") delayed: String? = null
-    ): Response<String>  // Plain text response
+    ): Response<String>
 
     @FormUrlEncoded
     @POST("callback")
@@ -60,16 +60,16 @@ interface OdorikApi {
     suspend fun getCallHistory(
         @Query("user") user: String,
         @Query("password") password: String,
-        @Query("from") from: String, // ISO 8601 format
-        @Query("to") to: String      // ISO 8601 format
+        @Query("from") from: String,
+        @Query("to") to: String
     ): Response<List<HistoryItem>>
 
     @GET("sms.json")
     suspend fun getSmsHistory(
         @Query("user") user: String,
         @Query("password") password: String,
-        @Query("from") from: String, // ISO 8601 format
-        @Query("to") to: String      // ISO 8601 format
+        @Query("from") from: String,
+        @Query("to") to: String
     ): Response<List<HistoryItem>>
 
     @GET("public_numbers.json")

@@ -84,7 +84,7 @@ class DashboardViewModel @Inject constructor(
     init {
         loadSavedDateRange()
 
-        // Auto-manage error retry
+
         viewModelScope.launch {
             error.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -134,7 +134,7 @@ class DashboardViewModel @Inject constructor(
             }
 
             try {
-                // If initializing and no custom range is set, ensure we are up to date with the current week
+
                 if (isInitialLoad && securePreferences.getString("dashboard_start_date") == null) {
                     val (start, end) = getCurrentWeekRange()
                     _startDate.value = start
@@ -174,13 +174,13 @@ class DashboardViewModel @Inject constructor(
                 _startDate.value = java.time.LocalDate.ofEpochDay(startEpoch)
                 _endDate.value = java.time.LocalDate.ofEpochDay(endEpoch)
             } catch (e: Exception) {
-                // If parsing fails, use current week
+
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
                 _endDate.value = end
             }
         } else {
-            // Explicitly set current week if nothing saved (ensures freshness)
+
             val (start, end) = getCurrentWeekRange()
             _startDate.value = start
             _endDate.value = end
@@ -194,18 +194,18 @@ class DashboardViewModel @Inject constructor(
 
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
         val (currentStart, currentEnd) = getCurrentWeekRange()
-        
-        // If the selected range matches the current week, do NOT save it (treat as dynamic default)
+
+
         if (newStartDate == currentStart && newEndDate == currentEnd) {
             securePreferences.clearString("dashboard_start_date")
             securePreferences.clearString("dashboard_end_date")
         } else {
             saveDateRange(newStartDate, newEndDate)
         }
-        
+
         _startDate.value = newStartDate
         _endDate.value = newEndDate
-        
+
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -217,7 +217,7 @@ class DashboardViewModel @Inject constructor(
         _endDate.value = end
         securePreferences.clearString("dashboard_start_date")
         securePreferences.clearString("dashboard_end_date")
-        
+
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -263,15 +263,15 @@ class DashboardViewModel @Inject constructor(
 
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
-                
-                // 🔥 CRITICAL FIX: Filter cached data to match the selected date range
+
+
                 val filteredCache = cachedHistory.filter { item ->
                     try {
                         val itemDate = parseIsoDate(item.date).toInstant()
                             .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                         !itemDate.isBefore(_startDate.value) && !itemDate.isAfter(_endDate.value)
                     } catch (ex: Exception) {
-                        false // Skip items with unparseable dates
+                        false
                     }
                 }
 

@@ -54,7 +54,7 @@ class SmsViewModel @Inject constructor(
     private val _isRetrying = MutableStateFlow(false)
     val isRetrying: StateFlow<Boolean> = _isRetrying
 
-    // --- State for inputs to support Contact Resolution ---
+
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
 
@@ -63,7 +63,7 @@ class SmsViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
-        // Auto-manage error retry when error changes
+
         viewModelScope.launch {
             error.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -105,7 +105,7 @@ class SmsViewModel @Inject constructor(
     }
 
     fun fetchAllowedSenders() = viewModelScope.launch {
-        _error.value = null // Clear previous error
+        _error.value = null
         val result = smsRepository.getAllowedSenders()
         result.onSuccess {
             _allowedSenders.value = it
@@ -117,16 +117,16 @@ class SmsViewModel @Inject constructor(
     }
 
     fun sendSms(recipient: String, message: String, sender: String?) = viewModelScope.launch {
-        _sendResult.value = null // Clear previous result
-        _error.value = null      // Clear previous error
-        
+        _sendResult.value = null
+        _error.value = null
+
         val result = smsRepository.sendSms(
             recipient = recipient,
             message = message,
             sender = sender,
             delayed = _delayed.value.takeIf { it.isNotBlank() }
         )
-        
+
         result.onSuccess {
             _sendResult.value = it
             clearDraft()
@@ -153,12 +153,12 @@ class SmsViewModel @Inject constructor(
             return
         }
 
-        // Try parse as minutes (positive integer)
+
         try {
             val minutes = delayed.toInt()
             _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
         } catch (e: NumberFormatException) {
-            // Try parse as datetime
+
             try {
                 val scheduled = Instant.parse(delayed)
                 val now = Instant.now()

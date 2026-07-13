@@ -85,7 +85,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setPhoneNumber(number: String) {
-        // Convert + format to 00 format if needed
+
         val formattedNumber = if (number.startsWith("+")) {
             number.replace("+", "00")
         } else {

@@ -7,17 +7,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.core.content.ContextCompat
 
-/**
- * Centralized helper for launching phone calls or the dialer.
- *
- * This reduces duplication between CallScreen (one-shot flow) and WidgetCallActivity.
- */
+
 object PhoneCallLauncher {
 
-    /**
-     * Launches either ACTION_CALL (if direct calls enabled + permission granted)
-     * or falls back to ACTION_DIAL.
-     */
+
     fun launch(
         context: Context,
         phoneNumber: String,

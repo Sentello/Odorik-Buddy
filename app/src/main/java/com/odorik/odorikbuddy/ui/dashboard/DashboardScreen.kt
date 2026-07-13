@@ -135,10 +135,10 @@ fun DashboardScreen(
     val error by viewModel.error.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
-    
+
     val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
 
-    // Context and language setup for currency formatting
+
     val context = LocalContext.current
     val currentLanguage = remember {
         val locale = context.resources.configuration.locales[0]
@@ -152,11 +152,11 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         viewModel.loadData(true)
     }
-    
-    // Auto-retry when in critical error state
 
 
-    // Observe navigation results reliably using LaunchedEffect keys
+
+
+
     val navStartDate = navController.currentBackStackEntry?.savedStateHandle?.get<Long>("startDate")
     val navEndDate = navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate")
 
@@ -165,19 +165,19 @@ fun DashboardScreen(
             val newStartDate = java.time.LocalDate.ofEpochDay(navStartDate)
             val newEndDate = java.time.LocalDate.ofEpochDay(navEndDate)
 
-            // Only update if the range actually changed
+
             if (newStartDate != startDate || newEndDate != endDate) {
                 viewModel.updateDateRange(newStartDate, newEndDate)
             }
 
-            // Clear immediately after processing to prevent re-triggers
+
             navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("startDate")
             navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("endDate")
         }
     }
 
     LaunchedEffect(error) {
-        // Only show snackbar if NOT in critical error state
+
         if (!isCriticalError && error != null) {
             snackbarHostState.showSnackbar(
                 message = error!!,
@@ -219,9 +219,9 @@ fun DashboardScreen(
                         .fillMaxSize()
                         .padding(getResponsivePadding())
                 ) {
-                    // Calculate chart height dynamically.
-                    // Total non-chart overhead: balance card (~110dp) + spending summary (~140dp)
-                    // + chart card internal elements (~128dp) + spacers & padding (~52dp) ≈ 430dp
+
+
+
                     val chartOverhead = 430.dp
                     val dynamicChartHeight = (maxHeight - chartOverhead).coerceAtLeast(180.dp)
 
@@ -286,7 +286,7 @@ fun DashboardScreen(
                     }
                 }
             }
-            
+
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
@@ -431,7 +431,7 @@ fun SpendingChart(
             .fillMaxWidth()
             .darkModeBorder(RoundedCornerShape(20.dp))
             .semantics {
-                val valuesDesc = spendingChartData.joinToString(", ") { 
+                val valuesDesc = spendingChartData.joinToString(", ") {
                     val formattedValue = currencyFormatter.formatCurrency(it.spending, language)
                     "${it.date}: $formattedValue"
                 }
@@ -490,7 +490,7 @@ fun SpendingChart(
                         AndroidView(
                             factory = { ctx ->
                                 CombinedChart(ctx).apply {
-                                    // X-Axis styling
+
                                     xAxis.position = XAxis.XAxisPosition.BOTTOM
                                     xAxis.granularity = 1f
                                     xAxis.isGranularityEnabled = true
@@ -498,7 +498,7 @@ fun SpendingChart(
                                     xAxis.setDrawGridLines(false)
                                     xAxis.yOffset = 8f
 
-                                    // Y-Axis styling
+
                                     axisLeft.setDrawAxisLine(false)
                                     axisLeft.setDrawGridLines(true)
                                     axisLeft.gridColor = android.graphics.Color.parseColor("#22888888")
@@ -507,14 +507,14 @@ fun SpendingChart(
                                     axisLeft.setLabelCount(5, false)
                                     axisRight.isEnabled = false
 
-                                    // General chart styling
+
                                     description.isEnabled = false
                                     legend.isEnabled = true
                                     legend.textColor = secondaryColor
                                     legend.yOffset = 8f
                                     setExtraOffsets(4f, 8f, 4f, 20f)
 
-                                    // Interaction
+
                                     setTouchEnabled(true)
                                     isDragEnabled = true
                                     setScaleEnabled(true)
@@ -573,7 +573,7 @@ fun SpendingChart(
                                 combinedData.setData(lineData)
                                 chart.data = combinedData
 
-                                // Swap bar sub-renderer inside CombinedChartRenderer for rounded bars
+
                                 val combinedRenderer = chart.renderer as? CombinedChartRenderer
                                 combinedRenderer?.let { cr ->
                                     val subRenderers = cr.subRenderers.toMutableList()

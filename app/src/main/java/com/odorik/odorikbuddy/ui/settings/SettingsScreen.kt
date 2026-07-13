@@ -170,29 +170,29 @@ fun SettingsScreen(
 
     val uriHandler = LocalUriHandler.current
 
-    // Update information
+
     val updateInfo by updateViewModel.updateInfo.collectAsState()
     val isUpdateLoading by updateViewModel.isLoading.collectAsState()
     val updateError by updateViewModel.error.collectAsState()
 
-    // Permission launcher for notifications
+
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission granted, enable auto-update
+
             viewModel.setAutoUpdateEnabled(true)
-            // Perform immediate update check to show notification if update is available
+
             viewModel.performImmediateUpdateCheck()
         }
     }
 
-    // Permission launcher for direct calls
+
     val callPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission granted, enable direct calls
+
             viewModel.setDirectCallsEnabled(true)
         }
     }
@@ -224,7 +224,7 @@ fun SettingsScreen(
                 iconGradientBrush = Brush.linearGradient(listOf(SettingsAccent, SettingsAccentLight)),
                 iconRotation = rotation
             )
-            
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -233,7 +233,7 @@ fun SettingsScreen(
                     bottom = getResponsiveSpacing()
                 )
             ) {
-                // Account Section (Lines)
+
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_account),
@@ -257,7 +257,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // Personal Section
+
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_personal),
@@ -292,7 +292,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // Display Section
+
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_display),
@@ -331,7 +331,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // Data Section
+
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_data),
@@ -353,14 +353,14 @@ fun SettingsScreen(
                     }
                 }
 
-                // App Section
+
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_app),
                         icon = Icons.Default.Apps
                     ) {
                         Column {
-                            // Auto-update
+
                             ListItem(
                                 headlineContent = { Text(stringResource(R.string.auto_update_checking)) },
                                 supportingContent = { Text(stringResource(R.string.auto_update_checking_description)) },
@@ -400,8 +400,8 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
-                            
-                            // Direct calls
+
+
                             ListItem(
                                 headlineContent = { Text(stringResource(R.string.direct_calls)) },
                                 supportingContent = { Text(stringResource(R.string.direct_calls_description)) },
@@ -434,7 +434,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
 
-                            // About
+
                             ListItem(
                                 headlineContent = { Text(stringResource(R.string.about_app)) },
                                 trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
@@ -445,7 +445,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
 
-                            // Version / Update
+
                             val isUpdateAvailable = updateViewModel.isUpdateAvailable()
                             ListItem(
                                 headlineContent = {
@@ -473,7 +473,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // Logout Button
+
                 item {
                     androidx.compose.material3.OutlinedButton(
                         onClick = { showLogoutDialog = true },
@@ -488,7 +488,7 @@ fun SettingsScreen(
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.Logout, 
+                            Icons.AutoMirrored.Filled.Logout,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -504,7 +504,7 @@ fun SettingsScreen(
         }
     }
 
-    // --- DIALOGS --- //
+
 
     selectedLine?.let {
         LineInfoDialog(line = it, onDismiss = { viewModel.onDismissLineDialog() })
@@ -561,8 +561,8 @@ fun SettingsScreen(
             onDismiss = { showPhoneNumberDialog = false }
         )
     }
-    
-    // Update Dialog
+
+
     if (showUpdateDialog) {
         val isUpdateAvailable = updateViewModel.isUpdateAvailable()
         UpdateInfoDialog(
@@ -573,8 +573,8 @@ fun SettingsScreen(
             onDismiss = { showUpdateDialog = false }
         )
     }
-    
-    // About Dialog
+
+
     if (showAboutDialog) {
         AboutDialog(
             onDismiss = { showAboutDialog = false },
@@ -592,16 +592,16 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/2)) {
                 Text(
-                    "${stringResource(R.string.line_name_label)} ${line.name}", 
+                    "${stringResource(R.string.line_name_label)} ${line.name}",
                     fontSize = getResponsiveBodyLargeSize()
                 )
                 Text(
-                    "${stringResource(R.string.caller_id_label_settings)} ${line.callerId}", 
+                    "${stringResource(R.string.caller_id_label_settings)} ${line.callerId}",
                     fontSize = getResponsiveBodyLargeSize()
                 )
                 line.publicNumber?.let {
                     Text(
-                        "${stringResource(R.string.public_number_label)} ${it}", 
+                        "${stringResource(R.string.public_number_label)} ${it}",
                         fontSize = getResponsiveBodyLargeSize()
                     )
                 }
@@ -635,7 +635,7 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
                 )
                 if (line.connectedDevices.isEmpty()) {
                     Text(
-                        stringResource(R.string.none), 
+                        stringResource(R.string.none),
                         fontSize = getResponsiveBodyLargeSize()
                     )
                 } else {
@@ -644,13 +644,13 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
                             val ipAddress = device.publicSocket.substringBefore(':')
                             Column {
                                 Text(
-                                    "• ${device.userAgent}", 
+                                    "• ${device.userAgent}",
                                     fontSize = getResponsiveBodyLargeSize(),
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    "  IP: $ipAddress", 
-                                    fontSize = getResponsiveBodySmallSize(), 
+                                    "  IP: $ipAddress",
+                                    fontSize = getResponsiveBodySmallSize(),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -672,7 +672,7 @@ fun PhoneNumberInputDialog(
     onDismiss: () -> Unit
 ) {
     var phoneNumberInput by remember { mutableStateOf(currentNumber) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.personal_phone_number)) },
@@ -686,11 +686,11 @@ fun PhoneNumberInputDialog(
                 OutlinedTextField(
                     value = phoneNumberInput,
                     onValueChange = { phoneNumberInput = it },
-                    label = { 
+                    label = {
                         Text(
                             stringResource(R.string.personal_phone_number),
                             fontSize = getResponsiveBodyLargeSize()
-                        ) 
+                        )
                     },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -829,9 +829,9 @@ fun UpdateInfoDialog(
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-    
+
     val cannotOpenUrlString = stringResource(R.string.cannot_open_url)
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.app_update)) },
@@ -851,7 +851,7 @@ fun UpdateInfoDialog(
                             "${stringResource(R.string.latest_version)}: ${updateInfo.version}",
                             fontSize = getResponsiveBodyLargeSize()
                         )
-                        
+
                         if (isUpdateAvailable) {
                             Text(
                                 stringResource(R.string.update_available),
@@ -883,13 +883,13 @@ fun UpdateInfoDialog(
         confirmButton = {
             if (updateInfo != null && isUpdateAvailable) {
                 TextButton(
-                    onClick = { 
+                    onClick = {
                         try {
                             uriHandler.openUri(updateInfo.downloadUrl)
                         } catch (e: Exception) {
                             android.widget.Toast.makeText(
-                                context, 
-                                cannotOpenUrlString, 
+                                context,
+                                cannotOpenUrlString,
                                 android.widget.Toast.LENGTH_LONG
                             ).show()
                         }
@@ -931,7 +931,7 @@ fun AboutDialog(
                     fontSize = getResponsiveBodyLargeSize(),
                     modifier = Modifier.padding(bottom = getResponsiveSpacing()/2)
                 )
-                
+
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.github_repository)) },
                     leadingContent = { Icon(Icons.Default.Code, contentDescription = null) },
@@ -940,7 +940,7 @@ fun AboutDialog(
                     ),
                     modifier = Modifier.clickable { onOpenGitHub() }
                 )
-                
+
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.discussion_forum)) },
                     leadingContent = { Icon(Icons.Default.Forum, contentDescription = null) },

@@ -38,7 +38,7 @@ class OneShotCallCoordinatorUseCase @Inject constructor(
             val lastSharedNumber = publicNumbers.lastOrNull { it.type == "shared" }?.publicNumber
                 ?: return Result.failure(SharedNumberNotFoundException())
 
-            // Get lines if we have a selected line id
+
             var selectedLineInfo: Line? = null
             if (selectedLineId != null) {
                 val linesResult = getLinesUseCase.execute()

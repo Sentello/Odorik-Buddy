@@ -3,13 +3,10 @@ package com.odorik.odorikbuddy.util
 import com.odorik.odorikbuddy.BuildConfig
 
 object VersionUtils {
-    /**
-     * Compares the current app version with the latest available version.
-     * Returns true if latestVersion is higher than currentVersion.
-     */
+
     fun isNewUpdateAvailable(latestVersion: String): Boolean {
         val currentVersion = BuildConfig.VERSION_NAME
-        
+
         return try {
             val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
             val latestParts = latestVersion.split(".").map { it.toIntOrNull() ?: 0 }

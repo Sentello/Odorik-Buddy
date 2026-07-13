@@ -7,9 +7,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * Utility functions to handle responsive design based on screen size
- */
+
 
 @Composable
 fun getResponsivePadding(): PaddingValues {
@@ -17,10 +15,10 @@ fun getResponsivePadding(): PaddingValues {
     val screenWidthDp = configuration.screenWidthDp
 
     val responsiveHorizontalPadding = when {
-        screenWidthDp < 320 -> 8.dp // Very small screens
-        screenWidthDp < 360 -> 12.dp // Small screens
-        screenWidthDp < 412 -> 16.dp // Medium screens (like Pixel)
-        else -> 24.dp // Larger screens
+        screenWidthDp < 320 -> 8.dp
+        screenWidthDp < 360 -> 12.dp
+        screenWidthDp < 412 -> 16.dp
+        else -> 24.dp
     }
 
     val responsiveVerticalPadding = when {
@@ -66,13 +64,13 @@ fun getResponsiveChartHeight(): Dp {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
 
-    // Subtract estimated UI overhead:
-    // ~76dp GradientHeader + ~90dp Balance card + ~120dp Spending Summary card
-    // ~80dp Bottom Navigation Bar + ~74dp spacing/padding between elements
+
+
+
     val uiOverhead = 440
     val availableHeight = (screenHeightDp - uiOverhead).coerceAtLeast(0)
 
-    // Use a smaller fraction on compact screens to avoid the chart dominating
+
     val fraction = if (screenHeightDp < 800) 0.40 else 0.55
     return ((availableHeight * fraction).dp).coerceIn(120.dp, 320.dp)
 }
@@ -114,15 +112,15 @@ fun getResponsiveBodyLargeSize(): androidx.compose.ui.unit.TextUnit {
 }
 
 @Composable
-fun getResponsiveMessageFieldHeight(): Dp {  // Max (expanded) - for heightIn max constraint
+fun getResponsiveMessageFieldHeight(): Dp {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
 
     return when {
-        screenHeightDp < 680 -> 200.dp  // For small screens
-        screenHeightDp < 840 -> 360.dp  // For medium screens  
-        screenHeightDp < 1000 -> 400.dp // For large phones
-        else -> 440.dp                  // For tablets
+        screenHeightDp < 680 -> 200.dp
+        screenHeightDp < 840 -> 360.dp
+        screenHeightDp < 1000 -> 400.dp
+        else -> 440.dp
     }
 }
 
@@ -132,10 +130,10 @@ fun getResponsiveMinMessageHeight(): Dp {
     val screenHeightDp = configuration.screenHeightDp
 
     return when {
-        screenHeightDp < 680 -> 120.dp  // ~3 lines on small screens
-        screenHeightDp < 840 -> 240.dp  // ~6 lines on medium screens
-        screenHeightDp < 1000 -> 320.dp // ~8 lines on large screens
-        else -> 360.dp                  // ~9 lines on tablets
+        screenHeightDp < 680 -> 120.dp
+        screenHeightDp < 840 -> 240.dp
+        screenHeightDp < 1000 -> 320.dp
+        else -> 360.dp
     }
 }
 
@@ -171,7 +169,7 @@ fun shouldShowNavigationLabels(): Boolean {
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
 
-    // Show labels only on screens wider than 400dp to prevent text wrapping/truncation
+
     return screenWidthDp >= 400
 }
 
@@ -181,8 +179,8 @@ fun getResponsiveNavigationLabelSize(): androidx.compose.ui.unit.TextUnit {
     val screenWidthDp = configuration.screenWidthDp
 
     return when {
-        screenWidthDp < 412 -> 12.sp // Small screens
-        else -> 14.sp // Default label size
+        screenWidthDp < 412 -> 12.sp
+        else -> 14.sp
     }
 }
 

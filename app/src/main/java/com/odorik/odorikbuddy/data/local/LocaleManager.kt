@@ -20,10 +20,7 @@ class LocaleManager @Inject constructor(
         LanguagePreferences.setPreferredLanguage(context, lang)
     }
 
-    /**
-     * Applies the locale change using the modern AppCompatDelegate API.
-     * This is the recommended way since Android 13.
-     */
+
     fun applyLocale(lang: String) {
         setPreferredLanguage(lang)
 
@@ -31,11 +28,7 @@ class LocaleManager @Inject constructor(
         AppCompatDelegate.setApplicationLocales(localeList)
     }
 
-    /**
-     * Creates a localized context for cases where we still need one
-     * (e.g. some utility methods or older components).
-     * This is kept for backward compatibility but should be used sparingly.
-     */
+
     fun createLocaleContext(base: Context): Context {
         val lang = LanguagePreferences.getPreferredLanguage(base)
         val localeList = LocaleListCompat.forLanguageTags(lang)

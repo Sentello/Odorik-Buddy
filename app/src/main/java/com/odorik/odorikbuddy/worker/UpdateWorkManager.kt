@@ -42,15 +42,15 @@ class UpdateWorkManager @Inject constructor(
             .build()
 
         val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-            7, TimeUnit.DAYS // Weekly
+            7, TimeUnit.DAYS
         )
             .setConstraints(constraints)
-            .setInitialDelay(1, TimeUnit.HOURS) // Start after 1 hour
+            .setInitialDelay(1, TimeUnit.HOURS)
             .build()
 
         workManager.enqueueUniquePeriodicWork(
             UPDATE_CHECK_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP, // Keep existing if already scheduled
+            ExistingPeriodicWorkPolicy.KEEP,
             updateWorkRequest
         )
     }
@@ -76,23 +76,16 @@ class UpdateWorkManager @Inject constructor(
     fun performImmediateUpdateCheck() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Check for updates
+
                 val result = updateRepository.getAppUpdateInfo()
 
                 result.onSuccess { updateInfo ->
-                    // Cache the update info
-                    updateRepository.getCachedUpdateInfo() // This will cache it
 
-                    // Check if this is a new update that we haven't notified about
-                    if (com.odorik.odorikbuddy.util.VersionUtils.isNewUpdateAvailable(updateInfo.version)) {
-                        showImmediateUpdateNotification(updateInfo)
-                        // Mark this version as notified
-                        markVersionAsNotified(updateInfo.version)
-                    }
-                }
-                // Ignore failures for immediate check - don't want to bother user
+                    updateRepository.getCachedUpdateInfo()
+
+
             } catch (e: Exception) {
-                // Silently fail for immediate check
+
             }
         }
     }
@@ -103,15 +96,15 @@ class UpdateWorkManager @Inject constructor(
     }
 
     private fun showImmediateUpdateNotification(updateInfo: AppUpdateInfo) {
-        // Check if POST_NOTIFICATIONS permission is granted
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-                return // Permission not granted, skip notification
+                return
             }
         }
 
-        // Create notification channel if needed
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = android.app.NotificationChannel(
                 "update_notifications",
@@ -124,7 +117,7 @@ class UpdateWorkManager @Inject constructor(
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Create intent to open the app
+
         val intent = android.content.Intent(context, com.odorik.odorikbuddy.MainActivity::class.java).apply {
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -149,7 +142,7 @@ class UpdateWorkManager @Inject constructor(
         try {
             androidx.core.app.NotificationManagerCompat.from(context).notify(1002, notification)
         } catch (e: SecurityException) {
-            // Permission not granted, silently fail
+
         }
     }
 }

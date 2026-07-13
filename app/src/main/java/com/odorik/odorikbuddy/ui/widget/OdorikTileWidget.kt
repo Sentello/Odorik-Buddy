@@ -48,7 +48,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class OdorikTileWidget : GlanceAppWidget() {
 
     companion object {
-        // Per-widget color override keys (hybrid model: default to tile colors, allow override)
+
         val useTileColorsKey = booleanPreferencesKey("use_tile_colors")
         val widgetColorKey = longPreferencesKey("widget_color")
         val widgetTextColorKey = longPreferencesKey("widget_text_color")
@@ -67,7 +67,7 @@ class OdorikTileWidget : GlanceAppWidget() {
             val tileId = prefs[intPreferencesKey("tile_id")] ?: -1
             val widgetStyle = prefs[stringPreferencesKey("widget_style")] ?: "SQUARE"
 
-            // Hybrid coloring: per-widget overrides or fall back to tile
+
             val useTileColors = prefs[useTileColorsKey] ?: true
             val widgetColorOverride = prefs[widgetColorKey]
             val widgetTextColorOverride = prefs[widgetTextColorKey]
@@ -79,7 +79,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 )
             }
 
-            // Load tile asynchronously using produceState
+
             val tileState = produceState<TileEntity?>(initialValue = null, tileId) {
                 if (tileId != -1) {
                     value = withTimeoutOrNull(1500) {
@@ -93,7 +93,7 @@ class OdorikTileWidget : GlanceAppWidget() {
             }
             val tile = tileState.value
 
-            // Load contact name asynchronously using produceState
+
             val contactNameState = produceState<String>(initialValue = "", tile) {
                 if (tile != null) {
                     value = resolveContactName(context, entryPoint.contactNameResolver(), tile.recipient)
@@ -114,11 +114,7 @@ class OdorikTileWidget : GlanceAppWidget() {
         }
     }
 
-    /**
-     * Improved contact name resolution:
-     * 1. First try the app's cached ContactNameResolver (fast, already loaded by the main app)
-     * 2. Fall back to direct query only if needed (with simple in-memory cache)
-     */
+
     private val contactNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     private suspend fun resolveContactName(
@@ -126,14 +122,14 @@ class OdorikTileWidget : GlanceAppWidget() {
         resolver: ContactNameResolver,
         phoneNumber: String
     ): String {
-        // 1. Try the global cache first (best case - app already loaded contacts)
+
         val cached = resolver.getContactName(phoneNumber)
         if (cached != phoneNumber) return cached
 
-        // 2. Check our lightweight widget cache
+
         contactNameCache[phoneNumber]?.let { return it }
 
-        // 3. Last resort: direct query (only when necessary)
+
         val name = withContext(Dispatchers.IO) {
             queryContactNameDirectly(context, phoneNumber)
         }
@@ -171,17 +167,17 @@ class OdorikTileWidget : GlanceAppWidget() {
         val context = LocalContext.current
         val isDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
 
-        // Hybrid color resolution (per-widget override takes precedence)
+
         val effectiveBackgroundColor: Color = when {
             !useTileColors && widgetColorOverride != null -> Color(widgetColorOverride)
             tile?.color != null -> Color(tile.color)
-            else -> if (isDark) Color(0xFF263238) else Color(0xFFECEFF1) // Dark / Light grey fallback for visibility
+            else -> if (isDark) Color(0xFF263238) else Color(0xFFECEFF1)
         }
 
         val effectiveTextColor: Color = when {
             !useTileColors && widgetTextColorOverride != null -> Color(widgetTextColorOverride)
             tile?.textColor != null -> Color(tile.textColor)
-            tile?.color != null -> Color.White // Reasonable default for custom colored tiles
+            tile?.color != null -> Color.White
             else -> if (isDark) Color.White else Color.Black
         }
 
@@ -201,7 +197,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 )
             }
         } else if (widgetStyle == "CIRCLE") {
-            // CIRCLE Style (Avatar)
+
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
@@ -209,8 +205,8 @@ class OdorikTileWidget : GlanceAppWidget() {
                     .applyTileClickAction(tile),
                 contentAlignment = Alignment.Center
             ) {
-                // Outer transparent box to allow for system rounding, 
-                // but the content is a centered circle
+
+
                 Box(
                     modifier = GlanceModifier
                         .size(64.dp)
@@ -231,7 +227,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 }
             }
         } else {
-            // SQUARE Style (Classic)
+
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
@@ -250,7 +246,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 ) {
                     val titleText = if (tile.label.isNotEmpty()) tile.label else contactName
                     val subtitleText = if (tile.label.isNotEmpty()) contactName else if (contactName != tile.recipient) tile.recipient else ""
-                    
+
                     TextWithShadow(
                         text = titleText,
                         style = TextStyle(
@@ -261,7 +257,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                         ),
                         maxLines = 1
                     )
-                    
+
                     if (subtitleText.isNotEmpty()) {
                         TextWithShadow(
                             text = subtitleText,
@@ -295,7 +291,7 @@ class OdorikTileWidget : GlanceAppWidget() {
         maxLines: Int = 1
     ) {
         Box(contentAlignment = Alignment.Center) {
-            // Shadow Layer - Increased opacity and offset for better readability
+
             Text(
                 text = text,
                 style = style.copy(
@@ -304,7 +300,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 maxLines = maxLines,
                 modifier = GlanceModifier.padding(start = 1.dp, top = 1.dp)
             )
-            // Main Text Layer
+
             Text(
                 text = text,
                 style = style,
@@ -314,7 +310,7 @@ class OdorikTileWidget : GlanceAppWidget() {
     }
 
     private fun GlanceModifier.applyTileClickAction(tile: TileEntity): GlanceModifier {
-        // Always use WidgetCallActivity for consistency and reliability
+
         return this.clickable(
             actionStartActivity<WidgetCallActivity>(
                 actionParametersOf(ActionParameters.Key<Int>("tile_id") to tile.id)

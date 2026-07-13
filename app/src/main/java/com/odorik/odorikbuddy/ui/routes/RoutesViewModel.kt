@@ -46,7 +46,7 @@ class RoutesViewModel @Inject constructor(
     private val _routesMap = MutableStateFlow<Map<String, List<Route>>>(emptyMap())
     val routesMap: StateFlow<Map<String, List<Route>>> = _routesMap.asStateFlow()
 
-    // --- NEW: STATE FOR CONTACTS MAP ---
+
     val contactsMap: StateFlow<Map<String, String>> = publicNumbersDelegate.contactsMap
 
     private val _isLoading = MutableStateFlow(false)
@@ -187,7 +187,7 @@ class RoutesViewModel @Inject constructor(
     }
 
     fun getContactName(number: String): String = publicNumbersDelegate.getContactName(number)
-    
+
     fun loadContacts(contentResolver: ContentResolver) {
         viewModelScope.launch {
             publicNumbersDelegate.loadContacts(contentResolver)

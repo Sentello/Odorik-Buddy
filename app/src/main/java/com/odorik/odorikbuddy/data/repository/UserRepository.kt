@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class UserRepository @Inject constructor(
     private val application: Application,
-    private val securePreferences: SecurePreferences // Inject SecurePreferences
+    private val securePreferences: SecurePreferences
 ) {
 
     fun saveCredentials(userId: String, password: String, remember: Boolean) {

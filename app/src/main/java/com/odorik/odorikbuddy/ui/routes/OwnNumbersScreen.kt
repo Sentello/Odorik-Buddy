@@ -204,7 +204,7 @@ fun OwnNumbersScreen(
                     )
                 }
                 is OwnNumbersViewModel.UiState.Success -> {
-                    // Hoist responsive calculations out of the LazyColumn for performance
+
                     val baseSpacing = getResponsiveSpacing()
                     val cardPadding = getResponsiveCardPadding()
                     val bodyLargeSize = getResponsiveBodyLargeSize()
@@ -220,7 +220,7 @@ fun OwnNumbersScreen(
                         ) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
-                            
+
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
                             OwnNumberItem(
@@ -250,7 +250,7 @@ fun OwnNumbersScreen(
                     }
                 }
             }
-            
+
             PullRefreshIndicator(
                 refreshing = isLoading && uiState !is OwnNumbersViewModel.UiState.Loading,
                 state = pullRefreshState,
@@ -379,7 +379,7 @@ fun OwnNumbersScreen(
     }
 
     LaunchedEffect(error) {
-        // Only show snackbar if NOT in full-screen error state
+
         if (uiState !is OwnNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
@@ -466,7 +466,7 @@ fun OwnNumberItem(
                                 color = SettingsAccent
                             )
                         } else {
-                            // Extract to avoid nested LazyColumn performance problems
+
                             Column(modifier = Modifier.heightIn(max = 300.dp)) {
                                 routesForThisNumber.forEach { route ->
                                     val sourceName = viewModel.getContactName(route.sourceNumber)

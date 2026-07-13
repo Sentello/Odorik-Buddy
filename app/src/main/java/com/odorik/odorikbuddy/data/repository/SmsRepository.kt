@@ -11,7 +11,7 @@ class SmsRepository @Inject constructor(
         return try {
             val credentials = userRepository.requireCredentials()
             val response = api.getAllowedSenders(credentials.first, credentials.second)
-            
+
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.startsWith("error") == true) {
@@ -30,22 +30,22 @@ class SmsRepository @Inject constructor(
     }
 
     suspend fun sendSms(
-        recipient: String, 
-        message: String, 
-        sender: String?, 
+        recipient: String,
+        message: String,
+        sender: String?,
         delayed: String?
     ): Result<String> {
         return try {
             val credentials = userRepository.requireCredentials()
             val response = api.sendSms(
-                credentials.first, 
-                credentials.second, 
-                recipient, 
-                message, 
-                sender, 
+                credentials.first,
+                credentials.second,
+                recipient,
+                message,
+                sender,
                 delayed
             )
-            
+
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.startsWith("error") == true) {

@@ -182,7 +182,7 @@ class OwnNumbersViewModel @Inject constructor(
 
 
     fun getContactName(number: String): String = publicNumbersDelegate.getContactName(number)
-    
+
     fun loadContacts(contentResolver: ContentResolver) {
         viewModelScope.launch {
             publicNumbersDelegate.loadContacts(contentResolver)

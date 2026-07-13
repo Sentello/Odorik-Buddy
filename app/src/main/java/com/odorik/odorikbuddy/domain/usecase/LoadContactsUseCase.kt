@@ -7,10 +7,7 @@ import javax.inject.Inject
 
 class LoadContactsUseCase @Inject constructor() {
 
-    /**
-     * Reads all device contacts and returns a map of normalized number -> display name.
-     * Must be called from a coroutine (suspending I/O via ContentResolver).
-     */
+
     operator fun invoke(contentResolver: ContentResolver): Map<String, String> {
         val projection = arrayOf(
             ContactsContract.CommonDataKinds.Phone.NUMBER,
