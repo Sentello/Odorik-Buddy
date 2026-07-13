@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -41,6 +44,7 @@ fun GradientHeader(
     iconVector: ImageVector,
     backgroundBrush: Brush,
     iconGradientBrush: Brush,
+    onBackClick: (() -> Unit)? = null,
     onActionClick: (() -> Unit)? = null,
     actionIcon: ImageVector? = null,
     actionContentDescription: String? = null,
@@ -48,6 +52,7 @@ fun GradientHeader(
     iconSize: androidx.compose.ui.unit.Dp = 24.dp,
     iconContainerSize: androidx.compose.ui.unit.Dp = 44.dp,
     iconCornerRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    iconRotation: Float = 0f,
     modifier: Modifier = Modifier
 ) {
     var iconVisible by remember { mutableStateOf(false) }
@@ -80,6 +85,15 @@ fun GradientHeader(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (onBackClick != null) {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .size(iconContainerSize)
@@ -92,7 +106,7 @@ fun GradientHeader(
                         imageVector = iconVector,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(iconSize)
+                        modifier = Modifier.size(iconSize).rotate(iconRotation)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))

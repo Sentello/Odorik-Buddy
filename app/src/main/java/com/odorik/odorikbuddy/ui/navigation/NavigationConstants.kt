@@ -8,4 +8,5 @@ object NavigationRoutes {
     const val SMS = "sms"
     const val HISTORY = "history"
     const val SETTINGS = "settings"
+    const val DATE_RANGE_PICKER = "date_range_picker"
 }

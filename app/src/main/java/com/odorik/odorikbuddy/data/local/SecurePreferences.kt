@@ -21,7 +21,7 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
     )
 
     fun saveUser(user: String) {
-        sharedPreferences.edit().putString("user", user).commit()
+        sharedPreferences.edit().putString("user", user).apply()
     }
 
     fun getUser(): String? {
@@ -29,7 +29,7 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
     }
 
     fun savePassword(password: String) {
-        sharedPreferences.edit().putString("password", password).commit()
+        sharedPreferences.edit().putString("password", password).apply()
     }
 
     fun getPassword(): String? {
@@ -37,15 +37,15 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
     }
 
     fun clearUser() {
-        sharedPreferences.edit().remove("user").commit()
+        sharedPreferences.edit().remove("user").apply()
     }
 
     fun clearPassword() {
-        sharedPreferences.edit().remove("password").commit()
+        sharedPreferences.edit().remove("password").apply()
     }
 
     fun saveString(key: String, value: String) {
-        sharedPreferences.edit().putString(key, value).commit()
+        sharedPreferences.edit().putString(key, value).apply()
     }
 
     fun getString(key: String, defaultValue: String? = null): String? {
@@ -53,6 +53,6 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
     }
 
     fun clearString(key: String) {
-        sharedPreferences.edit().remove(key).commit()
+        sharedPreferences.edit().remove(key).apply()
     }
 }

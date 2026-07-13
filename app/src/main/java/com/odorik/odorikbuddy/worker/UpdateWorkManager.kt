@@ -10,7 +10,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.odorik.odorikbuddy.BuildConfig
+import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.repository.UpdateRepository
 import com.odorik.odorikbuddy.model.AppUpdateInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -24,14 +24,13 @@ import javax.inject.Singleton
 @Singleton
 class UpdateWorkManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val updateRepository: UpdateRepository
+    private val updateRepository: UpdateRepository,
+    private val appPreferences: AppPreferences
 ) {
     private val workManager by lazy { WorkManager.getInstance(context) }
 
     companion object {
         private const val UPDATE_CHECK_WORK_NAME = "update_check_work"
-        private const val PREF_AUTO_UPDATE_ENABLED = "auto_update_enabled"
-        private const val PREF_AUTO_UPDATE_DEFAULT = false
     }
 
     fun scheduleUpdateCheck() {
@@ -43,15 +42,15 @@ class UpdateWorkManager @Inject constructor(
             .build()
 
         val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-            7, TimeUnit.DAYS
+            7, TimeUnit.DAYS // Weekly
         )
             .setConstraints(constraints)
-            .setInitialDelay(1, TimeUnit.HOURS)
+            .setInitialDelay(1, TimeUnit.HOURS) // Start after 1 hour
             .build()
 
         workManager.enqueueUniquePeriodicWork(
             UPDATE_CHECK_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.KEEP, // Keep existing if already scheduled
             updateWorkRequest
         )
     }
@@ -61,8 +60,7 @@ class UpdateWorkManager @Inject constructor(
     }
 
     fun setAutoUpdateEnabled(enabled: Boolean) {
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean(PREF_AUTO_UPDATE_ENABLED, enabled).apply()
+        appPreferences.autoUpdateEnabled = enabled
 
         if (enabled) {
             scheduleUpdateCheck()
@@ -72,45 +70,30 @@ class UpdateWorkManager @Inject constructor(
     }
 
     fun isAutoUpdateEnabled(): Boolean {
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        return prefs.getBoolean(PREF_AUTO_UPDATE_ENABLED, PREF_AUTO_UPDATE_DEFAULT)
+        return appPreferences.autoUpdateEnabled
     }
 
     fun performImmediateUpdateCheck() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-
+                // Check for updates
                 val result = updateRepository.getAppUpdateInfo()
 
                 result.onSuccess { updateInfo ->
+                    // Cache the update info
+                    updateRepository.getCachedUpdateInfo() // This will cache it
 
-                    updateRepository.getCachedUpdateInfo()
-
-
+                    // Check if this is a new update that we haven't notified about
+                    if (com.odorik.odorikbuddy.util.VersionUtils.isNewUpdateAvailable(updateInfo.version)) {
+                        showImmediateUpdateNotification(updateInfo)
+                        // Mark this version as notified
+                        markVersionAsNotified(updateInfo.version)
+                    }
+                }
+                // Ignore failures for immediate check - don't want to bother user
             } catch (e: Exception) {
-
+                // Silently fail for immediate check
             }
-        }
-    }
-
-    private fun isNewUpdateAvailable(updateInfo: AppUpdateInfo): Boolean {
-        val currentVersion = BuildConfig.VERSION_NAME
-        val latestVersion = updateInfo.version
-
-
-        return try {
-            val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
-            val latestParts = latestVersion.split(".").map { it.toIntOrNull() ?: 0 }
-
-            for (i in 0 until maxOf(currentParts.size, latestParts.size)) {
-                val current = currentParts.getOrNull(i) ?: 0
-                val latest = latestParts.getOrNull(i) ?: 0
-                if (latest > current) return true
-                if (latest < current) return false
-            }
-            false
-        } catch (e: Exception) {
-            false
         }
     }
 
@@ -120,15 +103,15 @@ class UpdateWorkManager @Inject constructor(
     }
 
     private fun showImmediateUpdateNotification(updateInfo: AppUpdateInfo) {
-
+        // Check if POST_NOTIFICATIONS permission is granted
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-                return
+                return // Permission not granted, skip notification
             }
         }
 
-
+        // Create notification channel if needed
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = android.app.NotificationChannel(
                 "update_notifications",
@@ -141,7 +124,7 @@ class UpdateWorkManager @Inject constructor(
             notificationManager.createNotificationChannel(channel)
         }
 
-
+        // Create intent to open the app
         val intent = android.content.Intent(context, com.odorik.odorikbuddy.MainActivity::class.java).apply {
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -166,7 +149,7 @@ class UpdateWorkManager @Inject constructor(
         try {
             androidx.core.app.NotificationManagerCompat.from(context).notify(1002, notification)
         } catch (e: SecurityException) {
-
+            // Permission not granted, silently fail
         }
     }
 }

@@ -9,14 +9,8 @@ class CallUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
     suspend fun execute(callerId: String, recipient: String, line: String): Result<String> {
-        val userId = userRepository.getUserId()
-        val password = userRepository.getPassword()
-
-        if (userId == null || password == null) {
-            return Result.failure(Exception("User not logged in"))
-        }
-
         return try {
+            val (userId, password) = userRepository.requireCredentials()
             val response = odorikApi.call(
                 user = userId,
                 password = password,

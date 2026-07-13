@@ -1,9 +1,9 @@
 package com.odorik.odorikbuddy.data.local
 
 import android.content.Context
-import android.content.res.Configuration
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -11,8 +11,6 @@ import javax.inject.Singleton
 class LocaleManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-
-    private val KEY_LANGUAGE = "language"
 
     fun getPreferredLanguage(): String {
         return LanguagePreferences.getPreferredLanguage(context)
@@ -22,21 +20,30 @@ class LocaleManager @Inject constructor(
         LanguagePreferences.setPreferredLanguage(context, lang)
     }
 
+    /**
+     * Applies the locale change using the modern AppCompatDelegate API.
+     * This is the recommended way since Android 13.
+     */
+    fun applyLocale(lang: String) {
+        setPreferredLanguage(lang)
+
+        val localeList = LocaleListCompat.forLanguageTags(lang)
+        AppCompatDelegate.setApplicationLocales(localeList)
+    }
+
+    /**
+     * Creates a localized context for cases where we still need one
+     * (e.g. some utility methods or older components).
+     * This is kept for backward compatibility but should be used sparingly.
+     */
     fun createLocaleContext(base: Context): Context {
         val lang = LanguagePreferences.getPreferredLanguage(base)
-        val locale = Locale.forLanguageTag(lang)
-        val config = Configuration(base.resources.configuration)
-        config.setLocale(locale)
-        return base.createConfigurationContext(config)
-    }
-
-
-    fun updateLocale(context: Context, lang: String): Context {
-        setPreferredLanguage(lang)
-        val locale = Locale.forLanguageTag(lang)
-        val config = Configuration(context.resources.configuration)
-        config.setLocale(locale)
-        return context.createConfigurationContext(config)
+        val localeList = LocaleListCompat.forLanguageTags(lang)
+        val platformLocales = localeList.unwrap() as? android.os.LocaleList ?: android.os.LocaleList.getEmptyLocaleList()
+        return base.createConfigurationContext(
+            base.resources.configuration.apply {
+                setLocales(platformLocales)
+            }
+        )
     }
 }
-

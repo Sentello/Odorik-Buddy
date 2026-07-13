@@ -10,14 +10,8 @@ class GetRoutesForNumberUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
     suspend fun execute(publicNumber: String): Result<List<Route>> {
-        val userId = userRepository.getUserId()
-        val password = userRepository.getPassword()
-
-        if (userId == null || password == null) {
-            return Result.failure(Exception("User not logged in"))
-        }
-
         return try {
+            val (userId, password) = userRepository.requireCredentials()
             val response = odorikApi.getRoutes(publicNumber, userId, password)
             if (response.isSuccessful) {
                 val routes: List<Route>? = response.body()

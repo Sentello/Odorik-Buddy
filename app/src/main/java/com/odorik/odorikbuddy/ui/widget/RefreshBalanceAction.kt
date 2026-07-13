@@ -5,6 +5,7 @@ import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.state.updateAppWidgetState
+import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -24,7 +25,7 @@ class RefreshBalanceAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-
+        // Set loading state
         updateAppWidgetState(context, glanceId) { prefs ->
             prefs[BalanceWidget.isLoadingKey] = true
             prefs.remove(BalanceWidget.errorKey)
@@ -42,12 +43,12 @@ class RefreshBalanceAction : ActionCallback {
         updateAppWidgetState(context, glanceId) { prefs ->
             prefs[BalanceWidget.isLoadingKey] = false
             prefs[BalanceWidget.lastUpdatedKey] = System.currentTimeMillis()
-
+            
             result.onSuccess { balance ->
                 prefs[BalanceWidget.balanceKey] = balance
                 prefs.remove(BalanceWidget.errorKey)
             }.onFailure { error ->
-                prefs[BalanceWidget.errorKey] = error.message ?: "Unknown error"
+                prefs[BalanceWidget.errorKey] = error.message ?: context.applicationContext.getString(R.string.error_unknown_generic)
             }
         }
         BalanceWidget().update(context, glanceId)

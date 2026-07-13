@@ -148,7 +148,7 @@
     <string name="routing_description">Manage shared and own number routes</string>
     <string name="section_personal">Personal</string>
     <string name="personal_phone_number">Phone Number</string>
-    <string name="personal_phone_number_description">Enter your phone number in international format (e.g. 00420601123123 or +420601123123)</string>
+    <string name="personal_phone_number_description">Enter your phone number in international format (e.g. +420123456789)</string>
     <string name="oneshot_call">One Shot Call</string>
     <string name="shared_number">Shared phone numbers</string>
     <string name="add_rule">Add Rule</string>
@@ -227,14 +227,20 @@
     <string name="reset">Reset</string>
     <string name="custom_period">Custom Period</string>
     <string name="custom_date_range">Custom Date Range</string>
+
+    <!-- Widget error messages -->
+    <string name="widget_error_tile_not_found">Tile not found</string>
+    <string name="widget_error_callback_failed">Callback failed</string>
+    <string name="widget_error_unknown">Unknown error</string>
+    <string name="error_failed_to_load_credit">Failed to load credit</string>
+    <string name="error_failed_to_load_user_info">Failed to load user info</string>
+    <string name="error_unknown_generic">Unknown error</string>
     <string name="spending_for_date">Spending for %1$s: %2$.2f CZK</string>
     <string name="end_date_before_start_date">End date cannot be before start date.</string>
     <string name="sms_options_menu">More options</string>
     <string name="sms_delay_options_title">Schedule SMS</string>
     <string name="schedule_sms_button">Schedule SMS</string>
 
-    <string name="donate_button">Buy me a coffee</string>
-    
     <!-- App Update and About Strings -->
     <string name="about_app">About App</string>
     <string name="about_app_description">Odorik Buddy is an unofficial companion app for Odorik.cz services.</string>
@@ -308,4 +314,22 @@
     <string name="widget_config_large">Large</string>
     <string name="widget_config_extra_large">Extra Large</string>
     <string name="widget_preview">Preview</string>
+
+    <!-- Additional common UI strings -->
+    <string name="dismiss">Dismiss</string>
+    <string name="delete">Delete</string>
+    <string name="move_up">Move Up</string>
+    <string name="move_down">Move Down</string>
+    <string name="change_contact">Change Contact</string>
+    <string name="selected_contact_prefix">Selected: %s</string>
+    <string name="error_fetching_lines">Failed to fetch lines</string>
+    <string name="credentials_missing">User not logged in or credentials missing</string>
+
+    <!-- Widget Coloring (Hybrid model) -->
+    <string name="widget_colors">Widget Colors</string>
+    <string name="widget_use_tile_colors">Use colors from the tile</string>
+    <string name="widget_custom_colors">Customize colors for this widget</string>
+    <string name="save_widget">Add to Home Screen</string>
+    <string name="select_tile_first">Select a tile above</string>
+    <string name="widget_live_preview">Live Preview</string>
 </resources>

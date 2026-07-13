@@ -1,7 +1,5 @@
 package com.odorik.odorikbuddy.ui.dashboard
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,6 +77,7 @@ fun DateRangePickerScreen(navController: NavController) {
     var showEndDatePicker by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         topBar = {
@@ -100,103 +99,98 @@ fun DateRangePickerScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn()
+            // Predefined period buttons
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = getResponsiveSpacing())
+                    .darkModeBorder(RoundedCornerShape(20.dp)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = getResponsiveSpacing())
-                        .darkModeBorder(RoundedCornerShape(20.dp)),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
-                        Text(
-                            text = stringResource(R.string.quick_select),
-                            fontSize = getResponsiveTitleLargeSize(),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = getResponsiveSpacing())
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
+                    Text(
+                        text = stringResource(R.string.quick_select),
+                        fontSize = getResponsiveTitleLargeSize(),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = getResponsiveSpacing())
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val now = LocalDate.now()
+                        OutlinedButton(
+                            onClick = {
+                                val monday = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                                startDate = monday
+                                endDate = monday.plusDays(6)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
                         ) {
-                            val now = LocalDate.now()
-                            OutlinedButton(
-                                onClick = {
-                                    val monday = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                                    startDate = monday
-                                    endDate = monday.plusDays(6)
-                                },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        Icons.Default.CalendarToday,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.this_week),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.CalendarToday,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.this_week),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
-                            OutlinedButton(
-                                onClick = {
-                                    startDate = now.withDayOfMonth(1)
-                                    endDate = now
-                                },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        Icons.Default.DateRange,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.this_month),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                startDate = now.withDayOfMonth(1)
+                                endDate = now
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.this_month),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
-                            OutlinedButton(
-                                onClick = {
-                                    val lastMonth = now.minusMonths(1)
-                                    startDate = lastMonth.withDayOfMonth(1)
-                                    endDate = lastMonth.with(java.time.temporal.TemporalAdjusters.lastDayOfMonth())
-                                },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        Icons.Default.DateRange,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.last_month),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val lastMonth = now.minusMonths(1)
+                                startDate = lastMonth.withDayOfMonth(1)
+                                endDate = lastMonth.with(java.time.temporal.TemporalAdjusters.lastDayOfMonth())
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.last_month),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
                         }
                     }
                 }
             }
-
+            
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                 shape = RoundedCornerShape(20.dp),
@@ -211,7 +205,7 @@ fun DateRangePickerScreen(navController: NavController) {
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = getResponsiveSpacing())
                     )
-
+                    
                     OutlinedButton(
                         onClick = { showStartDatePicker = true },
                         modifier = Modifier.fillMaxWidth(),
@@ -247,7 +241,7 @@ fun DateRangePickerScreen(navController: NavController) {
                             onClick = {
                                 if (endDate.isBefore(startDate)) {
                                     scope.launch {
-                                        snackbarHostState.showSnackbar(message = "End date cannot be before start date.")
+                                        snackbarHostState.showSnackbar(message = context.getString(R.string.end_date_before_start_date))
                                     }
                                 } else {
                                     navController.previousBackStackEntry
@@ -283,8 +277,8 @@ fun DateRangePickerScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
-                    showStartDatePicker = false
+                TextButton(onClick = { 
+                    showStartDatePicker = false 
                     startDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0).atZone(ZoneId.systemDefault()).toLocalDate()
                 }) {
                     Text(stringResource(R.string.ok))
@@ -305,7 +299,7 @@ fun DateRangePickerScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(onClick = { 
                     showEndDatePicker = false
                     endDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0).atZone(ZoneId.systemDefault()).toLocalDate()
                 }) {
@@ -380,7 +374,7 @@ private fun GradientHeader(
 
                 Text(
                     text = title,
-                    fontSize = com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize(),
+                    fontSize = getResponsiveTitleLargeSize(),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )

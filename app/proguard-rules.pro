@@ -41,20 +41,28 @@
 -keepclassmembers class * { @com.google.gson.annotations.SerializedName <fields>; }
 
 
-#----------------- Hilt / Dagger -----------------
+#----------------- Hilt / Dagger / ViewModels -----------------
+# Keep Hilt/Dagger annotations and core classes
+-keepattributes *Annotation*
 -keep class dagger.hilt.** { *; }
 -keep class javax.inject.** { *; }
 -keep class dagger.** { *; }
--keepattributes *Annotation*
 -dontwarn dagger.hilt.internal.**.
 
+# Keep all ViewModels to prevent R8 stripping during dependency injection
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+
+# Keep Hilt's ViewModel factory and generated components
+-keep class dagger.hilt.android.internal.lifecycle.HiltViewModelFactory { *; }
+-keep class dagger.hilt.android.internal.lifecycle.HiltViewModelFactory$* { *; }
+-keep class * extends dagger.hilt.internal.GeneratedComponent { *; }
+-keep class * extends dagger.hilt.internal.GeneratedComponentManager { *; }
+
 #----------------- Jetpack Compose -----------------
-# Jetpack Compose Basic Rules
-# -keepclasseswithmembers class androidx.compose.** { *; }
 -keepclassmembers class * { @androidx.compose.runtime.Composable *; }
 
 #----------------- App Specific Rules -----------------
-# Keep these classes and their members because they are used by Hilt and reflection.
+# Keep these classes and their members because they are used by reflection/Hilt
 -keep class com.odorik.odorikbuddy.data.local.SecurePreferences { *; }
 -keep class com.odorik.odorikbuddy.data.repository.UserRepository { *; }
 -keep class com.odorik.odorikbuddy.domain.usecase.** { *; }

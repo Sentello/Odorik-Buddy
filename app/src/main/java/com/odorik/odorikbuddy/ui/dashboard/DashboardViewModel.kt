@@ -78,8 +78,41 @@ class DashboardViewModel @Inject constructor(
     private val _isInitialLoading = MutableStateFlow(false)
     val isInitialLoading: StateFlow<Boolean> = _isInitialLoading
 
+    private val _isRetrying = MutableStateFlow(false)
+    val isRetrying: StateFlow<Boolean> = _isRetrying
+
     init {
         loadSavedDateRange()
+
+        // Auto-manage error retry
+        viewModelScope.launch {
+            error.collect { currentError ->
+                if (!currentError.isNullOrEmpty()) {
+                    startErrorRetry()
+                } else {
+                    stopErrorRetry()
+                }
+            }
+        }
+    }
+
+    fun startErrorRetry() {
+        if (_isRetrying.value) return
+        _isRetrying.value = true
+        viewModelScope.launch {
+            while (_isRetrying.value) {
+                kotlinx.coroutines.delay(5000)
+                if (!_isRetrying.value) break
+                refresh()
+                if (_error.value == null) {
+                    _isRetrying.value = false
+                }
+            }
+        }
+    }
+
+    fun stopErrorRetry() {
+        _isRetrying.value = false
     }
 
     private fun getCurrentWeekRange(): Pair<LocalDate, LocalDate> {
@@ -101,7 +134,7 @@ class DashboardViewModel @Inject constructor(
             }
 
             try {
-
+                // If initializing and no custom range is set, ensure we are up to date with the current week
                 if (isInitialLoad && securePreferences.getString("dashboard_start_date") == null) {
                     val (start, end) = getCurrentWeekRange()
                     _startDate.value = start
@@ -141,13 +174,13 @@ class DashboardViewModel @Inject constructor(
                 _startDate.value = java.time.LocalDate.ofEpochDay(startEpoch)
                 _endDate.value = java.time.LocalDate.ofEpochDay(endEpoch)
             } catch (e: Exception) {
-
+                // If parsing fails, use current week
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
                 _endDate.value = end
             }
         } else {
-
+            // Explicitly set current week if nothing saved (ensures freshness)
             val (start, end) = getCurrentWeekRange()
             _startDate.value = start
             _endDate.value = end
@@ -161,18 +194,18 @@ class DashboardViewModel @Inject constructor(
 
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
         val (currentStart, currentEnd) = getCurrentWeekRange()
-
-
+        
+        // If the selected range matches the current week, do NOT save it (treat as dynamic default)
         if (newStartDate == currentStart && newEndDate == currentEnd) {
             securePreferences.clearString("dashboard_start_date")
             securePreferences.clearString("dashboard_end_date")
         } else {
             saveDateRange(newStartDate, newEndDate)
         }
-
+        
         _startDate.value = newStartDate
         _endDate.value = newEndDate
-
+        
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -184,7 +217,7 @@ class DashboardViewModel @Inject constructor(
         _endDate.value = end
         securePreferences.clearString("dashboard_start_date")
         securePreferences.clearString("dashboard_end_date")
-
+        
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -196,7 +229,7 @@ class DashboardViewModel @Inject constructor(
             _credit.value = UiState.Success(it)
         }.onFailure {
             val localizedContext = localeManager.createLocaleContext(context)
-            val errorMessage = ErrorMessageUtil.standardizeError(it.message ?: "Failed to load credit", localizedContext)
+            val errorMessage = ErrorMessageUtil.standardizeError(it.message ?: context.getString(R.string.error_failed_to_load_credit), localizedContext)
             _credit.value = UiState.Error(errorMessage)
             _error.value = errorMessage
         }
@@ -207,25 +240,17 @@ class DashboardViewModel @Inject constructor(
         result.onSuccess {
             _userInfo.value = UiState.Success(it)
         }.onFailure {
-            _userInfo.value = UiState.Error(it.message ?: "Failed to load user info")
+            _userInfo.value = UiState.Error(it.message ?: context.getString(R.string.error_failed_to_load_user_info))
         }
     }
 
     private suspend fun fetchSpendingData() {
-        val user = securePreferences.getUser()
-        val password = securePreferences.getPassword()
-
-        if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-            _error.value = context.getString(R.string.user_or_password_not_set)
-            return
-        }
-
         val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
         val to = isoFormat.format(Date.from(_endDate.value.atTime(23, 59, 59).atZone(java.time.ZoneId.systemDefault()).toInstant()))
         val from = isoFormat.format(Date.from(_startDate.value.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()))
 
         try {
-            val history = historyRepository.getCombinedHistory(user, password, from, to)
+            val history = historyRepository.getCombinedHistory(from, to)
             historyRepository.insertHistory(history)
             calculateTodaysSpending(history)
             calculateSelectedPeriodSpending(history)
@@ -238,10 +263,22 @@ class DashboardViewModel @Inject constructor(
 
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
-                if (cachedHistory.isNotEmpty()) {
-                    calculateTodaysSpending(cachedHistory)
-                    calculateSelectedPeriodSpending(cachedHistory)
-                    calculateChartSpending(cachedHistory)
+                
+                // 🔥 CRITICAL FIX: Filter cached data to match the selected date range
+                val filteredCache = cachedHistory.filter { item ->
+                    try {
+                        val itemDate = parseIsoDate(item.date).toInstant()
+                            .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                        !itemDate.isBefore(_startDate.value) && !itemDate.isAfter(_endDate.value)
+                    } catch (ex: Exception) {
+                        false // Skip items with unparseable dates
+                    }
+                }
+
+                if (filteredCache.isNotEmpty()) {
+                    calculateTodaysSpending(filteredCache)
+                    calculateSelectedPeriodSpending(filteredCache)
+                    calculateChartSpending(filteredCache)
                     _error.value = "$errorMessage (using cached data)"
                 } else {
                     _error.value = "$errorMessage (no cached data available)"

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -95,26 +96,18 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-
-
-
-
-private var cachedTimeFormat: SimpleDateFormat? = null
-private var cachedFullFormat: SimpleDateFormat? = null
-private var cachedApiDateFormat: SimpleDateFormat? = null
-private var cachedLocale: Locale? = null
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
 
 private fun getFormatters(): Triple<SimpleDateFormat, SimpleDateFormat, SimpleDateFormat> {
     val currentLocale = Locale.getDefault()
-    if (cachedLocale != currentLocale || cachedTimeFormat == null || cachedFullFormat == null || cachedApiDateFormat == null) {
-        cachedLocale = currentLocale
-        cachedApiDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", currentLocale).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        cachedTimeFormat = SimpleDateFormat("HH:mm:ss", currentLocale)
-        cachedFullFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", currentLocale)
+    val apiFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", currentLocale).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
     }
-    return Triple(cachedApiDateFormat!!, cachedTimeFormat!!, cachedFullFormat!!)
+    val timeFormat = SimpleDateFormat("HH:mm:ss", currentLocale)
+    val fullFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", currentLocale)
+    return Triple(apiFormat, timeFormat, fullFormat)
 }
 
 private fun parseApiDate(isoDate: String): java.util.Date? {
@@ -128,9 +121,9 @@ private fun parseApiDate(isoDate: String): java.util.Date? {
 
 private fun formatRelativeTime(isoDate: String, context: android.content.Context): String {
     val date = parseApiDate(isoDate) ?: return isoDate
-
+    
     val (_, timeFormat, fullFormat) = getFormatters()
-
+    
     val calendar = java.util.Calendar.getInstance()
     val todayStart = calendar.apply {
         set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -138,10 +131,10 @@ private fun formatRelativeTime(isoDate: String, context: android.content.Context
         set(java.util.Calendar.SECOND, 0)
         set(java.util.Calendar.MILLISECOND, 0)
     }.timeInMillis
-
+    
     calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
     val yesterdayStart = calendar.timeInMillis
-
+    
     return when {
         date.time >= todayStart -> context.getString(R.string.today) + " " + timeFormat.format(date)
         date.time >= yesterdayStart -> context.getString(R.string.yesterday) + " " + timeFormat.format(date)
@@ -162,17 +155,17 @@ private fun formatDuration(seconds: Int): String {
 private fun getNetworkColor(destinationName: String?): androidx.compose.ui.graphics.Color? {
     return when {
         destinationName == null -> null
-        destinationName.contains("mobil", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF2196F3)
-        destinationName.contains("pevná", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
-        destinationName.contains("SMS", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF9C27B0)
-        destinationName.contains("800", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF009688)
-        else -> androidx.compose.ui.graphics.Color(0xFF757575)
+        destinationName.contains("mobil", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF2196F3) // Blue for mobile
+        destinationName.contains("pevná", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF4CAF50) // Green for landline
+        destinationName.contains("SMS", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF9C27B0) // Purple for SMS
+        destinationName.contains("800", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF009688) // Teal for toll-free
+        else -> androidx.compose.ui.graphics.Color(0xFF757575) // Gray for others
     }
 }
 
-
-
-
+// ============================================================================
+// MAIN SCREEN
+// ============================================================================
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -187,18 +180,28 @@ fun HistoryScreen(
     val filterNumber by viewModel.filterNumber.collectAsState()
     val eventTypeFilter by viewModel.eventTypeFilter.collectAsState()
     val eventDirectionFilter by viewModel.eventDirectionFilter.collectAsState()
+    val listState = rememberLazyListState()
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory(isRefresh = true) })
-
+    
     val context = LocalContext.current
     val currentLanguage = remember {
         context.resources.configuration.locales[0].language
     }
     val currencyFormatter = remember { CurrencyFormatter(context) }
-
+    
     var showFilterSheet by remember { mutableStateOf(false) }
     var filtersApplied by remember { mutableStateOf(false) }
+    var wasRefreshing by remember { mutableStateOf(false) }
 
-
+    // Auto-scroll to top when refreshing completes
+    LaunchedEffect(isRefreshing) {
+        if (wasRefreshing && !isRefreshing && historyItems.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
+        wasRefreshing = isRefreshing
+    }
+    
+    // Permission handling
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -207,10 +210,6 @@ fun HistoryScreen(
             }
         }
     )
-
-    LaunchedEffect(Unit) {
-        viewModel.refreshIfStale()
-    }
 
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
@@ -231,7 +230,7 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
+            // Gradient Header
             GradientHeader(
                 title = stringResource(R.string.history_title),
                 iconVector = Icons.Default.History,
@@ -249,8 +248,8 @@ fun HistoryScreen(
                 actionContentDescription = stringResource(R.string.filter_history),
                 actionTint = HistoryAccent
             )
-
-
+            
+            
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -268,16 +267,17 @@ fun HistoryScreen(
                     }
                 }
 
-
+                // Content based on state
                 HistoryContent(
                     historyItems = historyItems,
                     isRefreshing = isRefreshing,
                     error = error,
                     viewModel = viewModel,
                     language = currentLanguage,
-                    currencyFormatter = currencyFormatter
+                    currencyFormatter = currencyFormatter,
+                    listState = listState
                 )
-
+                
                 PullRefreshIndicator(
                     refreshing = isRefreshing,
                     state = pullRefreshState,
@@ -285,8 +285,8 @@ fun HistoryScreen(
                 )
             }
         }
-
-
+        
+        // Filter Bottom Sheet
         if (showFilterSheet) {
             FilterBottomSheet(
                 lines = lines,
@@ -301,9 +301,9 @@ fun HistoryScreen(
     }
 }
 
-
-
-
+// ============================================================================
+// HISTORY CONTENT
+// ============================================================================
 
 @Composable
 private fun HistoryContent(
@@ -312,13 +312,14 @@ private fun HistoryContent(
     error: String?,
     viewModel: HistoryViewModel,
     language: String,
-    currencyFormatter: CurrencyFormatter
+    currencyFormatter: CurrencyFormatter,
+    listState: androidx.compose.foundation.lazy.LazyListState
 ) {
     val hasError = error != null
 
     when {
         isRefreshing && historyItems.isEmpty() && !hasError -> {
-
+            // Loading state
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -327,7 +328,7 @@ private fun HistoryContent(
             }
         }
         hasError -> {
-
+            // Error state
             ErrorState(
                 error = error!!,
                 onRetry = { viewModel.fetchHistory(isRefresh = true) },
@@ -335,15 +336,16 @@ private fun HistoryContent(
             )
         }
         historyItems.isEmpty() -> {
-
+            // Empty state
             EmptyState(onRetry = { viewModel.fetchHistory(isRefresh = true) })
         }
         else -> {
-
+            // History list
             val horizontalPadding = getResponsiveCardPadding()
             val bottomPadding = getResponsiveSpacing()
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(
                     start = horizontalPadding,
                     end = horizontalPadding,
@@ -352,13 +354,12 @@ private fun HistoryContent(
             ) {
                 itemsIndexed(
                     items = historyItems,
-                    key = { _, displayItem ->
-                        displayItem.item.id + if (displayItem.isChild) "_child" else ""
+                    key = { _, displayItem -> 
+                        displayItem.item.id + if (displayItem.isChild) "_child" else "" 
                     }
                 ) { _, displayItem ->
                     HistoryListItem(
                         displayItem = displayItem,
-                        viewModel = viewModel,
                         language = language,
                         currencyFormatter = currencyFormatter
                     )
@@ -368,9 +369,9 @@ private fun HistoryContent(
     }
 }
 
-
-
-
+// ============================================================================
+// ERROR STATE
+// ============================================================================
 
 @Composable
 private fun ErrorState(
@@ -439,9 +440,9 @@ private fun ErrorState(
     }
 }
 
-
-
-
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
 
 @Composable
 private fun EmptyState(onRetry: () -> Unit) {
@@ -481,9 +482,9 @@ private fun EmptyState(onRetry: () -> Unit) {
     }
 }
 
-
-
-
+// ============================================================================
+// FILTER BOTTOM SHEET
+// ============================================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -497,7 +498,7 @@ private fun FilterBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
+    
     var lineExpanded by remember { mutableStateOf(false) }
     var tempSelectedLine by remember { mutableStateOf(selectedLine) }
     var tempFilterNumber by remember { mutableStateOf(filterNumber) }
@@ -505,7 +506,7 @@ private fun FilterBottomSheet(
     var tempEventDirectionFilter by remember { mutableStateOf(eventDirectionFilter) }
     var eventTypeExpanded by remember { mutableStateOf(false) }
     var eventDirectionExpanded by remember { mutableStateOf(false) }
-
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -527,7 +528,7 @@ private fun FilterBottomSheet(
                 .fillMaxWidth()
                 .padding(bottom = getResponsiveSpacing() * 2)
         ) {
-
+            // Gradient header
             GradientHeader(
                 title = stringResource(R.string.filter_history),
                 iconVector = Icons.Default.FilterList,
@@ -544,7 +545,7 @@ private fun FilterBottomSheet(
                 iconContainerSize = 40.dp,
                 iconCornerRadius = 10.dp
             )
-
+            
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -555,13 +556,13 @@ private fun FilterBottomSheet(
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
             ) {
-
+                // Line filter
                 ExposedDropdownMenuBox(
                     expanded = lineExpanded,
                     onExpandedChange = { lineExpanded = !lineExpanded }
                 ) {
                     OutlinedTextField(
-                        value = tempSelectedLine?.caller_id ?: stringResource(R.string.all_lines),
+                        value = tempSelectedLine?.callerId ?: stringResource(R.string.all_lines),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.line_filter)) },
@@ -586,7 +587,7 @@ private fun FilterBottomSheet(
                         )
                         lines.forEach { line ->
                             androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(line.caller_id) },
+                                text = { Text(line.callerId) },
                                 onClick = {
                                     tempSelectedLine = line
                                     lineExpanded = false
@@ -595,8 +596,8 @@ private fun FilterBottomSheet(
                         }
                     }
                 }
-
-
+                
+                // Number filter
                 OutlinedTextField(
                     value = tempFilterNumber,
                     onValueChange = { tempFilterNumber = it },
@@ -608,8 +609,8 @@ private fun FilterBottomSheet(
                         focusedLabelColor = HistoryAccent
                     )
                 )
-
-
+                
+                // Event type filter
                 ExposedDropdownMenuBox(
                     expanded = eventTypeExpanded,
                     onExpandedChange = { eventTypeExpanded = !eventTypeExpanded }
@@ -646,8 +647,8 @@ private fun FilterBottomSheet(
                         }
                     }
                 }
-
-
+                
+                // Event direction filter
                 ExposedDropdownMenuBox(
                     expanded = eventDirectionExpanded,
                     onExpandedChange = { eventDirectionExpanded = !eventDirectionExpanded }
@@ -684,10 +685,10 @@ private fun FilterBottomSheet(
                         }
                     }
                 }
-
+                
                 Spacer(modifier = Modifier.height(8.dp))
-
-
+                
+                // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -698,7 +699,7 @@ private fun FilterBottomSheet(
                             val numberChanged = tempFilterNumber != filterNumber
                             val eventTypeChanged = tempEventTypeFilter != eventTypeFilter
                             val eventDirectionChanged = tempEventDirectionFilter != eventDirectionFilter
-
+                            
                             if (lineChanged || numberChanged || eventTypeChanged || eventDirectionChanged) {
                                 viewModel.setSelectedLine(tempSelectedLine)
                                 viewModel.setFilterNumber(tempFilterNumber)
@@ -719,7 +720,7 @@ private fun FilterBottomSheet(
                             fontSize = getResponsiveBodyLargeSize()
                         )
                     }
-
+                    
                     if (selectedLine != null || filterNumber.isNotEmpty() || eventTypeFilter != "all" || eventDirectionFilter != "all") {
                         Button(
                             onClick = {
@@ -752,22 +753,21 @@ private fun FilterBottomSheet(
     }
 }
 
-
-
-
+// ============================================================================
+// HISTORY LIST ITEM
+// ============================================================================
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HistoryListItem(
     displayItem: HistoryDisplayItem,
-    viewModel: HistoryViewModel,
     language: String,
     currencyFormatter: CurrencyFormatter
 ) {
     val item = displayItem.item
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
-
+    
     val statusColor = when {
         item.status == "missed" -> MaterialTheme.colorScheme.error
         item.direction == "in" -> MaterialTheme.colorScheme.primary
@@ -782,13 +782,13 @@ fun HistoryListItem(
             .padding(vertical = 4.dp)
             .darkModeBorder(RoundedCornerShape(16.dp))
             .combinedClickable(
-                onClick = {  },
+                onClick = { /* Handle click */ },
                 onLongClick = {
-                    clipboardManager.setText(AnnotatedString(item.source_number))
+                    clipboardManager.setText(AnnotatedString(item.sourceNumber))
                     Toast
                         .makeText(
                             context,
-                            context.getString(R.string.number_coppied, item.source_number),
+                            context.getString(R.string.number_coppied, item.sourceNumber),
                             Toast.LENGTH_SHORT
                         )
                         .show()
@@ -807,7 +807,7 @@ fun HistoryListItem(
         )
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-
+            // Gradient accent strip on left edge
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -822,16 +822,16 @@ fun HistoryListItem(
                     )
                     .align(Alignment.CenterVertically)
             ) {
-
+                // This box needs minimum height, will be sized by sibling content
                 Spacer(modifier = Modifier.width(4.dp))
             }
-
+            
             Column(modifier = Modifier.weight(1f)) {
-
+                // Child item connector
                 if (displayItem.isChild) {
                     ChildConnector()
                 }
-
+                
                 Row(
                     modifier = Modifier
                         .padding(
@@ -843,22 +843,21 @@ fun HistoryListItem(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
+                    // Event icon with background
                     EventIcon(item = item, statusColor = statusColor)
                     Spacer(modifier = Modifier.width(12.dp))
-
-
+                    
+                    // Details
                     ItemDetails(
                         item = item,
                         displayItem = displayItem,
-                        viewModel = viewModel,
                         clipboardManager = clipboardManager,
                         context = context,
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-
-
+                    
+                    // Price and duration
                     PriceAndDuration(
                         item = item,
                         displayItem = displayItem,
@@ -871,9 +870,9 @@ fun HistoryListItem(
     }
 }
 
-
-
-
+// ============================================================================
+// SUBCOMPOSABLES
+// ============================================================================
 
 @Composable
 private fun ChildConnector() {
@@ -900,15 +899,6 @@ private fun ChildConnector() {
 }
 
 @Composable
-private fun StatusIndicator(color: Color) {
-    Box(
-        modifier = Modifier
-            .size(8.dp)
-            .background(color, CircleShape)
-    )
-}
-
-@Composable
 private fun EventIcon(
     item: HistoryItem,
     statusColor: Color
@@ -916,7 +906,7 @@ private fun EventIcon(
     val isCall = item.length != null
     val icon: ImageVector
     val backgroundColor: Color
-
+    
     if (isCall) {
         icon = when {
             item.status == "missed" -> Icons.AutoMirrored.Filled.PhoneMissed
@@ -930,7 +920,7 @@ private fun EventIcon(
         icon = Icons.Default.Sms
         backgroundColor = HistoryAccent
     }
-
+    
     Box(
         modifier = Modifier
             .size(36.dp)
@@ -952,31 +942,30 @@ private fun EventIcon(
 private fun ItemDetails(
     item: HistoryItem,
     displayItem: HistoryDisplayItem,
-    viewModel: HistoryViewModel,
     clipboardManager: androidx.compose.ui.platform.ClipboardManager,
     context: android.content.Context,
     modifier: Modifier = Modifier
 ) {
-    val sourceDisplayName = viewModel.getContactName(item.source_number)
-    val contactName = viewModel.getContactName(item.destination_number)
-    val destinationDisplayName = if (item.destination_name != null) {
-        if (contactName != item.destination_number) {
-            "$contactName (${item.destination_name})"
+    val sourceDisplayName = displayItem.sourceContactName.ifEmpty { item.sourceNumber }
+    val contactName = displayItem.destinationContactName.ifEmpty { item.destinationNumber }
+    val destinationDisplayName = if (item.destinationName != null) {
+        if (contactName != item.destinationNumber) {
+            "$contactName (${item.destinationName})"
         } else {
-            "${item.destination_number} (${item.destination_name})"
+            "${item.destinationNumber} (${item.destinationName})"
         }
     } else {
         contactName
     }
-
-
+    
+    // Get relative time
     val relativeTime = formatRelativeTime(item.date, context)
-
-
-    val networkColor = getNetworkColor(item.destination_name)
-
+    
+    // Network color for badge
+    val networkColor = getNetworkColor(item.destinationName)
+    
     Column(modifier = modifier) {
-
+        // Source line with recording indicator
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "${stringResource(R.string.from_history)} $sourceDisplayName",
@@ -985,7 +974,7 @@ private fun ItemDetails(
                 color = if (displayItem.isChild) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f, fill = false)
             )
-
+            // Recording indicator
             if (item.recording != null) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
@@ -996,8 +985,8 @@ private fun ItemDetails(
                 )
             }
         }
-
-
+        
+        // Destination line
         Text(
             text = "${stringResource(R.string.to_history)} $destinationDisplayName",
             fontSize = if (displayItem.isChild) 12.sp else 14.sp,
@@ -1007,30 +996,30 @@ private fun ItemDetails(
                 MaterialTheme.colorScheme.onSurfaceVariant
             },
             modifier = Modifier.combinedClickable(
-                onClick = {  },
+                onClick = { /* Handle click */ },
                 onLongClick = {
-                    clipboardManager.setText(AnnotatedString(item.destination_number))
+                    clipboardManager.setText(AnnotatedString(item.destinationNumber))
                     Toast.makeText(
                         context,
-                        context.getString(R.string.number_coppied, item.destination_number),
+                        context.getString(R.string.number_coppied, item.destinationNumber),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             )
         )
-
-
+        
+        // Network type badge + relative time
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 4.dp)
         ) {
-
-            if (networkColor != null && item.destination_name != null) {
+            // Network badge
+            if (networkColor != null && item.destinationName != null) {
                 val networkLabelResId = when {
-                    item.destination_name.contains("mobil", ignoreCase = true) -> R.string.network_mobile
-                    item.destination_name.contains("pevná", ignoreCase = true) -> R.string.network_landline
-                    item.destination_name.contains("SMS", ignoreCase = true) -> R.string.network_sms
-                    item.destination_name.contains("800", ignoreCase = true) -> R.string.network_toll_free
+                    item.destinationName.contains("mobil", ignoreCase = true) -> R.string.network_mobile
+                    item.destinationName.contains("pevná", ignoreCase = true) -> R.string.network_landline
+                    item.destinationName.contains("SMS", ignoreCase = true) -> R.string.network_sms
+                    item.destinationName.contains("800", ignoreCase = true) -> R.string.network_toll_free
                     else -> null
                 }
                 if (networkLabelResId != null) {
@@ -1050,8 +1039,8 @@ private fun ItemDetails(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
-
-
+            
+            // Relative time
             Text(
                 text = relativeTime,
                 style = MaterialTheme.typography.bodySmall,
@@ -1069,9 +1058,9 @@ private fun PriceAndDuration(
     language: String
 ) {
     val formattedPrice = currencyFormatter.formatCurrency(item.price, language)
-
+    
     Column(horizontalAlignment = Alignment.End) {
-
+        // Price
         Text(
             text = formattedPrice,
             color = MaterialTheme.colorScheme.primary,
@@ -1079,17 +1068,17 @@ private fun PriceAndDuration(
             fontSize = 16.sp,
             textAlign = TextAlign.End
         )
-
-
-        if (item.price_per_minute != null && item.price_per_minute > 0) {
+        
+        // Price per minute (if available and > 0)
+        if (item.pricePerMinute != null && item.pricePerMinute > 0) {
             Text(
-                text = currencyFormatter.formatCurrency(item.price_per_minute, language) + "/min",
+                text = currencyFormatter.formatCurrency(item.pricePerMinute, language) + "/min",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.End
             )
         }
-
+        
         when {
             item.length != null && item.length > 0 -> {
                 DurationIndicator(
@@ -1097,16 +1086,16 @@ private fun PriceAndDuration(
                     isChild = displayItem.isChild
                 )
             }
-            item.ringing_length != null && item.ringing_length > 0 && item.status == "missed" -> {
+            item.ringingLength != null && item.ringingLength > 0 && item.status == "missed" -> {
                 Row(
                     modifier = Modifier.padding(top = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
+                    // Visual indicator for ringing
                     Box(
                         modifier = Modifier
                             .height(6.dp)
-                            .width(((item.ringing_length / 10f).coerceAtMost(20f)).coerceAtLeast(6f).dp)
+                            .width(((item.ringingLength / 10f).coerceAtMost(20f)).coerceAtLeast(6f).dp)
                             .background(
                                 MaterialTheme.colorScheme.error.copy(alpha = 0.3f),
                                 CircleShape
@@ -1114,7 +1103,7 @@ private fun PriceAndDuration(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(R.string.rang_duration, item.ringing_length),
+                        text = stringResource(R.string.rang_duration, item.ringingLength),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error

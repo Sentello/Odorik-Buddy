@@ -3,18 +3,15 @@ package com.odorik.odorikbuddy.ui.sms
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.LocaleManager
-import com.odorik.odorikbuddy.data.local.SecurePreferences
-import com.odorik.odorikbuddy.data.remote.OdorikApi
-import com.odorik.odorikbuddy.data.repository.UserRepository
+import com.odorik.odorikbuddy.data.repository.SmsRepository
+import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
-import com.odorik.odorikbuddy.domain.usecase.SendSmsUseCase
+import com.odorik.odorikbuddy.domain.usecase.GetPhoneNumbersForContactUseCase
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
-import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import com.odorik.odorikbuddy.util.SmsDraftHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,11 +27,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SmsViewModel @Inject constructor(
-    private val sendSmsUseCase: SendSmsUseCase,
+
+    private val contactNameResolver: ContactNameResolver,
+    private val getPhoneNumbersForContactUseCase: GetPhoneNumbersForContactUseCase,
     private val getLinesUseCase: GetLinesUseCase,
-    private val userRepository: UserRepository,
-    private val securePreferences: SecurePreferences,
-    private val api: OdorikApi,
+    private val smsRepository: SmsRepository,
     private val smsDraftHelper: SmsDraftHelper,
     private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context
@@ -54,162 +51,93 @@ class SmsViewModel @Inject constructor(
     private val _delayedError = MutableStateFlow<Int?>(null)
     val delayedError: StateFlow<Int?> = _delayedError
 
+    private val _isRetrying = MutableStateFlow(false)
+    val isRetrying: StateFlow<Boolean> = _isRetrying
 
+    // --- State for inputs to support Contact Resolution ---
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
+
+    val recipientContactName: StateFlow<String?> = combine(_recipient, contactNameResolver.contactsMap) { number, _ ->
+        if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    init {
+        // Auto-manage error retry when error changes
+        viewModelScope.launch {
+            error.collect { currentError ->
+                if (!currentError.isNullOrEmpty()) {
+                    startErrorRetry()
+                } else {
+                    stopErrorRetry()
+                }
+            }
+        }
+    }
 
     fun updateRecipient(newRecipient: String) {
         _recipient.value = newRecipient
     }
 
+    fun startErrorRetry() {
+        if (_isRetrying.value) return
+        _isRetrying.value = true
+        viewModelScope.launch {
+            while (_isRetrying.value) {
+                kotlinx.coroutines.delay(5000)
+                if (!_isRetrying.value) break
+                fetchAllowedSenders()
+                if (_error.value == null) {
+                    _isRetrying.value = false
+                }
+            }
+        }
+    }
 
-    private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
-
-    val recipientContactName: StateFlow<String?> = combine(_recipient, _contactsMap) { number, contacts ->
-        resolveContactName(number, contacts)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    fun stopErrorRetry() {
+        _isRetrying.value = false
+    }
 
     fun loadContacts(contentResolver: ContentResolver) {
         viewModelScope.launch {
-            val projection = arrayOf(
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-            )
-            val contacts = mutableMapOf<String, String>()
-
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-
-                if (numberIndex >= 0 && nameIndex >= 0) {
-                    while (cursor.moveToNext()) {
-                        val number = cursor.getString(numberIndex)
-                        val name = cursor.getString(nameIndex)
-                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
-                            val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
-                            if (!contacts.containsKey(normalizedNumber)) {
-                                contacts[normalizedNumber] = name
-                            }
-                        }
-                    }
-                }
-            }
-            _contactsMap.value = contacts
+            contactNameResolver.loadContacts(contentResolver)
         }
-    }
-
-    private fun resolveContactName(number: String, contacts: Map<String, String>): String? {
-        if (number.isBlank()) return null
-        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
-        for ((contactNumber, contactName) in contacts) {
-            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
-                return if (parsedInput.specialPrefix.isNotEmpty()) {
-                    "${parsedInput.specialPrefix} $contactName".trim()
-                } else {
-                    contactName
-                }
-            }
-        }
-        return null
-    }
-
-
-    private fun filterAllowedSenders(numbers: List<String>): List<String> {
-        return numbers.filter { !it.trim().startsWith("00") }
     }
 
     fun fetchAllowedSenders() = viewModelScope.launch {
-        _error.value = null
-        try {
-            val user = securePreferences.getUser()
-            val password = securePreferences.getPassword()
-
-            if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-                _error.value = context.getString(R.string.auth_credentials_not_set)
-                return@launch
-            }
-
-            val response = api.getAllowedSenders(user, password)
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body?.startsWith("error") == true) {
-                    _error.value = body
-                } else {
-                    val allNumbers = body?.split(",") ?: emptyList()
-                    _allowedSenders.value = filterAllowedSenders(allNumbers)
-                    _error.value = null
-                }
-            } else {
-                _error.value = "HTTP error: ${response.code()}"
-            }
-        } catch (e: Exception) {
+        _error.value = null // Clear previous error
+        val result = smsRepository.getAllowedSenders()
+        result.onSuccess {
+            _allowedSenders.value = it
+            _error.value = null
+        }.onFailure { e ->
             val localizedContext = localeManager.createLocaleContext(context)
             _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
         }
     }
 
     fun sendSms(recipient: String, message: String, sender: String?) = viewModelScope.launch {
-        _sendResult.value = null
-        _error.value = null
-        try {
-            val user = securePreferences.getUser()
-            val password = securePreferences.getPassword()
-
-            if (user.isNullOrEmpty() || password.isNullOrEmpty()) {
-                _error.value = context.getString(R.string.auth_credentials_not_set)
-                return@launch
-            }
-
-            val response = api.sendSms(user, password, recipient, message, sender, _delayed.value.takeIf { it.isNotBlank() })
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body?.startsWith("error") == true) {
-                    _error.value = body
-                } else {
-                    _sendResult.value = body
-                    clearDraft()
-                }
-            } else {
-                _error.value = "HTTP error: ${response.code()}"
-            }
-        } catch (e: Exception) {
+        _sendResult.value = null // Clear previous result
+        _error.value = null      // Clear previous error
+        
+        val result = smsRepository.sendSms(
+            recipient = recipient,
+            message = message,
+            sender = sender,
+            delayed = _delayed.value.takeIf { it.isNotBlank() }
+        )
+        
+        result.onSuccess {
+            _sendResult.value = it
+            clearDraft()
+        }.onFailure { e ->
             val localizedContext = localeManager.createLocaleContext(context)
             _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
         }
     }
 
     fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-        val numbers = mutableListOf<String>()
-        contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
-            if (contactCursor.moveToFirst()) {
-                val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
-                val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
-                val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                contentResolver.query(
-                    ContactsContract.Data.CONTENT_URI,
-                    phoneProjection,
-                    phoneSelection,
-                    phoneSelectionArgs,
-                    null
-                )?.use { phoneCursor ->
-                    while (phoneCursor.moveToNext()) {
-                        var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                        number = number.replace(Regex("[^0-9+]"), "")
-                        if (number.isNotBlank()) {
-                            numbers.add(number)
-                        }
-                    }
-                }
-            }
-        }
-        return numbers
+        return getPhoneNumbersForContactUseCase(contentResolver, contactUri)
     }
 
     fun onMinutesDelayedInputChange(newValue: String) {
@@ -225,12 +153,12 @@ class SmsViewModel @Inject constructor(
             return
         }
 
-
+        // Try parse as minutes (positive integer)
         try {
             val minutes = delayed.toInt()
             _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
         } catch (e: NumberFormatException) {
-
+            // Try parse as datetime
             try {
                 val scheduled = Instant.parse(delayed)
                 val now = Instant.now()

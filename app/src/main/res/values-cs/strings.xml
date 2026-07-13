@@ -148,7 +148,7 @@
     <string name="routing_description">Spravovat pravidla pro sdílená a vlastní čísla</string>
     <string name="section_personal">Osobní</string>
     <string name="personal_phone_number">Telefonní číslo</string>
-    <string name="personal_phone_number_description">Zadejte své telefonní číslo v mezinárodním formátu (např. 00420601123123 nebo +420601123123)</string>
+    <string name="personal_phone_number_description">Zadejte své telefonní číslo v mezinárodním formátu (např. +420123456789)</string>
     <string name="oneshot_call">Přesměrované</string>
     <string name="shared_number">Sdílená telefonní čísla</string>
     <string name="add_rule">Přidat pravidlo</string>
@@ -231,14 +231,20 @@
     <string name="reset">Reset</string>
     <string name="custom_period">Vlastní období</string>
     <string name="custom_date_range">Vlastní časové období</string>
+
+    <!-- Widget error messages -->
+    <string name="widget_error_tile_not_found">Dlaždice nenalezena</string>
+    <string name="widget_error_callback_failed">Zpětné volání selhalo</string>
+    <string name="widget_error_unknown">Neznámá chyba</string>
+    <string name="error_failed_to_load_credit">Nepodařilo se načíst kredit</string>
+    <string name="error_failed_to_load_user_info">Nepodařilo se načíst informace o uživateli</string>
+    <string name="error_unknown_generic">Neznámá chyba</string>
     <string name="spending_for_date">Útrata za %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
     <string name="sms_options_menu">Více možností</string>
     <string name="sms_delay_options_title">Naplánovat SMS</string>
     <string name="schedule_sms_button">Naplánovat SMS</string>
 
-    <string name="donate_button">Podpoř projekt kafem</string>
-    
     <!-- App Update and About Strings -->
     <string name="about_app">O aplikaci</string>
     <string name="about_app_description">Odorik Buddy je neoficiální aplikace pro služby Odorik.cz.</string>
@@ -312,4 +318,22 @@
     <string name="widget_config_large">Velká</string>
     <string name="widget_config_extra_large">Extra velká</string>
     <string name="widget_preview">Náhled</string>
+
+    <!-- Další běžné UI řetězce -->
+    <string name="dismiss">Zavřít</string>
+    <string name="delete">Smazat</string>
+    <string name="move_up">Nahoru</string>
+    <string name="move_down">Dolů</string>
+    <string name="change_contact">Změnit kontakt</string>
+    <string name="selected_contact_prefix">Vybráno: %s</string>
+    <string name="error_fetching_lines">Chyba při načítání linek</string>
+    <string name="credentials_missing">Uživatel není přihlášen nebo chybí přihlašovací údaje</string>
+
+    <!-- Widget Coloring (Hybrid model) -->
+    <string name="widget_colors">Barvy widgetu</string>
+    <string name="widget_use_tile_colors">Použít barvy z dlaždice</string>
+    <string name="widget_custom_colors">Přizpůsobit barvy tohoto widgetu</string>
+    <string name="save_widget">Přidat na domovskou obrazovku</string>
+    <string name="select_tile_first">Nejprve vyberte dlaždici výše</string>
+    <string name="widget_live_preview">Náhled widgetu</string>
 </resources>

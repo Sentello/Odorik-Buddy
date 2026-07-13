@@ -1,6 +1,8 @@
 package com.odorik.odorikbuddy.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Credit(
-    val credit: String,
-    val currency: String
+    @SerializedName("credit") val credit: String = "",
+    @SerializedName("currency") val currency: String = ""
 )

@@ -9,14 +9,8 @@ class DeleteRouteUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
     suspend fun execute(publicNumber: String, routeId: Long): Result<String> {
-        val userId = userRepository.getUserId()
-        val password = userRepository.getPassword()
-
-        if (userId == null || password == null) {
-            return Result.failure(Exception("User not logged in"))
-        }
-
         return try {
+            val (userId, password) = userRepository.requireCredentials()
             val response = odorikApi.deleteRoute(publicNumber, routeId, userId, password)
             if (response.isSuccessful) {
                 Result.success(response.body() ?: "Route deleted successfully")

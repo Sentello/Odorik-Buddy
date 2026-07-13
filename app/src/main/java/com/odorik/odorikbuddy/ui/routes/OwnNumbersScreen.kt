@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,14 +19,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Delete
@@ -53,7 +50,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -77,80 +73,14 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.theme.SettingsAccent
 import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
 import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
-import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
 
-@Composable
-private fun GradientHeader(
-    title: String,
-    onBackClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent,
-        shadowElevation = 4.dp
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            SettingsAccent.copy(alpha = 0.35f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .statusBarsPadding()
-                .padding(horizontal = 4.dp, vertical = 12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(SettingsAccent, SettingsAccentLight)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = title,
-                    fontSize = getResponsiveTitleLargeSize(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -242,6 +172,13 @@ fun OwnNumbersScreen(
         topBar = {
             GradientHeader(
                 title = stringResource(R.string.own_numbers),
+                iconVector = Icons.Default.Phone,
+                backgroundBrush = Brush.verticalGradient(
+                    colors = listOf(SettingsAccent.copy(alpha = 0.35f), Color.Transparent)
+                ),
+                iconGradientBrush = Brush.linearGradient(
+                    colors = listOf(SettingsAccent, SettingsAccentLight)
+                ),
                 onBackClick = { internalNavController.popBackStack() }
             )
         },
@@ -267,7 +204,7 @@ fun OwnNumbersScreen(
                     )
                 }
                 is OwnNumbersViewModel.UiState.Success -> {
-
+                    // Hoist responsive calculations out of the LazyColumn for performance
                     val baseSpacing = getResponsiveSpacing()
                     val cardPadding = getResponsiveCardPadding()
                     val bodyLargeSize = getResponsiveBodyLargeSize()
@@ -283,7 +220,7 @@ fun OwnNumbersScreen(
                         ) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
-
+                            
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
                             OwnNumberItem(
@@ -313,7 +250,7 @@ fun OwnNumbersScreen(
                     }
                 }
             }
-
+            
             PullRefreshIndicator(
                 refreshing = isLoading && uiState !is OwnNumbersViewModel.UiState.Loading,
                 state = pullRefreshState,
@@ -442,7 +379,7 @@ fun OwnNumbersScreen(
     }
 
     LaunchedEffect(error) {
-
+        // Only show snackbar if NOT in full-screen error state
         if (uiState !is OwnNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
@@ -529,7 +466,7 @@ fun OwnNumberItem(
                                 color = SettingsAccent
                             )
                         } else {
-
+                            // Extract to avoid nested LazyColumn performance problems
                             Column(modifier = Modifier.heightIn(max = 300.dp)) {
                                 routesForThisNumber.forEach { route ->
                                     val sourceName = viewModel.getContactName(route.sourceNumber)

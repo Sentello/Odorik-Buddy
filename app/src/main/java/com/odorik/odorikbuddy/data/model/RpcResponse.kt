@@ -1,5 +1,8 @@
 package com.odorik.odorikbuddy.data.model
 
-import com.google.gson.JsonElement
+import com.google.gson.annotations.SerializedName
 
-data class RpcResponse(val result: JsonElement?, val error: String?)
+data class RpcResponse(
+    @SerializedName("result") val result: String? = null,
+    @SerializedName("error") val error: String? = null
+)

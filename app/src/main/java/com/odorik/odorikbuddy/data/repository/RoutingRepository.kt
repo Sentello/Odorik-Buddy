@@ -6,14 +6,19 @@ import com.odorik.odorikbuddy.model.Route
 import com.odorik.odorikbuddy.model.SharedPublicNumber
 import javax.inject.Inject
 
+
+
 class RoutingRepository @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
 
+
+
     suspend fun getSharedPublicNumbers(): Result<List<SharedPublicNumber>> {
         return try {
-            val response = odorikApi.getSharedPublicNumbers(userRepository.getUserId()!!, userRepository.getPassword()!!)
+            val (userId, password) = userRepository.requireCredentials()
+            val response = odorikApi.getSharedPublicNumbers(userId, password)
             if (response.isSuccessful) {
                 val sharedNumbers = response.body()?.filter { it.type == "shared" } ?: emptyList()
                 Result.success(sharedNumbers)
@@ -27,7 +32,8 @@ class RoutingRepository @Inject constructor(
 
     suspend fun getPublicNumbers(): Result<List<PublicNumber>> {
         return try {
-            val response = odorikApi.getPublicNumbers(userRepository.getUserId()!!, userRepository.getPassword()!!)
+            val (userId, password) = userRepository.requireCredentials()
+            val response = odorikApi.getPublicNumbers(userId, password)
             if (response.isSuccessful) {
                 Result.success(response.body() ?: emptyList())
             } else {
@@ -40,7 +46,8 @@ class RoutingRepository @Inject constructor(
 
     suspend fun getRoutesForNumber(number: String): Result<List<Route>> {
         return try {
-            val response = odorikApi.getRoutes(number, userRepository.getUserId()!!, userRepository.getPassword()!!)
+            val (userId, password) = userRepository.requireCredentials()
+            val response = odorikApi.getRoutes(number, userId, password)
             if (response.isSuccessful) {
                 Result.success(response.body() ?: emptyList())
             } else {
@@ -58,13 +65,14 @@ class RoutingRepository @Inject constructor(
         replaceBySource: Boolean
     ): Result<String> {
         return try {
+            val (userId, userPassword) = userRepository.requireCredentials()
             val response = odorikApi.createRoute(
                 number = publicNumber,
                 sourceNumber = sourceNumber,
                 ringingNumber = ringingNumber,
                 replaceBySource = if (replaceBySource) "true" else null,
-                user = userRepository.getUserId()!!,
-                password = userRepository.getPassword()!!
+                user = userId,
+                password = userPassword
             )
             if (response.isSuccessful) {
                 Result.success(response.body() ?: "")
@@ -105,7 +113,8 @@ class RoutingRepository @Inject constructor(
 
     suspend fun deleteRoute(publicNumber: String, routeId: Long): Result<String> {
         return try {
-            val response = odorikApi.deleteRoute(publicNumber, routeId, userRepository.getUserId()!!, userRepository.getPassword()!!)
+            val (userId, password) = userRepository.requireCredentials()
+            val response = odorikApi.deleteRoute(publicNumber, routeId, userId, password)
             if (response.isSuccessful) {
                 Result.success(response.body() ?: "")
             } else {

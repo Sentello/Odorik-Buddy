@@ -9,7 +9,10 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.github.mikephil.charting.renderer.BarChartRenderer
 import com.github.mikephil.charting.utils.ViewPortHandler
 
-
+/**
+ * Custom renderer that draws bars with rounded top corners
+ * for a more polished, modern chart appearance.
+ */
 class RoundedBarChartRenderer(
     chart: BarDataProvider,
     animator: ChartAnimator,
@@ -55,14 +58,14 @@ class RoundedBarChartRenderer(
                 mRenderPaint.color = dataSet.getColor(j / 4)
             }
 
-
+            // Apply gradient if set
             if (dataSet.gradientColor != null) {
                 val gradientColor = dataSet.gradientColor
                 mRenderPaint.shader = android.graphics.LinearGradient(
                     buffer.buffer[j],
-                    buffer.buffer[j + 3],
+                    buffer.buffer[j + 3],  // bottom
                     buffer.buffer[j],
-                    buffer.buffer[j + 1],
+                    buffer.buffer[j + 1],  // top
                     gradientColor.startColor,
                     gradientColor.endColor,
                     android.graphics.Shader.TileMode.CLAMP
@@ -77,12 +80,12 @@ class RoundedBarChartRenderer(
             roundedPath.reset()
             rectF.set(left, top, right, bottom)
 
-
+            // Only round top corners, bottom stays flat
             val radii = floatArrayOf(
-                radius, radius,
-                radius, radius,
-                0f, 0f,
-                0f, 0f
+                radius, radius,   // top-left
+                radius, radius,   // top-right
+                0f, 0f,           // bottom-right
+                0f, 0f            // bottom-left
             )
             roundedPath.addRoundRect(rectF, radii, Path.Direction.CW)
 
@@ -92,7 +95,7 @@ class RoundedBarChartRenderer(
                 c.drawPath(roundedPath, mBarBorderPaint)
             }
 
-
+            // Clear shader after drawing
             mRenderPaint.shader = null
 
             j += 4

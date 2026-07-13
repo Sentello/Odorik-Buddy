@@ -24,7 +24,7 @@ class UpdateRepository @Inject constructor(
             val response = updateApi.getAppUpdateInfo()
             if (response.isSuccessful) {
                 response.body()?.let {
-
+                    // Cache the successful response
                     cacheUpdateInfo(it)
                     Result.success(it)
                 } ?: Result.failure(Exception("No data received"))

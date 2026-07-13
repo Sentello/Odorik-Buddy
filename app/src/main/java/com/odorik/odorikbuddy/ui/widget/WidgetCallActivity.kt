@@ -1,14 +1,11 @@
 package com.odorik.odorikbuddy.ui.widget
 
-import android.Manifest
-import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,23 +15,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.data.repository.TileRepository
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
 import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
-import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
+import com.odorik.odorikbuddy.ui.calls.CallViewModel
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
+import com.odorik.odorikbuddy.util.PhoneCallLauncher
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -55,9 +56,6 @@ class WidgetCallActivity : ComponentActivity() {
     lateinit var getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase
 
     @Inject
-    lateinit var getLinesUseCase: GetLinesUseCase
-
-    @Inject
     lateinit var securePreferences: SecurePreferences
 
     @Inject
@@ -65,6 +63,11 @@ class WidgetCallActivity : ComponentActivity() {
 
     @Inject
     lateinit var sharedPreferences: SharedPreferences
+
+    @Inject
+    lateinit var appPreferences: AppPreferences
+
+    private val callViewModel: CallViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,6 +80,26 @@ class WidgetCallActivity : ComponentActivity() {
 
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
+                val isLoading by callViewModel.isOneShotCallLoading.collectAsStateWithLifecycle()
+                val oneShotResult by callViewModel.oneShotCallResult.collectAsStateWithLifecycle()
+                val oneShotError by callViewModel.oneShotCallError.collectAsStateWithLifecycle()
+
+                // Handle one-shot result
+                LaunchedEffect(oneShotResult, oneShotError) {
+                    if (oneShotResult.isNotEmpty()) {
+                        PhoneCallLauncher.launch(
+                            context = this@WidgetCallActivity,
+                            phoneNumber = oneShotResult,
+                            directCallsEnabled = appPreferences.directCallsEnabled
+                        )
+                        callViewModel.resetOneShotCallResult()
+                        finish()
+                    } else if (!oneShotError.isNullOrEmpty()) {
+                        showErrorAndFinish(oneShotError!!)
+                        callViewModel.resetOneShotCallError() // We'll add this method
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -86,29 +109,41 @@ class WidgetCallActivity : ComponentActivity() {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.widget_call_connecting),
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(R.string.widget_call_connecting),
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        } else {
+                            // Fallback / initial state
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }
         }
 
         lifecycleScope.launch {
-            handleTileAction(tileId)
+            // Only proceed if not already loading (extra safety)
+            if (!callViewModel.isOneShotCallLoading.value) {
+                handleTileAction(tileId)
+            } else {
+                finish()
+            }
         }
     }
-
+    
     private suspend fun handleTileAction(tileId: Int) {
         val tile = tileRepository.getTileById(tileId)
         if (tile == null) {
-            showErrorAndFinish("Tile not found")
+            showErrorAndFinish(getString(R.string.widget_error_tile_not_found))
             return
         }
 
@@ -118,63 +153,53 @@ class WidgetCallActivity : ComponentActivity() {
             handleOneShotCall(tile)
         }
     }
-
+    
     private suspend fun handleCallback(tile: TileEntity) {
         try {
+             // Resolve Caller ID (User's number or overridden in Tile)
+            val globalCallerId = securePreferences.getString("caller_id", "") ?: ""
+            val callerId = if (!tile.callerId.isNullOrBlank()) tile.callerId else globalCallerId
 
-            val globalLineIdStr = securePreferences.getString("selected_line", null)
-            val targetLineIdStr = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLineIdStr
-
-            val selectedLineInfo = if (targetLineIdStr != null) {
-                lines.find { it.id.toString() == targetLineIdStr }
-            } else null
-
-
-            val result = if (selectedLineInfo != null) {
-                createRouteUseCase.executeWithLineCredentials(
-                    publicNumber = lastSharedNumber,
-                    sourceNumber = sourceNumber,
-                    ringingNumber = tile.recipient,
-                    replaceBySource = true,
-                    useCallerIdPrefix = tile.useLineAsCallerId,
-                    lineId = selectedLineInfo.id.toString(),
-                    sipPassword = selectedLineInfo.sip_password
-                )
-            } else {
-                 createRouteUseCase.execute(
-                    publicNumber = lastSharedNumber,
-                    sourceNumber = sourceNumber,
-                    ringingNumber = tile.recipient,
-                    replaceBySource = true,
-                    useCallerIdPrefix = tile.useLineAsCallerId
-                )
+            // Resolve Line (Tile specific or Global)
+            val globalLine = securePreferences.getString("selected_line", null)
+            val lineId = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLine
+            
+            if (callerId.isBlank()) {
+                showErrorAndFinish(getString(R.string.callback_error_no_caller_id))
+                return
             }
-
-            if (result.isSuccess) {
-                launchDialer(lastSharedNumber)
-            } else {
-                showErrorAndFinish(result.exceptionOrNull()?.message ?: "Unknown error")
+            
+            val result = callUseCase.execute(
+                callerId = callerId,
+                recipient = tile.recipient,
+                line = lineId ?: ""
+            )
+            
+            result.onSuccess {
+                Toast.makeText(this, getString(R.string.callback_success_notification, tile.recipient), Toast.LENGTH_SHORT).show()
+                finish()
+            }.onFailure {
+                // Simplified error handling for now (using Toast instead of LocaleManager/ErrorMessageUtil complexity)
+                showErrorAndFinish(it.message ?: getString(R.string.widget_error_callback_failed))
             }
-
+            
         } catch (e: Exception) {
-            showErrorAndFinish(e.message ?: "Unknown error")
+             showErrorAndFinish(e.message ?: getString(R.string.widget_error_unknown))
         }
     }
 
-    private fun launchDialer(phoneNumber: String) {
-        val directCallsEnabled = sharedPreferences.getBoolean("direct_calls_enabled", false)
-        val hasCallPermission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CALL_PHONE
-        ) == PackageManager.PERMISSION_GRANTED
+    private suspend fun handleOneShotCall(tile: TileEntity) {
+        // Resolve which line ID to use: Tile's lineId > Global selected_line
+        val globalLineIdStr = securePreferences.getString("selected_line", null)
+        val targetLineIdStr = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLineIdStr
+        val targetLineId = targetLineIdStr?.toIntOrNull()
 
-        val intent = if (directCallsEnabled && hasCallPermission) {
-            Intent(Intent.ACTION_CALL, Uri.parse("tel:$phoneNumber"))
-        } else {
-            Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
-        }
-        startActivity(intent)
-        finish()
+        // Delegate to CallViewModel so we get proper loading state management
+        callViewModel.makeOneShotCall(
+            targetRecipient = tile.recipient,
+            useLineAsCallerId = tile.useLineAsCallerId,
+            selectedLineId = targetLineId
+        )
     }
 
     private fun showErrorAndFinish(message: String) {

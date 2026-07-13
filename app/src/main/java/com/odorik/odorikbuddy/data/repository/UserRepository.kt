@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class UserRepository @Inject constructor(
     private val application: Application,
-    private val securePreferences: SecurePreferences
+    private val securePreferences: SecurePreferences // Inject SecurePreferences
 ) {
 
     fun saveCredentials(userId: String, password: String, remember: Boolean) {
@@ -35,4 +35,12 @@ class UserRepository @Inject constructor(
     fun isLoggedIn(): Boolean {
         return getUserId() != null && getPassword() != null
     }
+
+    fun requireCredentials(): Pair<String, String> {
+        val userId = getUserId() ?: throw CredentialsNotSetException()
+        val password = getPassword() ?: throw CredentialsNotSetException()
+        return userId to password
+    }
 }
+
+class CredentialsNotSetException : Exception("User credentials are not set")

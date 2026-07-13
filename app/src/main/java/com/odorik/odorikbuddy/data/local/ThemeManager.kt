@@ -12,16 +12,18 @@ class ThemeManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    private val PREFS_NAME = "theme_prefs"
-    private val KEY_DARK_MODE = "dark_mode"
+    companion object {
+        private const val PREFS_NAME = "theme_prefs"
+        private const val KEY_DARK_MODE = "dark_mode"
+    }
 
     private val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-
+    // Use MutableState to allow Compose to observe changes
     val isDarkMode: MutableState<Boolean> = mutableStateOf(sharedPreferences.getBoolean(KEY_DARK_MODE, false))
 
     fun setDarkMode(enabled: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_DARK_MODE, enabled).apply()
-        isDarkMode.value = enabled
+        isDarkMode.value = enabled // Update the observable state
     }
 }

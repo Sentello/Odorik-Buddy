@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.repository.UpdateRepository
@@ -41,49 +40,36 @@ class UpdateCheckWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-
+            // Check for updates
             val result = updateRepository.getAppUpdateInfo()
 
             result.onSuccess { updateInfo ->
-
+                // Cache the update info
                 saveUpdateInfo(updateInfo)
 
-
-
+                // Check if this is a new update that we haven't notified about
+                if (com.odorik.odorikbuddy.util.VersionUtils.isNewUpdateAvailable(updateInfo.version)) {
+                    showUpdateNotification(updateInfo)
+                    // Mark this version as notified
+                    markVersionAsNotified(updateInfo.version)
+                }
+            }.onFailure {
+                // Log error but don't fail the worker - network issues shouldn't break the periodic task
+                // In a production app, you might want to implement retry logic or exponential backoff
             }
 
             Result.success()
         } catch (e: Exception) {
-
+            // Handle unexpected errors
             Result.failure()
         }
     }
 
     private fun saveUpdateInfo(updateInfo: AppUpdateInfo) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val json = """{"version":"${updateInfo.version}","download_url":"${updateInfo.downloadUrl}","message":"${updateInfo.message}"}"""
+        val gson = com.google.gson.Gson()
+        val json = gson.toJson(updateInfo)
         prefs.edit().putString(KEY_LAST_UPDATE_INFO, json).apply()
-    }
-
-    private fun isNewUpdateAvailable(updateInfo: AppUpdateInfo): Boolean {
-        val currentVersion = BuildConfig.VERSION_NAME
-        val latestVersion = updateInfo.version
-
-
-        return try {
-            val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
-            val latestParts = latestVersion.split(".").map { it.toIntOrNull() ?: 0 }
-
-            for (i in 0 until maxOf(currentParts.size, latestParts.size)) {
-                val current = currentParts.getOrNull(i) ?: 0
-                val latest = latestParts.getOrNull(i) ?: 0
-                if (latest > current) return true
-                if (latest < current) return false
-            }
-            false
-        } catch (e: Exception) {
-            false
-        }
     }
 
     private fun markVersionAsNotified(version: String) {
@@ -92,18 +78,18 @@ class UpdateCheckWorker @AssistedInject constructor(
     }
 
     private fun showUpdateNotification(updateInfo: AppUpdateInfo) {
-
+        // Check if POST_NOTIFICATIONS permission is granted (required for Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-
+                // Permission not granted, skip showing notification
                 return
             }
         }
 
         createNotificationChannel()
 
-
+        // Create intent to open the app when notification is tapped
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -128,7 +114,7 @@ class UpdateCheckWorker @AssistedInject constructor(
         try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         } catch (e: SecurityException) {
-
+            // Permission not granted, silently fail
         }
     }
 

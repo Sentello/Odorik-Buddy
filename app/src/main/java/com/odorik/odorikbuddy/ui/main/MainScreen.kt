@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -38,6 +39,7 @@ import com.odorik.odorikbuddy.ui.calls.CallScreen
 import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
 import com.odorik.odorikbuddy.ui.dashboard.DateRangePickerScreen
 import com.odorik.odorikbuddy.ui.history.HistoryScreen
+import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.routes.OwnNumbersScreen
 import com.odorik.odorikbuddy.ui.routes.RoutesScreen
@@ -74,7 +76,7 @@ fun MainScreen(navController: NavController) {
                     val isSelected = when (screen) {
                         BottomNavItem.Dashboard -> {
                             currentDestination?.hierarchy?.any { it.route == screen.route } == true ||
-                                    currentDestination?.route == "date_range_picker"
+                                    currentDestination?.route == com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.DATE_RANGE_PICKER
                         }
                         else -> {
                             currentDestination?.hierarchy?.any { it.route == screen.route } == true
@@ -94,7 +96,7 @@ fun MainScreen(navController: NavController) {
                         icon = {
                             Icon(
                                 if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                                contentDescription = label,
+                                contentDescription = label, // Accessibility: Spoken label for icon
                                 modifier = Modifier.scale(scale)
                             )
                         },
@@ -118,7 +120,7 @@ fun MainScreen(navController: NavController) {
                                 val tabDestination = currentDestination?.hierarchy?.firstOrNull { it.route == screen.route }
                                 if (tabDestination is androidx.navigation.NavGraph) {
                                     bottomNavController.popBackStack(tabDestination.startDestinationId, inclusive = false)
-                                } else if (currentDestination?.route == "date_range_picker" && screen.route == BottomNavItem.Dashboard.route) {
+                                } else if (currentDestination?.route == NavigationRoutes.DATE_RANGE_PICKER && screen.route == BottomNavItem.Dashboard.route) {
                                     bottomNavController.popBackStack(BottomNavItem.Dashboard.route, inclusive = false)
                                 }
                             } else {
@@ -144,13 +146,15 @@ fun MainScreen(navController: NavController) {
         NavHost(
             bottomNavController,
             startDestination = viewModel.getLastScreen(),
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
         ) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen(navController = bottomNavController) }
             composable(BottomNavItem.Calls.route) { CallScreen() }
             composable(BottomNavItem.Sms.route) { SmsScreen() }
             composable(BottomNavItem.History.route) { HistoryScreen() }
-            composable("date_range_picker") { DateRangePickerScreen(navController = bottomNavController) }
+            composable(NavigationRoutes.DATE_RANGE_PICKER) { DateRangePickerScreen(navController = bottomNavController) }
             navigation(startDestination = SettingsRoutes.SETTINGS_HOME, route = BottomNavItem.Settings.route) {
                 composable(SettingsRoutes.SETTINGS_HOME) {
                     SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)

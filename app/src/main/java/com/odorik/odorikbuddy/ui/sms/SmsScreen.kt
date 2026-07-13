@@ -63,7 +63,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -113,12 +112,14 @@ import com.odorik.odorikbuddy.ui.theme.CounterOrange
 import com.odorik.odorikbuddy.ui.theme.CounterRed
 import com.odorik.odorikbuddy.ui.theme.SmsAccent
 import com.odorik.odorikbuddy.ui.theme.SmsAccentLight
-import com.odorik.odorikbuddy.ui.theme.SmsSend
+import com.odorik.odorikbuddy.util.AppConstants.MILLISECONDS_PER_DAY
+import com.odorik.odorikbuddy.util.AppConstants.SMS_MAX_LENGTH
 import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
+import com.odorik.odorikbuddy.util.getResponsiveBodyMediumSize
+import com.odorik.odorikbuddy.util.getResponsiveCaptionSize
 import com.odorik.odorikbuddy.util.getResponsiveCardPadding
 import com.odorik.odorikbuddy.util.getResponsiveMaxLines
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
-import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -129,14 +130,11 @@ import kotlin.math.ceil
 @Composable
 private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
     val message = when {
-
         response.startsWith("successfully_sent") -> {
             val credit = response.substringAfter("successfully_sent ").trim()
             stringResource(R.string.sms_successfully_sent, credit)
         }
         response == "successfully_enqueued" -> stringResource(R.string.sms_successfully_enqueued)
-
-
         response.startsWith("error missing_argument") -> {
             val args = response.substringAfter("error missing_argument ").trim()
             stringResource(R.string.sms_error_missing_argument, args)
@@ -148,25 +146,17 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
         response == "error gateway_failed" -> stringResource(R.string.sms_error_gateway_failed)
         response == "error invalid_delay_format" -> stringResource(R.string.sms_error_invalid_delay_format)
         response == "error delayed_into_past" -> stringResource(R.string.sms_error_delayed_into_past)
-
-
         response == stringResource(R.string.error_network_unreachable) -> stringResource(R.string.error_network_unreachable)
         response == stringResource(R.string.error_host_unresolvable) -> stringResource(R.string.error_host_unresolvable)
-
-
         response == stringResource(R.string.auth_credentials_not_set) -> stringResource(R.string.auth_credentials_not_set)
         response == stringResource(R.string.user_or_password_not_set) -> stringResource(R.string.user_or_password_not_set)
-
-
         response.startsWith("HTTP error:") -> {
             val code = response.substringAfter("HTTP error: ").trim()
             stringResource(R.string.error_unknown) + " (HTTP $code)"
         }
-
-
         else -> stringResource(R.string.sms_unknown_error)
     }
-
+    
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
@@ -203,9 +193,9 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
                 Icon(
                     imageVector = if (isError) Icons.Default.Error else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isError)
-                        MaterialTheme.colorScheme.onErrorContainer
-                    else
+                    tint = if (isError) 
+                        MaterialTheme.colorScheme.onErrorContainer 
+                    else 
                         MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
@@ -225,7 +215,6 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
     }
 }
 
-
 private fun calculateSmsSegments(message: String): Int {
     val isUnicode = message.any { it.code > 127 }
     val singleLimit = if (isUnicode) 70 else 160
@@ -242,46 +231,28 @@ private fun calculateSmsSegments(message: String): Int {
 @Composable
 private fun CircularCharacterCounter(
     charCount: Int,
-    maxChars: Int = 765,
+    maxChars: Int = SMS_MAX_LENGTH,
     segments: Int,
     onClick: () -> Unit
 ) {
     val progress = (charCount.toFloat() / maxChars).coerceIn(0f, 1f)
-
     val targetColor = when {
         segments <= 1 -> CounterGreen
         segments <= 3 -> CounterOrange
         else -> CounterRed
     }
-
-    val animatedColor by animateColorAsState(
-        targetValue = targetColor,
-        animationSpec = tween(durationMillis = 300),
-        label = "counterColor"
-    )
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "counterProgress"
-    )
+    val animatedColor by animateColorAsState(targetColor, label = "counterColor")
+    val animatedProgress by animateFloatAsState(progress, label = "counterProgress")
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(56.dp)
-            .clickable(
-                enabled = segments > 1,
-                onClick = onClick
-            )
+            .clickable(enabled = segments > 1, onClick = onClick)
             .semantics {
                 contentDescription = "$charCount characters, ${if (segments > 1) "$segments messages" else "1 message"}"
             }
     ) {
-
         CircularProgressIndicator(
             progress = { 1f },
             modifier = Modifier.size(48.dp),
@@ -289,7 +260,6 @@ private fun CircularCharacterCounter(
             strokeWidth = 4.dp,
             trackColor = Color.Transparent
         )
-
         CircularProgressIndicator(
             progress = { animatedProgress },
             modifier = Modifier.size(48.dp),
@@ -297,31 +267,14 @@ private fun CircularCharacterCounter(
             strokeWidth = 4.dp,
             trackColor = Color.Transparent
         )
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = charCount.toString(),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = animatedColor
-            )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = charCount.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = animatedColor)
             if (segments > 1) {
-                Text(
-                    text = "×$segments",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = animatedColor.copy(alpha = 0.8f)
-                )
+                Text(text = "×$segments", fontSize = 9.sp, fontWeight = FontWeight.Medium, color = animatedColor.copy(alpha = 0.8f))
             }
         }
     }
 }
-
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -342,7 +295,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     var showTimePicker by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = System.currentTimeMillis() + 86400000L,
+        initialSelectedDateMillis = System.currentTimeMillis() + MILLISECONDS_PER_DAY,
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                 return utcTimeMillis >= System.currentTimeMillis()
@@ -398,14 +351,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
         contentVisible = true
     }
 
-    LaunchedEffect(error) {
-        if (!error.isNullOrEmpty()) {
-            while (true) {
-                delay(5000)
-                viewModel.fetchAllowedSenders()
-            }
-        }
-    }
+
 
     LaunchedEffect(allowedSenders) {
         if (allowedSenders.size == 1 && selectedSender == null) {
@@ -418,40 +364,22 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             message = ""
         }
     }
-
-
+    
     val fabInteractionSource = remember { MutableInteractionSource() }
     val isFabPressed by fabInteractionSource.collectIsPressedAsState()
-    val fabScale by animateFloatAsState(
-        targetValue = if (isFabPressed) 0.92f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        ),
-        label = "fabScale"
-    )
+    val fabScale by animateFloatAsState(targetValue = if (isFabPressed) 0.92f else 1f, label = "fabScale")
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.sendSms(recipient, message, selectedSender) },
-                modifier = Modifier
-                    .imePadding()
-                    .scale(fabScale),
+                modifier = Modifier.imePadding().scale(fabScale),
                 interactionSource = fabInteractionSource,
-                containerColor = SmsSend,
+                containerColor = SmsAccent,
                 contentColor = Color.White,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 6.dp,
-                    pressedElevation = 12.dp
-                ),
                 shape = CircleShape
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = stringResource(R.string.send_sms),
-                    modifier = Modifier.size(24.dp)
-                )
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.send_sms), modifier = Modifier.size(24.dp))
             }
         },
         contentWindowInsets = WindowInsets(0.dp)
@@ -460,57 +388,33 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
-
             GradientHeader(
                 title = stringResource(R.string.sms_title),
                 iconVector = Icons.Default.Sms,
-                backgroundBrush = Brush.verticalGradient(
-                    colors = listOf(
-                        SmsAccent.copy(alpha = 0.35f),
-                        Color.Transparent
-                    )
-                ),
-                iconGradientBrush = Brush.linearGradient(
-                    colors = listOf(SmsAccent, SmsAccentLight)
-                ),
+                backgroundBrush = Brush.verticalGradient(colors = listOf(SmsAccent.copy(alpha = 0.35f), Color.Transparent)),
+                iconGradientBrush = Brush.linearGradient(colors = listOf(SmsAccent, SmsAccentLight)),
                 onActionClick = { showDelayOptions = true },
                 actionIcon = Icons.Default.AccessTime,
                 actionContentDescription = stringResource(R.string.sms_delay_options_title),
                 actionTint = SmsAccent
             )
-
+            
             AnimatedVisibility(
                 visible = contentVisible,
-                enter = fadeIn(animationSpec = tween(400)) +
-                        slideInVertically(
-                            initialOffsetY = { it / 4 },
-                            animationSpec = tween(400)
-                        )
+                enter = fadeIn(animationSpec = tween(400)) + slideInVertically(initialOffsetY = { it / 4 }, animationSpec = tween(400))
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Spacer(modifier = Modifier.height(8.dp))
-
-
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-
+                        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                             OutlinedTextField(
                                 value = recipient,
                                 onValueChange = {
@@ -518,13 +422,9 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     viewModel.updateRecipient(it)
                                     viewModel.saveDraft(it, message, selectedSender)
                                 },
-                                label = {
+                                label = { 
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Phone,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                        Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.padding(start = 4.dp))
                                         Text(
                                             text = if (recipientContactName != null) "${stringResource(R.string.recipient)} • $recipientContactName" else stringResource(R.string.recipient),
@@ -534,37 +434,23 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = SmsAccent,
-                                    focusedLabelColor = SmsAccent
-                                ),
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SmsAccent, focusedLabelColor = SmsAccent),
                                 trailingIcon = {
                                     IconButton(
                                         onClick = {
-                                            when (PackageManager.PERMISSION_GRANTED) {
-                                                ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.READ_CONTACTS
-                                                ) -> {
-                                                    launcher.launch(null)
-                                                }
-                                                else -> {
-                                                    requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                                                }
+                                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                                                launcher.launch(null)
+                                            } else {
+                                                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                                             }
                                         }
                                     ) {
-                                        Icon(
-                                            Icons.Default.Contacts,
-                                            contentDescription = stringResource(R.string.pick_contact),
-                                            tint = SmsAccent
-                                        )
+                                        Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact), tint = SmsAccent)
                                     }
                                 }
                             )
 
                             Spacer(Modifier.height(12.dp))
-
 
                             ExposedDropdownMenuBox(
                                 expanded = expanded,
@@ -575,32 +461,19 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     value = selectedSender ?: stringResource(R.string.select_sender),
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = {
+                                    label = { 
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.Person,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(16.dp)
-                                            )
+                                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.padding(start = 4.dp))
-                                            Text(
-                                                text = stringResource(R.string.sender),
-                                                fontSize = getResponsiveBodyLargeSize()
-                                            )
+                                            Text(text = stringResource(R.string.sender), fontSize = getResponsiveBodyLargeSize()) 
                                         }
                                     },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = SmsAccent,
-                                        focusedLabelColor = SmsAccent
-                                    )
+                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SmsAccent, focusedLabelColor = SmsAccent)
                                 )
-                                ExposedDropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
+                                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                     allowedSenders.forEach { sender ->
                                         DropdownMenuItem(
                                             text = { Text(sender) },
@@ -618,119 +491,66 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
 
                     Spacer(Modifier.height(16.dp))
 
-
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            val minLines = 3
+                        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                             val charCount = message.length
                             val segments = calculateSmsSegments(message)
 
                             OutlinedTextField(
                                 value = message,
                                 onValueChange = {
-                                    if (it.length <= 765) {
+                                    if (it.length <= SMS_MAX_LENGTH) {
                                         message = it
                                         viewModel.saveDraft(recipient, it, selectedSender)
                                     }
                                 },
-                                label = {
+                                label = { 
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Sms,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                        Icon(Icons.Default.Sms, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.padding(start = 4.dp))
-                                        Text(
-                                            text = stringResource(R.string.message),
-                                            fontSize = getResponsiveBodyLargeSize()
-                                        )
+                                        Text(text = stringResource(R.string.message), fontSize = getResponsiveBodyLargeSize()) 
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                minLines = minLines,
+                                minLines = 3,
                                 maxLines = getResponsiveMaxLines(),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = SmsAccent,
-                                    focusedLabelColor = SmsAccent
-                                ),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Text,
-                                )
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SmsAccent, focusedLabelColor = SmsAccent),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 if (segments > 1) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(CounterOrange.copy(alpha = 0.1f))
-                                            .clickable { showMultipartInfo = true }
-                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(CounterOrange.copy(alpha = 0.1f)).clickable { showMultipartInfo = true }.padding(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Info,
-                                            contentDescription = "Multipart SMS info",
-                                            tint = CounterOrange,
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                        Icon(Icons.Default.Info, contentDescription = stringResource(R.string.multipart_sms_title), tint = CounterOrange, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = stringResource(R.string.multipart_sms_title),
-                                            fontSize = 12.sp,
-                                            color = CounterOrange,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        Text(text = stringResource(R.string.multipart_sms_title), fontSize = 12.sp, color = CounterOrange, fontWeight = FontWeight.Medium)
                                     }
                                 } else {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
-
-                                CircularCharacterCounter(
-                                    charCount = charCount,
-                                    segments = segments,
-                                    onClick = { showMultipartInfo = true }
-                                )
+                                CircularCharacterCounter(charCount = charCount, segments = segments, onClick = { showMultipartInfo = true })
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-
-
-                    if (error != null) {
-                        ApiMessage(response = error!!, isError = true, visible = true)
-                    }
-                    if (sendResult != null) {
-                        ApiMessage(response = sendResult!!, isError = false, visible = true)
-                    }
-
-
-                    Spacer(modifier = Modifier.height(80.dp))
+                    if (error != null) ApiMessage(response = error!!, isError = true, visible = true)
+                    if (sendResult != null) ApiMessage(response = sendResult!!, isError = false, visible = true)
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
             }
         }
-
 
         if (showPhoneNumberDialog) {
             AlertDialog(
@@ -744,111 +564,65 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 viewModel.updateRecipient(it)
                                 viewModel.saveDraft(it, message, selectedSender)
                                 showPhoneNumberDialog = false
-                            }) {
-                                Text(it)
-                            }
+                            }) { Text(it) }
                         }
                     }
                 },
                 confirmButton = {},
-                dismissButton = {
-                    TextButton(onClick = { showPhoneNumberDialog = false }) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                }
+                dismissButton = { TextButton(onClick = { showPhoneNumberDialog = false }) { Text(stringResource(R.string.cancel)) } }
             )
         }
-
 
         if (showMultipartInfo) {
             AlertDialog(
                 onDismissRequest = { showMultipartInfo = false },
                 title = { Text(stringResource(R.string.multipart_sms_title)) },
                 text = { Text(stringResource(R.string.multipart_sms_message)) },
-                confirmButton = {
-                    TextButton(onClick = { showMultipartInfo = false }) {
-                        Text(stringResource(R.string.ok))
-                    }
-                }
+                confirmButton = { TextButton(onClick = { showMultipartInfo = false }) { Text(stringResource(R.string.ok)) } }
             )
         }
-
 
         if (showDelayOptions) {
             ModalBottomSheet(
                 onDismissRequest = { showDelayOptions = false },
                 sheetState = sheetState,
                 dragHandle = {
-                    Box(
-                        modifier = Modifier
-                            .padding(vertical = 12.dp)
-                            .size(width = 36.dp, height = 5.dp)
-                            .clip(CircleShape)
-                            .background(Brush.horizontalGradient(colors = listOf(SmsAccent, SmsAccentLight)))
-                    )
+                    Box(modifier = Modifier.padding(vertical = 12.dp).size(width = 36.dp, height = 5.dp).clip(CircleShape).background(Brush.horizontalGradient(colors = listOf(SmsAccent, SmsAccentLight))))
                 },
                 containerColor = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
-                com.odorik.odorikbuddy.util.ConfigureBottomSheetWindow()
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = getResponsiveSpacing() * 2)
-                ) {
-                    DelayOptionsContent(
-                        viewModel = viewModel,
-                        delayMode = delayMode,
-                        onDelayModeChange = { delayMode = it },
-                        showDatePicker = { showDatePicker = true },
-                        onDismiss = { showDelayOptions = false }
-                    )
+                Column(modifier = Modifier.fillMaxWidth().padding(bottom = getResponsiveSpacing() * 2)) {
+                    DelayOptionsContent(viewModel = viewModel, delayMode = delayMode, onDelayModeChange = { delayMode = it }, showDatePicker = { showDatePicker = true }, onDismiss = { showDelayOptions = false })
                 }
             }
         }
-
 
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showDatePicker = false
-                        showTimePicker = true
-                    }) { Text(stringResource(R.string.sms_next)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
+                confirmButton = { TextButton(onClick = { showDatePicker = false; showTimePicker = true }) { Text(stringResource(R.string.sms_next)) } },
+                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } }
+            ) { DatePicker(state = datePickerState) }
         }
-
 
         if (showTimePicker) {
             AlertDialog(
                 onDismissRequest = { showTimePicker = false },
                 title = { Text(stringResource(R.string.sms_select_time)) },
-                text = {
-                    TimePicker(state = timePickerState)
-                },
+                text = { TimePicker(state = timePickerState) },
                 confirmButton = {
                     TextButton(onClick = {
                         showTimePicker = false
                         val selectedDateMillis = datePickerState.selectedDateMillis ?: return@TextButton
-                        val selectedDate = Instant.ofEpochMilli(selectedDateMillis)
-                            .atZone(ZoneId.systemDefault()).toLocalDate()
+                        val selectedDate = Instant.ofEpochMilli(selectedDateMillis).atZone(ZoneId.systemDefault()).toLocalDate()
                         val selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                         val localDateTime = LocalDateTime.of(selectedDate, selectedTime)
                         val zonedUtc = localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC"))
-
                         viewModel.setDateTimeDelayed(zonedUtc.format(DateTimeFormatter.ISO_INSTANT))
                     }) { Text(stringResource(R.string.ok)) }
                 },
-                dismissButton = {
-                    TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) }
-                }
+                dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } }
             )
         }
     }
@@ -866,64 +640,33 @@ private fun DelayOptionsContent(
     val delayed by viewModel.delayed.collectAsState()
     val delayedError by viewModel.delayedError.collectAsState()
 
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
+    Column(modifier = Modifier.fillMaxWidth()) {
         GradientHeader(
             title = stringResource(R.string.sms_delay_options_title),
             iconVector = Icons.Default.AccessTime,
-            backgroundBrush = Brush.verticalGradient(
-                colors = listOf(
-                    SmsAccent.copy(alpha = 0.15f),
-                    Color.Transparent
-                )
-            ),
-            iconGradientBrush = Brush.linearGradient(
-                colors = listOf(SmsAccent, SmsAccentLight)
-            ),
+            backgroundBrush = Brush.verticalGradient(colors = listOf(SmsAccent.copy(alpha = 0.15f), Color.Transparent)),
+            iconGradientBrush = Brush.linearGradient(colors = listOf(SmsAccent, SmsAccentLight)),
             iconSize = 22.dp,
             iconContainerSize = 40.dp,
             iconCornerRadius = 10.dp
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveCardPadding())
-                .navigationBarsPadding(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveCardPadding()).navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing())
         ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = getResponsiveCardPadding()/2),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                ) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = getResponsiveCardPadding()/2), horizontalArrangement = Arrangement.Center) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth(0.9f)) {
                     SegmentedButton(
                         selected = delayMode == "minutes",
                         onClick = { onDelayModeChange("minutes"); viewModel.onMinutesDelayedInputChange("") },
                         shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.sms_minutes),
-                            fontSize = getResponsiveBodyLargeSize() * 0.9f
-                        )
-                    }
+                    ) { Text(stringResource(R.string.sms_minutes), fontSize = getResponsiveBodyMediumSize()) }
                     SegmentedButton(
                         selected = delayMode == "datetime",
                         onClick = { onDelayModeChange("datetime"); viewModel.setDateTimeDelayed("") },
                         shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.sms_specific_time),
-                            fontSize = getResponsiveBodyLargeSize() * 0.9f
-                        )
-                    }
+                    ) { Text(stringResource(R.string.sms_specific_time), fontSize = getResponsiveBodyMediumSize()) }
                 }
             }
 
@@ -940,88 +683,45 @@ private fun DelayOptionsContent(
                 OutlinedTextField(
                     value = delayed,
                     onValueChange = { viewModel.onMinutesDelayedInputChange(it) },
-                    label = {
-                        Text(
-                            stringResource(R.string.sms_delay_minutes),
-                            fontSize = getResponsiveBodyLargeSize() * 0.9f
-                        )
-                    },
+                    label = { Text(stringResource(R.string.sms_delay_minutes), fontSize = getResponsiveBodyMediumSize()) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = delayedError != null,
                     supportingText = {
-                        delayedError?.let {
-                            Text(
-                                stringResource(it),
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = getResponsiveBodyLargeSize() * 0.8f
-                            )
-                        }
+                        delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, fontSize = getResponsiveCaptionSize()) }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SmsAccent,
-                        focusedLabelColor = SmsAccent
-                    ),
-                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SmsAccent, focusedLabelColor = SmsAccent),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyMediumSize())
                 )
             } else {
                 OutlinedTextField(
                     value = displayDelayed,
                     onValueChange = {},
                     readOnly = true,
-                    label = {
-                        Text(
-                            stringResource(R.string.sms_scheduled_time_utc),
-                            fontSize = getResponsiveBodyLargeSize() * 0.9f
-                        )
-                    },
+                    label = { Text(stringResource(R.string.sms_scheduled_time_utc), fontSize = getResponsiveBodyMediumSize()) },
                     trailingIcon = {
                         IconButton(onClick = showDatePicker) {
-                            Icon(
-                                Icons.Default.CalendarToday,
-                                contentDescription = "Select date",
-                                modifier = Modifier.size(20.dp),
-                                tint = SmsAccent
-                            )
+                            Icon(Icons.Default.CalendarToday, contentDescription = stringResource(R.string.sms_select_date_time), modifier = Modifier.size(20.dp), tint = SmsAccent)
                         }
                     },
                     isError = delayedError != null,
                     supportingText = {
-                        delayedError?.let {
-                            Text(
-                                stringResource(it),
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = getResponsiveBodyLargeSize() * 0.8f
-                            )
-                        }
+                        delayedError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, fontSize = getResponsiveCaptionSize()) }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SmsAccent,
-                        focusedLabelColor = SmsAccent
-                    ),
-                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyLargeSize() * 0.95f)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SmsAccent, focusedLabelColor = SmsAccent),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = getResponsiveBodyMediumSize())
                 )
             }
-
-
+            
             Button(
-                onClick = {
-                    onDelayModeChange(delayMode)
-                    onDismiss()
-                },
+                onClick = { onDelayModeChange(delayMode); onDismiss() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SmsAccent),
                 shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.schedule_sms_button),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = getResponsiveBodyLargeSize()
-                )
-            }
+            ) { Text(text = stringResource(R.string.schedule_sms_button), fontWeight = FontWeight.Bold, fontSize = getResponsiveBodyLargeSize()) }
         }
     }
 }

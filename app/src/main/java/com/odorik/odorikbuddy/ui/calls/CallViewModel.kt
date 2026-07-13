@@ -3,25 +3,30 @@ package com.odorik.odorikbuddy.ui.calls
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.model.CallInfo
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
-import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
-import com.odorik.odorikbuddy.domain.usecase.GetCallListUseCase
+import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
+import com.odorik.odorikbuddy.domain.usecase.GetPhoneNumbersForContactUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
+import com.odorik.odorikbuddy.domain.usecase.NoSharedNumbersException
+import com.odorik.odorikbuddy.domain.usecase.NoSourceNumberException
+import com.odorik.odorikbuddy.domain.usecase.OneShotCallCoordinatorUseCase
+import com.odorik.odorikbuddy.domain.usecase.SharedNumberNotFoundException
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
-import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -29,14 +34,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CallViewModel @Inject constructor(
-    private val getCallListUseCase: GetCallListUseCase,
+    private val contactNameResolver: ContactNameResolver,
+    private val getPhoneNumbersForContactUseCase: GetPhoneNumbersForContactUseCase,
     private val getLinesUseCase: GetLinesUseCase,
     private val callUseCase: CallUseCase,
-    private val createRouteUseCase: CreateRouteUseCase,
+    private val oneShotCallCoordinatorUseCase: OneShotCallCoordinatorUseCase,
     private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
     private val securePreferences: SecurePreferences,
     private val localeManager: LocaleManager,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     private val _callList = MutableStateFlow<List<CallInfo>>(emptyList())
@@ -51,6 +58,9 @@ class CallViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _isRetrying = MutableStateFlow(false)
+    val isRetrying: StateFlow<Boolean> = _isRetrying
+
     private val _callerId = MutableStateFlow("")
     val callerId: StateFlow<String> = _callerId
 
@@ -60,76 +70,31 @@ class CallViewModel @Inject constructor(
     private val _oneShotRecipient = MutableStateFlow("")
     val oneShotRecipient: StateFlow<String> = _oneShotRecipient
 
+    val directCallsEnabled: Boolean
+        get() = appPreferences.directCallsEnabled
 
-    private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
-
-    val callerContactName: StateFlow<String?> = combine(_callerId, _contactsMap) { number, contacts ->
-        resolveContactName(number, contacts)
+    // --- Contacts Logic ---
+    val callerContactName: StateFlow<String?> = combine(_callerId, contactNameResolver.contactsMap) { number, _ ->
+        if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val callbackRecipientContactName: StateFlow<String?> = combine(_callbackRecipient, _contactsMap) { number, contacts ->
-        resolveContactName(number, contacts)
+    val callbackRecipientContactName: StateFlow<String?> = combine(_callbackRecipient, contactNameResolver.contactsMap) { number, _ ->
+        if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val oneShotRecipientContactName: StateFlow<String?> = combine(_oneShotRecipient, _contactsMap) { number, contacts ->
-        resolveContactName(number, contacts)
+    val oneShotRecipientContactName: StateFlow<String?> = combine(_oneShotRecipient, contactNameResolver.contactsMap) { number, _ ->
+        if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    fun loadContacts(contentResolver: ContentResolver) {
-        viewModelScope.launch {
-            val projection = arrayOf(
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-            )
-            val contacts = mutableMapOf<String, String>()
-
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-
-                if (numberIndex >= 0 && nameIndex >= 0) {
-                    while (cursor.moveToNext()) {
-                        val number = cursor.getString(numberIndex)
-                        val name = cursor.getString(nameIndex)
-                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
-                            val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
-                            if (!contacts.containsKey(normalizedNumber)) {
-                                contacts[normalizedNumber] = name
-                            }
-                        }
-                    }
-                }
-            }
-            _contactsMap.value = contacts
-        }
-    }
-
-    private fun resolveContactName(number: String, contacts: Map<String, String>): String? {
-        if (number.isBlank()) return null
-        val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
-        for ((contactNumber, contactName) in contacts) {
-            if (PhoneNumberUtils.areNumbersEqual(parsedInput.normalizedNumber, contactNumber)) {
-                return if (parsedInput.specialPrefix.isNotEmpty()) {
-                    "${parsedInput.specialPrefix} $contactName".trim()
-                } else {
-                    contactName
-                }
-            }
-        }
-        return null
-    }
 
     private val _selectedLine = MutableStateFlow<Int?>(null)
     val selectedLine: StateFlow<Int?> = _selectedLine
 
     private val _oneShotCallResult = MutableStateFlow<String>("")
     val oneShotCallResult: StateFlow<String> = _oneShotCallResult
+
+    // One-shot event for launching the dialer (better than watching result in UI)
+    private val _dialerLaunchRequest = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val dialerLaunchRequest = _dialerLaunchRequest.asSharedFlow()
 
     private val _oneShotCallError = MutableStateFlow<String?>("")
     val oneShotCallError: StateFlow<String?> = _oneShotCallError
@@ -149,17 +114,17 @@ class CallViewModel @Inject constructor(
 
     private fun getSelectedTab(): String {
         val savedString = securePreferences.getString("calls_selected_tab", null)
-        val defaultTitle = "callback_title"
+        val defaultTitle = "callback_title" // Fallback to first tab
         val tabOrder = getTabOrder()
         return if (savedString?.toIntOrNull() != null) {
-
+            // Migrate legacy index to title
             val oldIndex = savedString.toInt()
             val migratedTitle = if (oldIndex in tabOrder.indices) tabOrder[oldIndex] else defaultTitle
-
+            // Save the migrated title for future use
             securePreferences.saveString("calls_selected_tab", migratedTitle)
             migratedTitle
         } else {
-
+            // Already a title, validate it exists in order
             savedString?.takeIf { it in tabOrder } ?: defaultTitle
         }
     }
@@ -170,25 +135,16 @@ class CallViewModel @Inject constructor(
     private fun getTabOrder(): List<String> {
         val savedOrder = securePreferences.getString("calls_tab_order", null)
         val defaultOrder = listOf("callback_title", "oneshot_call", "tiles_title")
-
+        
         if (savedOrder == null) return defaultOrder
-
+        
         val currentList = savedOrder.split(",").filter { it.isNotBlank() }.toMutableList()
-
+        // Ensure new tabs are added if missing (for existing users)
         if (!currentList.contains("tiles_title")) {
             currentList.add("tiles_title")
         }
-
+        
         return currentList
-    }
-
-    fun updateTabOrder(newOrder: List<String>) {
-        _tabOrder.value = newOrder
-        securePreferences.saveString("calls_tab_order", newOrder.joinToString(","))
-    }
-
-    fun getTabIndexByTitle(title: String): Int {
-        return _tabOrder.value.indexOf(title).takeIf { it >= 0 } ?: 0
     }
 
     private val _phoneNumber = MutableStateFlow(getPhoneNumber())
@@ -198,14 +154,63 @@ class CallViewModel @Inject constructor(
         return securePreferences.getString("phone_number", "") ?: ""
     }
 
+    fun startErrorRetry() {
+        if (_isRetrying.value) return
+        _isRetrying.value = true
+        viewModelScope.launch {
+            while (_isRetrying.value) {
+                kotlinx.coroutines.delay(5000)
+                if (!_isRetrying.value) break
+                getLines()
+                if (_error.value == null) {
+                    _isRetrying.value = false
+                }
+            }
+        }
+    }
+
+    fun stopErrorRetry() {
+        _isRetrying.value = false
+    }
+
     init {
+        // Automatically manage error retry when error state changes
+        viewModelScope.launch {
+            error.collect { currentError ->
+                if (!currentError.isNullOrEmpty()) {
+                    startErrorRetry()
+                } else {
+                    stopErrorRetry()
+                }
+            }
+        }
+
         _callerId.value = securePreferences.getString("caller_id", "") ?: ""
         _callbackRecipient.value = securePreferences.getString("recipient", "") ?: ""
         _oneShotRecipient.value = securePreferences.getString("oneshot_recipient", "") ?: ""
         _selectedLine.value = securePreferences.getString("selected_line", null)?.toIntOrNull()
         _useCallerIdPrefix.value = getUseCallerIdPrefix()
         _tabOrder.value = getTabOrder()
+        // _selectedTab is already initialized with getSelectedTab() in the property declaration
 
+        // Perform initial data load
+        getCallList()
+        getLines()
+    }
+
+    fun loadContacts(contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            contactNameResolver.loadContacts(contentResolver)
+        }
+    }
+
+    fun updateTabOrder(newOrder: List<String>) {
+        _tabOrder.value = newOrder
+        securePreferences.saveString("calls_tab_order", newOrder.joinToString(","))
+    }
+
+    fun getTabIndexByTitle(title: String): Int {
+        return _tabOrder.value.indexOf(title).takeIf { it >= 0 } ?: 0
     }
 
     fun updateSelectedTab(tabTitle: String) {
@@ -249,8 +254,15 @@ class CallViewModel @Inject constructor(
     }
 
     fun getCallList() {
-
-
+        // Commented out again as GetCallListUseCase.execute() is commented out
+        /*
+        viewModelScope.launch {
+            val result = getCallListUseCase.execute()
+            result.onSuccess {
+                _callList.value = it
+            }
+        }
+        */
     }
 
     fun getLines() {
@@ -258,7 +270,7 @@ class CallViewModel @Inject constructor(
             val result = getLinesUseCase.execute()
             result.onSuccess {
                 _lines.value = it
-                _error.value = null
+                _error.value = null // Clear error on success
                 _oneShotCallError.value = null
                 _callResult.value = ""
                 if (_selectedLine.value == null && it.isNotEmpty()) {
@@ -273,8 +285,8 @@ class CallViewModel @Inject constructor(
 
     fun makeCall(callerId: String, recipient: String, line: String) {
         viewModelScope.launch {
-            _error.value = null
-            _callResult.value = ""
+            _error.value = null // Clear previous errors
+            _callResult.value = "" // Clear previous results
             val result = callUseCase.execute(callerId, recipient, line)
             result.onSuccess {
                 _callResult.value = it
@@ -286,116 +298,50 @@ class CallViewModel @Inject constructor(
         }
     }
 
-fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-    val numbers = mutableListOf<String>()
-    contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { contactCursor ->
-        if (contactCursor.moveToFirst()) {
-            val contactId = contactCursor.getString(contactCursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
-            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            val phoneSelection = "${ContactsContract.Data.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?"
-            val phoneSelectionArgs = arrayOf(contactId, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-            contentResolver.query(
-                ContactsContract.Data.CONTENT_URI,
-                phoneProjection,
-                phoneSelection,
-                phoneSelectionArgs,
-                null
-            )?.use { phoneCursor ->
-                while (phoneCursor.moveToNext()) {
-                    var number = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
-                    number = number.replace(Regex("[^0-9+]"), "")
-                    if (number.isNotBlank()) {
-                        numbers.add(number)
-                    }
-                }
-            }
-        }
+    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
+        return getPhoneNumbersForContactUseCase(contentResolver, contactUri)
     }
-    return numbers
-}
 
-    fun makeOneShotCall(targetRecipient: String, useLineAsCallerId: Boolean) {
+    /**
+     * Initiates a one-shot call.
+     *
+     * @param targetRecipient The number to call.
+     * @param useLineAsCallerId Whether to use the selected line's caller ID.
+     * @param selectedLineId Optional specific line ID (used by widgets that have per-tile line configuration).
+     *                       If null, falls back to the globally selected line.
+     */
+    fun makeOneShotCall(
+        targetRecipient: String,
+        useLineAsCallerId: Boolean,
+        selectedLineId: Int? = null
+    ) {
         viewModelScope.launch {
             _oneShotCallError.value = null
-            _oneShotCallResult.value = ""
+            _oneShotCallResult.value = ""  // Clear previous result
             _isOneShotCallLoading.value = true
 
             try {
+                // Use provided line ID (for widgets) or fall back to global selection
+                val lineIdToUse = selectedLineId ?: _selectedLine.value
 
-                val currentPhoneNumber = securePreferences.getString("phone_number", "") ?: ""
-                _phoneNumber.value = currentPhoneNumber
+                val result = oneShotCallCoordinatorUseCase.execute(
+                    targetRecipient = targetRecipient,
+                    useLineAsCallerId = useLineAsCallerId,
+                    selectedLineId = lineIdToUse
+                )
 
-
-                val publicNumbersResult = getSharedPublicNumbersUseCase.execute()
-                if (publicNumbersResult.isFailure) {
+                result.onSuccess { lastSharedNumber ->
+                    _oneShotCallResult.value = lastSharedNumber
+                    _dialerLaunchRequest.tryEmit(lastSharedNumber) // Notify UI to launch dialer
+                }.onFailure { e ->
                     val localizedContext = localeManager.createLocaleContext(context)
-                    _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error getting public numbers: ${publicNumbersResult.exceptionOrNull()?.message}", localizedContext)
-                    _isOneShotCallLoading.value = false
-                    return@launch
+                    _oneShotCallError.value = when (e) {
+                        is NoSourceNumberException -> context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_source_number_configured)
+                        is NoSharedNumbersException -> context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_available)
+                        is SharedNumberNotFoundException -> context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_found)
+                        else -> ErrorMessageUtil.standardizeError("Error during One Shot Call setup: ${e.message}", localizedContext)
+                    }
                 }
-
-                val publicNumbers = publicNumbersResult.getOrNull()
-                if (publicNumbers.isNullOrEmpty()) {
-                    _oneShotCallError.value = context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_available)
-                    _isOneShotCallLoading.value = false
-                    return@launch
-                }
-
-
-                val lastSharedNumber = publicNumbers.lastOrNull { it.type == "shared" }?.publicNumber
-                if (lastSharedNumber == null) {
-                    _oneShotCallError.value = context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_found)
-                    _isOneShotCallLoading.value = false
-                    return@launch
-                }
-
-
-
-                val sourceNumber = currentPhoneNumber
-
-
-                val selectedLineInfo = _selectedLine.value?.let { selectedLineId ->
-                    _lines.value.find { it.id == selectedLineId }
-                }
-
-                if (sourceNumber.isNullOrEmpty()) {
-                    _oneShotCallError.value = context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_source_number_configured)
-                    _isOneShotCallLoading.value = false
-                    return@launch
-                }
-
-
-                val routeResult = if (selectedLineInfo != null) {
-
-                    createRouteUseCase.executeWithLineCredentials(
-                        publicNumber = lastSharedNumber,
-                        sourceNumber = sourceNumber,
-                        ringingNumber = targetRecipient,
-                        replaceBySource = true,
-                        useCallerIdPrefix = useLineAsCallerId,
-                        lineId = selectedLineInfo.id.toString(),
-                        sipPassword = selectedLineInfo.sip_password
-                    )
-                } else {
-
-                    createRouteUseCase.execute(
-                        publicNumber = lastSharedNumber,
-                        sourceNumber = sourceNumber,
-                        ringingNumber = targetRecipient,
-                        replaceBySource = true,
-                        useCallerIdPrefix = useLineAsCallerId
-                    )
-                }
-
-                if (routeResult.isFailure) {
-                    val localizedContext = localeManager.createLocaleContext(context)
-                    _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error creating route: ${routeResult.exceptionOrNull()?.message}", localizedContext)
-                    _isOneShotCallLoading.value = false
-                    return@launch
-                }
-
-
-                _oneShotCallResult.value = lastSharedNumber
             } catch (e: Exception) {
                 val localizedContext = localeManager.createLocaleContext(context)
                 _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error during One Shot Call setup: ${e.message}", localizedContext)
@@ -404,12 +350,16 @@ fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri
             }
         }
     }
-
+    
     fun resetCallResult() {
         _callResult.value = ""
     }
-
+    
     fun resetOneShotCallResult() {
         _oneShotCallResult.value = ""
+    }
+
+    fun resetOneShotCallError() {
+        _oneShotCallError.value = null
     }
 }

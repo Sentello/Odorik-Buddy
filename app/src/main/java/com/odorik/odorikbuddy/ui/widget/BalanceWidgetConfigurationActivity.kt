@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -71,6 +74,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         val intent = intent
         val extras = intent.extras
@@ -110,6 +114,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
         var selectedTextSize by remember { mutableStateOf("NORMAL") }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0.dp),
             topBar = {
                 TopAppBar(
                     title = { Text(stringResource(R.string.balance_widget_name)) },
@@ -117,28 +122,16 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.background
                     )
                 )
-            },
-            bottomBar = {
-                Button(
-                    onClick = { onSave(selectedBackground, selectedTextColor, selectedTextSize) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Icon(Icons.Default.Save, contentDescription = null)
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(stringResource(R.string.save))
-                }
             }
         ) { padding ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-
+                // Preview Section
                 item {
                     Text(
                         text = stringResource(R.string.widget_preview),
@@ -146,8 +139,8 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-
-
+                    
+                    // Simulated Widget Preview
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -164,13 +157,13 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                                 }
                             )
                             .border(
-                                1.dp,
-                                if(selectedBackground == "TRANSPARENT") MaterialTheme.colorScheme.outline else Color.Transparent,
+                                1.dp, 
+                                if(selectedBackground == "TRANSPARENT") MaterialTheme.colorScheme.outline else Color.Transparent, 
                                 RoundedCornerShape(16.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-
+                        // Dummy Widget Content
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
@@ -217,7 +210,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-
+                // Background Settings
                 item {
                     ConfigSection(title = stringResource(R.string.widget_config_background)) {
                         val backgrounds = listOf(
@@ -242,7 +235,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-
+                // Text Color Settings
                 item {
                     ConfigSection(title = stringResource(R.string.text_color)) {
                          val colors = listOf(
@@ -265,7 +258,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-
+                // Text Size Settings
                 item {
                      ConfigSection(title = stringResource(R.string.widget_config_text_size)) {
                          val sizes = listOf(
@@ -287,6 +280,21 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                // Save Button (respects navigation bar insets)
+                item {
+                    Button(
+                        onClick = { onSave(selectedBackground, selectedTextColor, selectedTextSize) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 16.dp)
+                            .navigationBarsPadding()
+                    ) {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(stringResource(R.string.save))
+                    }
+                }
             }
         }
     }
@@ -303,14 +311,14 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
             content()
         }
     }
-
-
+    
+    // Simple replacement for FlowRow since we might be on older Compose
     @Composable
     fun FlowRowCompat(content: @Composable () -> Unit) {
-
-
-
-
+        // Just use a wrapped Row for now as FlowRow is experimental in some versions
+        // Or simple Column of Rows if items are many. 
+        // Given the limited items, a scrollable Row is safer or a simple custom layout.
+        // Let's use a LazyRow for horizontal scrolling if it overflows
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
@@ -326,8 +334,8 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
     private fun saveWidgetState(background: String, textColor: String, textSize: String) {
         lifecycleScope.launch {
             val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
-
-
+            
+            // 1. Save config and set loading state
             updateAppWidgetState(applicationContext, glanceId) { prefs ->
                 prefs[BalanceWidget.backgroundKey] = background
                 prefs[BalanceWidget.textColorKey] = textColor
@@ -336,24 +344,24 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                 prefs.remove(BalanceWidget.errorKey)
             }
             BalanceWidget().update(applicationContext, glanceId)
-
-
+            
+            // 2. Fetch data immediately
             val result = getCreditUseCase.execute()
-
-
+            
+            // 3. Update state with result
             updateAppWidgetState(applicationContext, glanceId) { prefs ->
                 prefs[BalanceWidget.isLoadingKey] = false
                 prefs[BalanceWidget.lastUpdatedKey] = System.currentTimeMillis()
-
+                
                 result.onSuccess { balance ->
                     prefs[BalanceWidget.balanceKey] = balance
                     prefs.remove(BalanceWidget.errorKey)
                 }.onFailure { error ->
-                    prefs[BalanceWidget.errorKey] = error.message ?: "Unknown error"
+                    prefs[BalanceWidget.errorKey] = error.message ?: applicationContext.getString(R.string.error_unknown_generic)
                 }
             }
             BalanceWidget().update(applicationContext, glanceId)
-
+            
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
             finish()

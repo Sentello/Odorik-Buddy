@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
@@ -38,28 +37,28 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,8 +66,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -85,82 +82,16 @@ import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.model.Line
+import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.components.darkModeBorder
 import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
 import com.odorik.odorikbuddy.ui.theme.SettingsAccent
 import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
 import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
+import com.odorik.odorikbuddy.util.getResponsiveBodyMediumSize
+import com.odorik.odorikbuddy.util.getResponsiveBodySmallSize
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
-import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
-
-@Composable
-private fun GradientHeader() {
-    val infiniteTransition = rememberInfiniteTransition(label = "iconRotation")
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(20000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "iconRotation"
-    )
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            SettingsAccent.copy(alpha = 0.35f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(SettingsAccent, SettingsAccentLight)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .rotate(rotation),
-                        tint = Color.White
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(R.string.settings),
-                    fontSize = getResponsiveTitleLargeSize(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun SettingsSection(
@@ -239,38 +170,34 @@ fun SettingsScreen(
 
     val uriHandler = LocalUriHandler.current
 
-
+    // Update information
     val updateInfo by updateViewModel.updateInfo.collectAsState()
     val isUpdateLoading by updateViewModel.isLoading.collectAsState()
     val updateError by updateViewModel.error.collectAsState()
 
-
+    // Permission launcher for notifications
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-
+            // Permission granted, enable auto-update
             viewModel.setAutoUpdateEnabled(true)
-
+            // Perform immediate update check to show notification if update is available
             viewModel.performImmediateUpdateCheck()
         }
-
     }
 
-
+    // Permission launcher for direct calls
     val callPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-
+            // Permission granted, enable direct calls
             viewModel.setDirectCallsEnabled(true)
         }
-
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.getLines()
-    }
+
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp)
@@ -280,8 +207,24 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            GradientHeader()
-
+            val infiniteTransition = rememberInfiniteTransition(label = "iconRotation")
+            val rotation by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(20000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "iconRotation"
+            )
+            GradientHeader(
+                title = stringResource(R.string.settings),
+                iconVector = Icons.Default.Settings,
+                backgroundBrush = Brush.verticalGradient(listOf(SettingsAccent.copy(alpha = 0.35f), Color.Transparent)),
+                iconGradientBrush = Brush.linearGradient(listOf(SettingsAccent, SettingsAccentLight)),
+                iconRotation = rotation
+            )
+            
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -290,7 +233,7 @@ fun SettingsScreen(
                     bottom = getResponsiveSpacing()
                 )
             ) {
-
+                // Account Section (Lines)
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_account),
@@ -299,7 +242,7 @@ fun SettingsScreen(
                         Column {
                             lines.forEachIndexed { index, line ->
                                 ListItem(
-                                    headlineContent = { Text("${line.name} (${line.caller_id})") },
+                                    headlineContent = { Text("${line.name} (${line.callerId})") },
                                     supportingContent = { Text(stringResource(R.string.line_id_label) + " " + line.id.toString()) },
                                     modifier = Modifier.clickable { viewModel.onLineSelected(line) }
                                 )
@@ -314,7 +257,7 @@ fun SettingsScreen(
                     }
                 }
 
-
+                // Personal Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_personal),
@@ -349,7 +292,7 @@ fun SettingsScreen(
                     }
                 }
 
-
+                // Display Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_display),
@@ -388,7 +331,7 @@ fun SettingsScreen(
                     }
                 }
 
-
+                // Data Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_data),
@@ -410,158 +353,158 @@ fun SettingsScreen(
                     }
                 }
 
-
-            item {
-                SettingsSection(
-                    title = stringResource(R.string.section_app),
-                    icon = Icons.Default.Apps
-                ) {
-                    Column {
-
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.auto_update_checking)) },
-                            supportingContent = { Text(stringResource(R.string.auto_update_checking_description)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = autoUpdateEnabled,
-                                    onCheckedChange = { enabled ->
-                                        if (enabled) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                // App Section
+                item {
+                    SettingsSection(
+                        title = stringResource(R.string.section_app),
+                        icon = Icons.Default.Apps
+                    ) {
+                        Column {
+                            // Auto-update
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.auto_update_checking)) },
+                                supportingContent = { Text(stringResource(R.string.auto_update_checking_description)) },
+                                trailingContent = {
+                                    Switch(
+                                        checked = autoUpdateEnabled,
+                                        onCheckedChange = { enabled ->
+                                            if (enabled) {
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                                    notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                                } else {
+                                                    viewModel.setAutoUpdateEnabled(true)
+                                                }
                                             } else {
-                                                viewModel.setAutoUpdateEnabled(true)
+                                                viewModel.setAutoUpdateEnabled(false)
                                             }
-                                        } else {
-                                            viewModel.setAutoUpdateEnabled(false)
-                                        }
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = SettingsAccent,
-                                        checkedTrackColor = SettingsAccentLight.copy(alpha = 0.5f)
-                                    )
-                                )
-                            },
-                            modifier = Modifier.clickable {
-                                if (!autoUpdateEnabled) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                                    } else {
-                                        viewModel.setAutoUpdateEnabled(true)
-                                    }
-                                } else {
-                                    viewModel.setAutoUpdateEnabled(false)
-                                }
-                            }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-
-
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.direct_calls)) },
-                            supportingContent = { Text(stringResource(R.string.direct_calls_description)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = directCallsEnabled,
-                                    onCheckedChange = { enabled ->
-                                        if (enabled) {
-                                            callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
-                                        } else {
-                                            viewModel.setDirectCallsEnabled(false)
-                                        }
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = SettingsAccent,
-                                        checkedTrackColor = SettingsAccentLight.copy(alpha = 0.5f)
-                                    )
-                                )
-                            },
-                            modifier = Modifier.clickable {
-                                if (!directCallsEnabled) {
-                                    callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
-                                } else {
-                                    viewModel.setDirectCallsEnabled(false)
-                                }
-                            }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-
-
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.about_app)) },
-                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
-                            modifier = Modifier.clickable { showAboutDialog = true }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-
-
-                        val isUpdateAvailable = updateViewModel.isUpdateAvailable()
-                        ListItem(
-                            headlineContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(stringResource(R.string.version_label))
-                                    if (isUpdateAvailable) {
-                                        Icon(
-                                            Icons.Default.Update,
-                                            contentDescription = "Update available",
-                                            modifier = Modifier
-                                                .padding(start = 4.dp)
-                                                .size(16.dp),
-                                            tint = SettingsAccent
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = SettingsAccent,
+                                            checkedTrackColor = SettingsAccentLight.copy(alpha = 0.5f)
                                         )
+                                    )
+                                },
+                                modifier = Modifier.clickable {
+                                    if (!autoUpdateEnabled) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                        } else {
+                                            viewModel.setAutoUpdateEnabled(true)
+                                        }
+                                    } else {
+                                        viewModel.setAutoUpdateEnabled(false)
                                     }
                                 }
-                            },
-                            supportingContent = { Text(BuildConfig.VERSION_NAME) },
-                            modifier = Modifier.clickable {
-                                showUpdateDialog = true
-                                updateViewModel.checkForUpdates()
-                            }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            
+                            // Direct calls
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.direct_calls)) },
+                                supportingContent = { Text(stringResource(R.string.direct_calls_description)) },
+                                trailingContent = {
+                                    Switch(
+                                        checked = directCallsEnabled,
+                                        onCheckedChange = { enabled ->
+                                            if (enabled) {
+                                                callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+                                            } else {
+                                                viewModel.setDirectCallsEnabled(false)
+                                            }
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = SettingsAccent,
+                                            checkedTrackColor = SettingsAccentLight.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.clickable {
+                                    if (!directCallsEnabled) {
+                                        callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+                                    } else {
+                                        viewModel.setDirectCallsEnabled(false)
+                                    }
+                                }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+
+                            // About
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.about_app)) },
+                                trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                                modifier = Modifier.clickable { showAboutDialog = true }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+
+                            // Version / Update
+                            val isUpdateAvailable = updateViewModel.isUpdateAvailable()
+                            ListItem(
+                                headlineContent = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(stringResource(R.string.version_label))
+                                        if (isUpdateAvailable) {
+                                            Icon(
+                                                Icons.Default.Update,
+                                                contentDescription = stringResource(R.string.update_available),
+                                                modifier = Modifier
+                                                    .padding(start = 4.dp)
+                                                    .size(16.dp),
+                                                tint = SettingsAccent
+                                            )
+                                        }
+                                    }
+                                },
+                                supportingContent = { Text(BuildConfig.VERSION_NAME) },
+                                modifier = Modifier.clickable {
+                                    showUpdateDialog = true
+                                    updateViewModel.checkForUpdates()
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Logout Button
+                item {
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { showLogoutDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout, 
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.logout),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
-
-
-            item {
-                androidx.compose.material3.OutlinedButton(
-                    onClick = { showLogoutDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.logout),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
         }
     }
-    }
 
-
+    // --- DIALOGS --- //
 
     selectedLine?.let {
         LineInfoDialog(line = it, onDismiss = { viewModel.onDismissLineDialog() })
@@ -618,8 +561,8 @@ fun SettingsScreen(
             onDismiss = { showPhoneNumberDialog = false }
         )
     }
-
-
+    
+    // Update Dialog
     if (showUpdateDialog) {
         val isUpdateAvailable = updateViewModel.isUpdateAvailable()
         UpdateInfoDialog(
@@ -630,14 +573,13 @@ fun SettingsScreen(
             onDismiss = { showUpdateDialog = false }
         )
     }
-
-
+    
+    // About Dialog
     if (showAboutDialog) {
         AboutDialog(
             onDismiss = { showAboutDialog = false },
             onOpenGitHub = { uriHandler.openUri("https://github.com/Sentello/Odorik-Buddy") },
-            onOpenForum = { uriHandler.openUri("https://forum.odorik.cz/viewtopic.php?t=6042") },
-            onSupport = { uriHandler.openUri("https://buymeacoffee.com/sentello") }
+            onOpenForum = { uriHandler.openUri("https://forum.odorik.cz/viewtopic.php?t=6042") }
         )
     }
 }
@@ -650,48 +592,65 @@ private fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/2)) {
                 Text(
-                    "${stringResource(R.string.line_name_label)} ${line.name}",
+                    "${stringResource(R.string.line_name_label)} ${line.name}", 
                     fontSize = getResponsiveBodyLargeSize()
                 )
                 Text(
-                    "${stringResource(R.string.caller_id_label_settings)} ${line.caller_id}",
+                    "${stringResource(R.string.caller_id_label_settings)} ${line.callerId}", 
                     fontSize = getResponsiveBodyLargeSize()
                 )
-                line.public_number?.let {
+                line.publicNumber?.let {
                     Text(
-                        "${stringResource(R.string.public_number_label)} ${it}",
+                        "${stringResource(R.string.public_number_label)} ${it}", 
                         fontSize = getResponsiveBodyLargeSize()
                     )
                 }
-                Text(
-                    "${stringResource(R.string.password_label_settings)} ${line.sip_password}",
-                    fontSize = getResponsiveBodyLargeSize()
-                )
+
+                var showPassword by remember { mutableStateOf(false) }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "${stringResource(R.string.password_label_settings)} ${if (showPassword) line.sipPassword else "••••••••"}",
+                        fontSize = getResponsiveBodyLargeSize()
+                    )
+                    IconButton(
+                        onClick = { showPassword = !showPassword },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showPassword) "Hide password" else "Show password",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = getResponsiveSpacing()/2))
                 Text(
                     stringResource(R.string.connected_devices_label),
-                    fontSize = getResponsiveBodyLargeSize() * 0.9f,
+                    fontSize = getResponsiveBodyMediumSize(),
                     fontWeight = FontWeight.SemiBold
                 )
-                if (line.connected_devices.isEmpty()) {
+                if (line.connectedDevices.isEmpty()) {
                     Text(
-                        stringResource(R.string.none),
+                        stringResource(R.string.none), 
                         fontSize = getResponsiveBodyLargeSize()
                     )
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/3)) {
-                        line.connected_devices.forEach { device ->
+                        line.connectedDevices.forEach { device ->
                             val ipAddress = device.publicSocket.substringBefore(':')
                             Column {
                                 Text(
-                                    "• ${device.userAgent}",
+                                    "• ${device.userAgent}", 
                                     fontSize = getResponsiveBodyLargeSize(),
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    "  IP: $ipAddress",
-                                    fontSize = getResponsiveBodyLargeSize() * 0.85f,
+                                    "  IP: $ipAddress", 
+                                    fontSize = getResponsiveBodySmallSize(), 
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -713,7 +672,7 @@ fun PhoneNumberInputDialog(
     onDismiss: () -> Unit
 ) {
     var phoneNumberInput by remember { mutableStateOf(currentNumber) }
-
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.personal_phone_number)) },
@@ -727,11 +686,11 @@ fun PhoneNumberInputDialog(
                 OutlinedTextField(
                     value = phoneNumberInput,
                     onValueChange = { phoneNumberInput = it },
-                    label = {
+                    label = { 
                         Text(
                             stringResource(R.string.personal_phone_number),
                             fontSize = getResponsiveBodyLargeSize()
-                        )
+                        ) 
                     },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -760,8 +719,8 @@ fun LanguageSelectionDialog(
     onDismiss: () -> Unit
 ) {
     val languages = listOf(
-        stringResource(R.string.lang_english) to "en",
-        stringResource(R.string.lang_czech) to "cs"
+        stringResource(R.string.lang_czech) to "cs",
+        stringResource(R.string.lang_english) to "en"
     )
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -870,10 +829,9 @@ fun UpdateInfoDialog(
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-
-
+    
     val cannotOpenUrlString = stringResource(R.string.cannot_open_url)
-
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.app_update)) },
@@ -893,7 +851,7 @@ fun UpdateInfoDialog(
                             "${stringResource(R.string.latest_version)}: ${updateInfo.version}",
                             fontSize = getResponsiveBodyLargeSize()
                         )
-
+                        
                         if (isUpdateAvailable) {
                             Text(
                                 stringResource(R.string.update_available),
@@ -925,14 +883,13 @@ fun UpdateInfoDialog(
         confirmButton = {
             if (updateInfo != null && isUpdateAvailable) {
                 TextButton(
-                    onClick = {
+                    onClick = { 
                         try {
                             uriHandler.openUri(updateInfo.downloadUrl)
                         } catch (e: Exception) {
-
                             android.widget.Toast.makeText(
-                                context,
-                                cannotOpenUrlString,
+                                context, 
+                                cannotOpenUrlString, 
                                 android.widget.Toast.LENGTH_LONG
                             ).show()
                         }
@@ -956,15 +913,13 @@ fun UpdateInfoDialog(
             }
         }
     )
-
 }
 
 @Composable
 fun AboutDialog(
     onDismiss: () -> Unit,
     onOpenGitHub: () -> Unit,
-    onOpenForum: () -> Unit,
-    onSupport: () -> Unit
+    onOpenForum: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -976,7 +931,7 @@ fun AboutDialog(
                     fontSize = getResponsiveBodyLargeSize(),
                     modifier = Modifier.padding(bottom = getResponsiveSpacing()/2)
                 )
-
+                
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.github_repository)) },
                     leadingContent = { Icon(Icons.Default.Code, contentDescription = null) },
@@ -985,7 +940,7 @@ fun AboutDialog(
                     ),
                     modifier = Modifier.clickable { onOpenGitHub() }
                 )
-
+                
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.discussion_forum)) },
                     leadingContent = { Icon(Icons.Default.Forum, contentDescription = null) },
@@ -993,15 +948,6 @@ fun AboutDialog(
                         containerColor = androidx.compose.ui.graphics.Color.Transparent
                     ),
                     modifier = Modifier.clickable { onOpenForum() }
-                )
-
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.donate_button)) },
-                    leadingContent = { Icon(Icons.Default.LocalCafe, contentDescription = null) },
-                    colors = androidx.compose.material3.ListItemDefaults.colors(
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent
-                    ),
-                    modifier = Modifier.clickable { onSupport() }
                 )
             }
         },

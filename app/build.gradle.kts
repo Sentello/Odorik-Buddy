@@ -16,8 +16,8 @@ android {
         applicationId = "com.odorik.odorikbuddy"
         minSdk = 24
         targetSdk = 36
-        versionCode = 11
-        versionName = "1.3.2"
+        versionCode = 17
+        versionName = "1.4.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -116,8 +116,14 @@ dependencies {
     // Jetpack Security
     implementation("androidx.security:security-crypto:1.0.0")
 
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.8.5")
+
+    // AppCompat (for modern per-app locale handling)
+    implementation("androidx.appcompat:appcompat:1.7.0")
 
     // Lottie
     implementation("com.airbnb.android:lottie-compose:6.0.0")

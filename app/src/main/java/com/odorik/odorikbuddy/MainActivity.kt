@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy
 
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,7 +18,6 @@ import com.odorik.odorikbuddy.ui.calls.CallViewModel
 import com.odorik.odorikbuddy.ui.navigation.AppNavigation
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -35,17 +35,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val lang = LanguagePreferences.getPreferredLanguage(this)
-        val locale = Locale.forLanguageTag(lang)
-        val config = Configuration(resources.configuration)
-        config.setLocale(locale)
-        @Suppress("DEPRECATION")
-        resources.updateConfiguration(config, resources.displayMetrics)
+        // Locale configuration is now handled in attachBaseContext
 
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(), 
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation()
@@ -54,13 +49,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        // Lightweight attachBaseContext for the very first launch.
+        // The main locale switching is now handled via AppCompatDelegate.
+        val lang = LanguagePreferences.getPreferredLanguage(newBase)
+        val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(lang)
+        val config = Configuration(newBase.resources.configuration)
+        val platformLocales = localeList.unwrap() as? android.os.LocaleList ?: android.os.LocaleList.getEmptyLocaleList()
+        config.setLocales(platformLocales)
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
+
     fun updateLocale(lang: String) {
-        localeManager.setPreferredLanguage(lang)
-        val locale = Locale.forLanguageTag(lang)
-        val config = Configuration(resources.configuration)
-        config.setLocale(locale)
-        @Suppress("DEPRECATION")
-        resources.updateConfiguration(config, resources.displayMetrics)
+        localeManager.applyLocale(lang)
         recreate()
     }
 }

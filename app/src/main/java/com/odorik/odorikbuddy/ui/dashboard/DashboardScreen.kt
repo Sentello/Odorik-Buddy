@@ -1,12 +1,9 @@
 package com.odorik.odorikbuddy.ui.dashboard
 
 import android.graphics.Typeface
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,7 +56,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,7 +100,6 @@ import com.odorik.odorikbuddy.util.getResponsiveHeadlineLargeSize
 import com.odorik.odorikbuddy.util.getResponsivePadding
 import com.odorik.odorikbuddy.util.getResponsiveSpacing
 import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -140,10 +135,10 @@ fun DashboardScreen(
     val error by viewModel.error.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
-
+    
     val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
 
-
+    // Context and language setup for currency formatting
     val context = LocalContext.current
     val currentLanguage = remember {
         val locale = context.resources.configuration.locales[0]
@@ -157,50 +152,36 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         viewModel.loadData(true)
     }
+    
+    // Auto-retry when in critical error state
 
 
-    LaunchedEffect(isCriticalError) {
-        if (isCriticalError) {
-            while (true) {
-                delay(5000)
-                if (isCriticalError) {
-                    viewModel.refresh()
-                }
+    // Observe navigation results reliably using LaunchedEffect keys
+    val navStartDate = navController.currentBackStackEntry?.savedStateHandle?.get<Long>("startDate")
+    val navEndDate = navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate")
+
+    LaunchedEffect(navStartDate, navEndDate) {
+        if (navStartDate != null && navEndDate != null) {
+            val newStartDate = java.time.LocalDate.ofEpochDay(navStartDate)
+            val newEndDate = java.time.LocalDate.ofEpochDay(navEndDate)
+
+            // Only update if the range actually changed
+            if (newStartDate != startDate || newEndDate != endDate) {
+                viewModel.updateDateRange(newStartDate, newEndDate)
             }
-        }
-    }
 
-
-    val currentStartDate by viewModel.startDate.collectAsState()
-    val currentEndDate by viewModel.endDate.collectAsState()
-
-    LaunchedEffect(Unit) {
-        snapshotFlow {
-            navController.currentBackStackEntry?.savedStateHandle?.get<Long>("startDate") to
-            navController.currentBackStackEntry?.savedStateHandle?.get<Long>("endDate")
-        }.collect { (startDateValue, endDateValue) ->
-            if (startDateValue != null && endDateValue != null) {
-                val newStartDate = java.time.LocalDate.ofEpochDay(startDateValue)
-                val newEndDate = java.time.LocalDate.ofEpochDay(endDateValue)
-
-
-                if (newStartDate != currentStartDate || newEndDate != currentEndDate) {
-                    viewModel.updateDateRange(newStartDate, newEndDate)
-
-
-                    navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("startDate")
-                    navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("endDate")
-                }
-            }
+            // Clear immediately after processing to prevent re-triggers
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("startDate")
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("endDate")
         }
     }
 
     LaunchedEffect(error) {
-
+        // Only show snackbar if NOT in critical error state
         if (!isCriticalError && error != null) {
             snackbarHostState.showSnackbar(
                 message = error!!,
-                actionLabel = "Dismiss"
+                actionLabel = context.getString(R.string.dismiss)
             )
             viewModel.clearError()
         }
@@ -238,9 +219,9 @@ fun DashboardScreen(
                         .fillMaxSize()
                         .padding(getResponsivePadding())
                 ) {
-
-
-
+                    // Calculate chart height dynamically.
+                    // Total non-chart overhead: balance card (~110dp) + spending summary (~140dp)
+                    // + chart card internal elements (~128dp) + spacers & padding (~52dp) ≈ 430dp
                     val chartOverhead = 430.dp
                     val dynamicChartHeight = (maxHeight - chartOverhead).coerceAtLeast(180.dp)
 
@@ -253,16 +234,12 @@ fun DashboardScreen(
                         val currentCreditState = creditState
                         if (currentCreditState is DashboardViewModel.UiState.Success) {
                             val balance = currentCreditState.data
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                             ) {
-                                ElevatedCard(
-                                    modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
-                                    shape = RoundedCornerShape(20.dp),
-                                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-                                ) {
                                     Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Box(
@@ -299,7 +276,6 @@ fun DashboardScreen(
                                         )
                                     }
                                 }
-                            }
                         }
 
                         Spacer(modifier = Modifier.height(getResponsiveSpacing()))
@@ -310,7 +286,7 @@ fun DashboardScreen(
                     }
                 }
             }
-
+            
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
@@ -455,7 +431,7 @@ fun SpendingChart(
             .fillMaxWidth()
             .darkModeBorder(RoundedCornerShape(20.dp))
             .semantics {
-                val valuesDesc = spendingChartData.joinToString(", ") {
+                val valuesDesc = spendingChartData.joinToString(", ") { 
                     val formattedValue = currencyFormatter.formatCurrency(it.spending, language)
                     "${it.date}: $formattedValue"
                 }
@@ -495,7 +471,7 @@ fun SpendingChart(
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset), tint = DashboardAccent)
                     }
                 }
-                IconButton(onClick = { navController.navigate("date_range_picker") }) {
+                IconButton(onClick = { navController.navigate(com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.DATE_RANGE_PICKER) }) {
                     Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.select_date_range), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -514,7 +490,7 @@ fun SpendingChart(
                         AndroidView(
                             factory = { ctx ->
                                 CombinedChart(ctx).apply {
-
+                                    // X-Axis styling
                                     xAxis.position = XAxis.XAxisPosition.BOTTOM
                                     xAxis.granularity = 1f
                                     xAxis.isGranularityEnabled = true
@@ -522,7 +498,7 @@ fun SpendingChart(
                                     xAxis.setDrawGridLines(false)
                                     xAxis.yOffset = 8f
 
-
+                                    // Y-Axis styling
                                     axisLeft.setDrawAxisLine(false)
                                     axisLeft.setDrawGridLines(true)
                                     axisLeft.gridColor = android.graphics.Color.parseColor("#22888888")
@@ -531,14 +507,14 @@ fun SpendingChart(
                                     axisLeft.setLabelCount(5, false)
                                     axisRight.isEnabled = false
 
-
+                                    // General chart styling
                                     description.isEnabled = false
                                     legend.isEnabled = true
                                     legend.textColor = secondaryColor
                                     legend.yOffset = 8f
                                     setExtraOffsets(4f, 8f, 4f, 20f)
 
-
+                                    // Interaction
                                     setTouchEnabled(true)
                                     isDragEnabled = true
                                     setScaleEnabled(true)
@@ -597,7 +573,7 @@ fun SpendingChart(
                                 combinedData.setData(lineData)
                                 chart.data = combinedData
 
-
+                                // Swap bar sub-renderer inside CombinedChartRenderer for rounded bars
                                 val combinedRenderer = chart.renderer as? CombinedChartRenderer
                                 combinedRenderer?.let { cr ->
                                     val subRenderers = cr.subRenderers.toMutableList()
@@ -719,7 +695,7 @@ private fun GradientHeader(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = title,
-                fontSize = com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize(),
+                fontSize = getResponsiveTitleLargeSize(),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )

@@ -4,10 +4,9 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.room.Room
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.data.api.UpdateApi
+import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.HistoryDao
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.local.OdorikDatabase
@@ -43,10 +42,10 @@ object AppModule {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://www.odorik.cz/api/v1/")
+            .baseUrl("https://www.odorik.cz/api/v1/") // Changed base URL
             .client(httpClient)
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()))
+            .addConverterFactory(ScalarsConverterFactory.create()) // Added for plain text
+            .addConverterFactory(GsonConverterFactory.create()) // For JSON conversion
             .build()
             .create(OdorikApi::class.java)
     }
@@ -64,7 +63,7 @@ object AppModule {
         return Retrofit.Builder()
             .baseUrl("https://raw.githubusercontent.com/Sentello/Odorik-Buddy/refs/heads/main/")
             .client(httpClient)
-            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()))
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(UpdateApi::class.java)
     }
@@ -131,10 +130,16 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSharedPreferences(app: Application): SharedPreferences = app.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-
+    
     @Provides
     @Singleton
     fun provideCurrencyFormatter(context: Context): CurrencyFormatter {
         return CurrencyFormatter(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppPreferences(@dagger.hilt.android.qualifiers.ApplicationContext context: Context): AppPreferences {
+        return AppPreferences(context)
     }
 }

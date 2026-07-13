@@ -18,7 +18,11 @@ class GetCreditUseCase @Inject constructor(
 
         var responseString = ""
         return try {
-            responseString = odorikApi.getCredit(userId, password)
+            val response = odorikApi.getCredit(userId, password)
+            if (!response.isSuccessful) {
+                return Result.failure(Exception("HTTP error: ${response.code()}"))
+            }
+            responseString = response.body() ?: ""
 
             if (responseString.contains("error authentication_failed")) {
                 return Result.failure(AuthenticationException("Authentication failed"))

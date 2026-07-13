@@ -68,7 +68,7 @@ fun LoginScreen(
     val loginUiState by viewModel.loginUiState.collectAsState()
     val focusManager = LocalFocusManager.current
 
-
+    // LaunchedEffect to navigate on successful login
     LaunchedEffect(loginUiState) {
         if (loginUiState is LoginUiState.Success) {
             onLoginSuccess()
@@ -108,7 +108,7 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = userId,
-                    onValueChange = {
+                    onValueChange = { 
                         userId = it
                         viewModel.onUserIdChanged()
                     },
@@ -133,7 +133,7 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = {
+                    onValueChange = { 
                         password = it
                         viewModel.onPasswordChanged()
                     },
@@ -176,7 +176,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
+                // Display error message
                 if (loginUiState is LoginUiState.Error) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
@@ -190,7 +190,7 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                                imageVector = androidx.compose.material.icons.Icons.Default.Lock, // Or Error icon if available
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp)

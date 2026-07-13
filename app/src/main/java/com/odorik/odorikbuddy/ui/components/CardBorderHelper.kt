@@ -9,20 +9,22 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
-
+/**
+ * Adds a subtle border to the component in dark mode.
+ * In light mode, no border is drawn.
+ */
 fun Modifier.darkModeBorder(shape: Shape = RoundedCornerShape(12.dp)): Modifier = composed {
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val borderColor = if (isDark) {
-        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-    } else {
-        androidx.compose.ui.graphics.Color.Transparent
-    }
 
-    this.then(
-        Modifier.border(
-            width = 1.dp,
-            color = borderColor,
-            shape = shape
+    if (isDark) {
+        this.then(
+            Modifier.border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                shape = shape
+            )
         )
-    )
+    } else {
+        this // Return unmodified Modifier in light mode (more optimal than Transparent border)
+    }
 }

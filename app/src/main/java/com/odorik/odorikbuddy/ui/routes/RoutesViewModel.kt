@@ -3,10 +3,8 @@ package com.odorik.odorikbuddy.ui.routes
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.DeleteRouteUseCase
@@ -15,12 +13,10 @@ import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
 import com.odorik.odorikbuddy.model.Route
 import com.odorik.odorikbuddy.model.SharedPublicNumber
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
-import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RoutesViewModel @Inject constructor(
+    val publicNumbersDelegate: PublicNumbersDelegate,
     private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
     private val getRoutesForNumberUseCase: GetRoutesForNumberUseCase,
     private val createRouteUseCase: CreateRouteUseCase,
@@ -49,12 +46,8 @@ class RoutesViewModel @Inject constructor(
     private val _routesMap = MutableStateFlow<Map<String, List<Route>>>(emptyMap())
     val routesMap: StateFlow<Map<String, List<Route>>> = _routesMap.asStateFlow()
 
-
-    private val _contactsMap = MutableStateFlow<Map<String, String>>(emptyMap())
-    val contactsMap: StateFlow<Map<String, String>> = _contactsMap.asStateFlow()
-
-    private val contactNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
-
+    // --- NEW: STATE FOR CONTACTS MAP ---
+    val contactsMap: StateFlow<Map<String, String>> = publicNumbersDelegate.contactsMap
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -99,10 +92,10 @@ class RoutesViewModel @Inject constructor(
             _error.value = null
 
             if (isRefresh && contentResolver != null) {
-                loadContacts(contentResolver)
+                publicNumbersDelegate.loadContacts(contentResolver)
             }
 
-            val numbersResult = retryWithExponentialBackoff {
+            val numbersResult = publicNumbersDelegate.retryWithExponentialBackoff {
                 getSharedPublicNumbersUseCase.execute()
             }
 
@@ -193,110 +186,13 @@ class RoutesViewModel @Inject constructor(
         _error.value = null
     }
 
-
-
-
-
+    fun getContactName(number: String): String = publicNumbersDelegate.getContactName(number)
+    
     fun loadContacts(contentResolver: ContentResolver) {
         viewModelScope.launch {
-            val projection = arrayOf(
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-            )
-            val contacts = mutableMapOf<String, String>()
-
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                val numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-
-                if (numberIndex >= 0 && nameIndex >= 0) {
-                    while (cursor.moveToNext()) {
-                        val number = cursor.getString(numberIndex)
-                        val name = cursor.getString(nameIndex)
-                        if (!number.isNullOrBlank() && !name.isNullOrBlank()) {
-
-                            val normalizedNumber = PhoneNumberUtils.normalizeForStorage(number)
-
-            var foundMatch = number
-            val n1 = parsedInput.normalizedNumber.replace("+", "")
-            for ((contactNumber, contactName) in _contactsMap.value) {
-                val n2 = contactNumber.replace("+", "")
-                if (n1 == n2 || (n1.length > 8 && n2.length > 8 && (n1.endsWith(n2) || n2.endsWith(n1)))) {
-                    val numberPart = if (parsedInput.specialPrefix.isNotEmpty()) {
-                        "${parsedInput.specialPrefix} ${PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)}"
-                    } else {
-                        PhoneNumberUtils.formatForDisplay(parsedInput.normalizedNumber)
-                    }
-                    foundMatch = "$contactName ($numberPart)"
-                    break
-                }
-            }
-
-
-            foundMatch
+            publicNumbersDelegate.loadContacts(contentResolver)
         }
     }
 
-
-    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-        val numbers = mutableListOf<String>()
-        var contactId: String? = null
-
-        contentResolver.query(contactUri, arrayOf(ContactsContract.Contacts._ID), null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                contactId = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
-            }
-        }
-
-        contactId?.let { id ->
-            val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            val selection = "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?"
-            val selectionArgs = arrayOf(id)
-
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                phoneProjection,
-                selection,
-                selectionArgs,
-                null
-            )?.use { phoneCursor ->
-                val numberColumnIndex = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                if (numberColumnIndex >= 0) {
-                    while (phoneCursor.moveToNext()) {
-                        val number = phoneCursor.getString(numberColumnIndex)
-
-
-                        number?.let { numbers.add(it) }
-                    }
-                }
-            }
-        }
-        return numbers.distinct()
-    }
-
-
-    suspend fun <T> retryWithExponentialBackoff(
-        times: Int = 3,
-        initialDelay: Long = 1000,
-        maxDelay: Long = 16000,
-        factor: Double = 2.0,
-        block: suspend () -> Result<T>
-    ): Result<T> {
-        var currentDelay = initialDelay
-        repeat(times) {
-            val result = block()
-            if (result.isSuccess) return result
-            if (it < times - 1) {
-                delay(currentDelay)
-                currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
-            }
-        }
-        return Result.failure(Exception(context.resources.getQuantityString(R.plurals.error_retry_failed, times, times)))
-    }
+    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> = publicNumbersDelegate.getPhoneNumbersFromContact(contentResolver, contactUri)
 }

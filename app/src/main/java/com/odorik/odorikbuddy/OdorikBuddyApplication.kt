@@ -7,7 +7,6 @@ import androidx.hilt.work.HiltWorkerFactory
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.worker.UpdateWorkManager
 import dagger.hilt.android.HiltAndroidApp
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -25,16 +24,19 @@ class OdorikBuddyApplication : Application(), androidx.work.Configuration.Provid
             .build()
 
     override fun attachBaseContext(base: Context) {
+        // Lightweight attachBaseContext for the very first launch.
+        // Main locale handling is done via AppCompatDelegate in LocaleManager.
         val lang = LanguagePreferences.getPreferredLanguage(base)
-        val locale = Locale.forLanguageTag(lang)
+        val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(lang)
         val config = Configuration(base.resources.configuration)
-        config.setLocale(locale)
+        val platformLocales = localeList.unwrap() as? android.os.LocaleList ?: android.os.LocaleList.getEmptyLocaleList()
+        config.setLocales(platformLocales)
         super.attachBaseContext(base.createConfigurationContext(config))
     }
 
     override fun onCreate() {
         super.onCreate()
-
+        // Schedule update checking work if enabled
         updateWorkManager.scheduleUpdateCheck()
     }
 }

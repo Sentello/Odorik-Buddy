@@ -1,42 +1,71 @@
 package com.odorik.odorikbuddy.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
-
-
+// Represents a single item in the call or SMS history.
+// Modernized with camelCase properties + explicit @SerializedName for Gson
+// and @ColumnInfo to keep Room schema stable.
 @Entity(tableName = "history")
 data class HistoryItem(
     @PrimaryKey
     @SerializedName("id")
-    val id: String,
+    @ColumnInfo(name = "id")
+    val id: String = "",
+
     @SerializedName("date")
-    val date: String,
+    @ColumnInfo(name = "date")
+    val date: String = "",
+
     @SerializedName("direction")
-    val direction: String,
+    @ColumnInfo(name = "direction")
+    val direction: String = "",
+
     @SerializedName("source_number")
-    val source_number: String,
+    @ColumnInfo(name = "source_number")
+    val sourceNumber: String = "",
+
     @SerializedName("destination_number")
-    val destination_number: String,
+    @ColumnInfo(name = "destination_number")
+    val destinationNumber: String = "",
+
     @SerializedName("length")
-    val length: Int?,
+    @ColumnInfo(name = "length")
+    val length: Int? = null, // Nullable because SMS records do not have a length
+
     @SerializedName("ringing_length")
-    val ringing_length: Int?,
+    @ColumnInfo(name = "ringing_length")
+    val ringingLength: Int? = null,
+
     @SerializedName("price")
-    val price: Double,
+    @ColumnInfo(name = "price")
+    val price: Double = 0.0,
+
     @SerializedName("price_per_minute")
-    val price_per_minute: Double?,
+    @ColumnInfo(name = "price_per_minute")
+    val pricePerMinute: Double? = null,
+
     @SerializedName("status")
-    val status: String?,
+    @ColumnInfo(name = "status")
+    val status: String? = null,
+
     @SerializedName("destination_name")
-    val destination_name: String?,
+    @ColumnInfo(name = "destination_name")
+    val destinationName: String? = null,
+
     @SerializedName("redirection_parent_id")
-    val redirection_parent_id: String?,
+    @ColumnInfo(name = "redirection_parent_id")
+    val redirectionParentId: String? = null,
+
     @SerializedName("line")
-    val line: Int?,
+    @ColumnInfo(name = "line")
+    val line: Int? = null,
+
     @SerializedName("recording")
-    val recording: String?
+    @ColumnInfo(name = "recording")
+    val recording: String? = null
 ) {
     val eventType: String
         get() = if (length != null) "call" else "sms"

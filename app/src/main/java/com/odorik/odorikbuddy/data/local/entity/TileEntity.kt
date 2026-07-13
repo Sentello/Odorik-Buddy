@@ -10,11 +10,11 @@ data class TileEntity(
     val position: Int,
     val label: String,
     val recipient: String,
-    val callType: String,
-    val lineId: String?,
-    val callerId: String?,
-    val useLineAsCallerId: Boolean = false,
-    val color: Long? = null,
-    val textColor: Long? = null,
-    val widgetStyle: String = "SQUARE"
+    val callType: String, // "CALLBACK" or "ONESHOT"
+    val lineId: String?, // For callback
+    val callerId: String?, // For callback
+    val useLineAsCallerId: Boolean = false, // For oneshot
+    val color: Long? = null, // Color as Long (ARGB) - Background
+    val textColor: Long? = null, // Text Color as Long (ARGB)
+    val widgetStyle: String = "SQUARE" // "SQUARE" or "CIRCLE"
 )
