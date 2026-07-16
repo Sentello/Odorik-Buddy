@@ -41,22 +41,34 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                userRepository.saveCredentials(userId, password, remember)
+
+                userRepository.setSessionCredentials(userId, password)
 
                 val result = getCreditUseCase.execute()
 
                 result.onSuccess {
+                    if (remember) {
+                        userRepository.persistCredentials(userId, password)
+                    } else {
+
+                        userRepository.clearPersistedCredentials()
+                    }
                     _loginUiState.value = LoginUiState.Success
                 }.onFailure { e ->
-                    if (e is AuthenticationException) {
-                        _loginUiState.value = LoginUiState.Error(context.getString(R.string.invalid_credentials))
-                    } else {
-                        _loginUiState.value = LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
+
+                    userRepository.clearCredentials()
+                    _loginUiState.value = when (e) {
+                        is AuthenticationException ->
+                            LoginUiState.Error(context.getString(R.string.invalid_credentials))
+                        else ->
+                            LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
                     }
                 }
             } catch (e: Exception) {
-
-                _loginUiState.value = LoginUiState.Error(e.message ?: context.getString(R.string.unknown_error))
+                userRepository.clearCredentials()
+                _loginUiState.value = LoginUiState.Error(
+                    e.message ?: context.getString(R.string.unknown_error)
+                )
             }
         }
     }

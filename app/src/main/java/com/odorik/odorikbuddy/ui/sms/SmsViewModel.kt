@@ -15,12 +15,14 @@ import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import com.odorik.odorikbuddy.util.SmsDraftHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.format.DateTimeParseException
 import javax.inject.Inject
@@ -136,8 +138,12 @@ class SmsViewModel @Inject constructor(
         }
     }
 
-    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-        return getPhoneNumbersForContactUseCase(contentResolver, contactUri)
+
+    suspend fun getPhoneNumbersFromContact(
+        contentResolver: ContentResolver,
+        contactUri: Uri
+    ): List<String> = withContext(Dispatchers.IO) {
+        getPhoneNumbersForContactUseCase(contentResolver, contactUri)
     }
 
     fun onMinutesDelayedInputChange(newValue: String) {

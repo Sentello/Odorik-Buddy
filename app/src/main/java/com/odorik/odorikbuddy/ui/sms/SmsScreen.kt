@@ -86,7 +86,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -310,19 +312,22 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     var contentVisible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
-            contactUri?.let {
-                val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, it)
-                if (numbers.size == 1) {
-                    val number = numbers.first()
-                    recipient = number
-                    viewModel.updateRecipient(number)
-                    viewModel.saveDraft(number, message, selectedSender)
-                } else if (numbers.size > 1) {
-                    phoneNumbers = numbers
-                    showPhoneNumberDialog = true
+            contactUri?.let { uri ->
+                scope.launch {
+                    val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, uri)
+                    if (numbers.size == 1) {
+                        val number = numbers.first()
+                        recipient = number
+                        viewModel.updateRecipient(number)
+                        viewModel.saveDraft(number, message, selectedSender)
+                    } else if (numbers.size > 1) {
+                        phoneNumbers = numbers
+                        showPhoneNumberDialog = true
+                    }
                 }
             }
         }

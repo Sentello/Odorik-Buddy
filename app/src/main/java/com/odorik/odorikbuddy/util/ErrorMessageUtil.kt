@@ -41,7 +41,8 @@ object ErrorMessageUtil {
 
 
             errorMessage.contains("User not logged in") ||
-            errorMessage.contains("credentials missing") -> {
+            errorMessage.contains("credentials missing") ||
+            errorMessage.contains("User credentials are not set") -> {
                 localizedContext.getString(R.string.auth_credentials_not_set)
             }
 

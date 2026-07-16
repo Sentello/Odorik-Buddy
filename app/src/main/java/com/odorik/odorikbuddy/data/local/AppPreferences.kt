@@ -9,8 +9,14 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,10 +31,8 @@ private val Context.dataStore by preferencesDataStore(
                 }
 
                 override suspend fun migrate(currentData: Preferences): Preferences {
-
                     val oldPrefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                     val mutablePrefs = currentData.toMutablePreferences()
-
 
                     if (oldPrefs.contains("direct_calls_enabled")) {
                         mutablePrefs[booleanPreferencesKey("direct_calls_enabled")] =
@@ -48,10 +52,7 @@ private val Context.dataStore by preferencesDataStore(
                             oldPrefs.getBoolean("auto_update_enabled", false)
                     }
 
-
-
                     oldPrefs.edit().clear().apply()
-
                     return mutablePrefs.toPreferences()
                 }
 
@@ -66,50 +67,94 @@ private val Context.dataStore by preferencesDataStore(
 class AppPreferences @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val dataStore = context.dataStore
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val loadMutex = Mutex()
 
+    @Volatile private var loaded = false
+    @Volatile private var _directCallsEnabled = false
+    @Volatile private var _autoUpdateEnabled = false
+    @Volatile private var _historyPeriodDays = 90
+
+    init {
+
+
+        scope.launch {
+            ensureLoadedSuspend()
+            dataStore.data.collect { prefs ->
+                applyFrom(prefs)
+            }
+        }
+    }
+
+    private fun applyFrom(prefs: Preferences) {
+        _directCallsEnabled = prefs[booleanPreferencesKey(KEY_DIRECT_CALLS_ENABLED)] ?: false
+        _autoUpdateEnabled = prefs[booleanPreferencesKey(KEY_AUTO_UPDATE_ENABLED)] ?: false
+        _historyPeriodDays = prefs[intPreferencesKey(KEY_HISTORY_PERIOD_DAYS)] ?: 90
+    }
+
+
+    private fun ensureLoaded() {
+        if (loaded) return
+        runBlocking(Dispatchers.IO) {
+            loadMutex.withLock {
+                if (loaded) return@withLock
+                applyFrom(dataStore.data.first())
+                loaded = true
+            }
+        }
+    }
 
     var directCallsEnabled: Boolean
-        get() = runBlocking { getBoolean(KEY_DIRECT_CALLS_ENABLED, false) }
-        set(value) { putBoolean(KEY_DIRECT_CALLS_ENABLED, value) }
-
+        get() {
+            ensureLoaded()
+            return _directCallsEnabled
+        }
+        set(value) {
+            _directCallsEnabled = value
+            loaded = true
+            scope.launch {
+                dataStore.edit { it[booleanPreferencesKey(KEY_DIRECT_CALLS_ENABLED)] = value }
+            }
+        }
 
     var autoUpdateEnabled: Boolean
-        get() = runBlocking { getBoolean(KEY_AUTO_UPDATE_ENABLED, false) }
-        set(value) { putBoolean(KEY_AUTO_UPDATE_ENABLED, value) }
-
+        get() {
+            ensureLoaded()
+            return _autoUpdateEnabled
+        }
+        set(value) {
+            _autoUpdateEnabled = value
+            loaded = true
+            scope.launch {
+                dataStore.edit { it[booleanPreferencesKey(KEY_AUTO_UPDATE_ENABLED)] = value }
+            }
+        }
 
     var historyPeriodDays: Int
-        get() = runBlocking { getInt(KEY_HISTORY_PERIOD_DAYS, 90) }
-        set(value) { putInt(KEY_HISTORY_PERIOD_DAYS, value) }
-
-
-    suspend fun getBoolean(key: String, defaultValue: Boolean = false): Boolean {
-        return dataStore.data.first()[booleanPreferencesKey(key)] ?: defaultValue
-    }
-
-    fun putBoolean(key: String, value: Boolean) {
-        runBlocking {
-            dataStore.edit { it[booleanPreferencesKey(key)] = value }
+        get() {
+            ensureLoaded()
+            return _historyPeriodDays
         }
-    }
-
-    suspend fun getInt(key: String, defaultValue: Int = 0): Int {
-        return dataStore.data.first()[intPreferencesKey(key)] ?: defaultValue
-    }
-
-    fun putInt(key: String, value: Int) {
-        runBlocking {
-            dataStore.edit { it[intPreferencesKey(key)] = value }
+        set(value) {
+            _historyPeriodDays = value
+            loaded = true
+            scope.launch {
+                dataStore.edit { it[intPreferencesKey(KEY_HISTORY_PERIOD_DAYS)] = value }
+            }
         }
+
+
+    suspend fun getHistoryPeriodDaysSuspend(): Int {
+        ensureLoadedSuspend()
+        return _historyPeriodDays
     }
 
-    suspend fun getString(key: String, defaultValue: String? = null): String? {
-        return dataStore.data.first()[stringPreferencesKey(key)] ?: defaultValue
-    }
-
-    fun putString(key: String, value: String) {
-        runBlocking {
-            dataStore.edit { it[stringPreferencesKey(key)] = value }
+    private suspend fun ensureLoadedSuspend() {
+        if (loaded) return
+        loadMutex.withLock {
+            if (loaded) return
+            applyFrom(dataStore.data.first())
+            loaded = true
         }
     }
 

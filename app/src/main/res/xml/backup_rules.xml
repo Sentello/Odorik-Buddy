@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto Backup (pre-Android 12 / full-backup-content).
+  Exclude credentials, local account data, and caches that should not leave the device.
+-->
 <full-backup-content>
-    <!-- For more information on backing up your app, see https://developer.android.com/guide/topics/data/autobackup -->
+    <!-- EncryptedSharedPreferences for user/password and other secure keys -->
+    <exclude domain="sharedpref" path="secure_prefs.xml" />
+
+    <!-- Room database (history cache, tiles) -->
+    <exclude domain="database" path="odorik_database" />
+    <exclude domain="database" path="odorik_database-shm" />
+    <exclude domain="database" path="odorik_database-wal" />
+
+    <!-- Drafts and update cache (non-critical but personal) -->
+    <exclude domain="sharedpref" path="sms_draft_prefs.xml" />
+    <exclude domain="sharedpref" path="update_prefs.xml" />
+
+    <!-- DataStore preferences file (may hold phone-related migration leftovers) -->
+    <exclude domain="file" path="datastore/app_prefs.preferences_pb" />
 </full-backup-content>

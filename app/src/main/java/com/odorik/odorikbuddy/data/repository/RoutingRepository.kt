@@ -4,16 +4,13 @@ import com.odorik.odorikbuddy.data.remote.OdorikApi
 import com.odorik.odorikbuddy.model.PublicNumber
 import com.odorik.odorikbuddy.model.Route
 import com.odorik.odorikbuddy.model.SharedPublicNumber
+import com.odorik.odorikbuddy.util.OdorikResponseParser
 import javax.inject.Inject
-
-
 
 class RoutingRepository @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
-
-
 
     suspend fun getSharedPublicNumbers(): Result<List<SharedPublicNumber>> {
         return try {
@@ -75,7 +72,7 @@ class RoutingRepository @Inject constructor(
                 password = userPassword
             )
             if (response.isSuccessful) {
-                Result.success(response.body() ?: "")
+                OdorikResponseParser.parsePlainTextBody(response.body())
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
@@ -102,7 +99,7 @@ class RoutingRepository @Inject constructor(
                 password = sipPassword
             )
             if (response.isSuccessful) {
-                Result.success(response.body() ?: "")
+                OdorikResponseParser.parsePlainTextBody(response.body())
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
@@ -116,7 +113,7 @@ class RoutingRepository @Inject constructor(
             val (userId, password) = userRepository.requireCredentials()
             val response = odorikApi.deleteRoute(publicNumber, routeId, userId, password)
             if (response.isSuccessful) {
-                Result.success(response.body() ?: "")
+                OdorikResponseParser.parsePlainTextBody(response.body())
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
