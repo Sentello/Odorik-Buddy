@@ -12,6 +12,7 @@ import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.util.ApiDates
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,10 +22,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import java.util.TimeZone
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -130,15 +129,14 @@ class HistoryViewModel @Inject constructor(
 
             val result = withContext(Dispatchers.IO) {
                 val days = appPreferences.getHistoryPeriodDaysSuspend()
-                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-                isoFormat.timeZone = TimeZone.getTimeZone("UTC")
-                val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-                val to = isoFormat.format(now.time)
-                now.add(Calendar.DAY_OF_YEAR, -days)
-                val from = isoFormat.format(now.time)
+                val now = Instant.now()
+                val to = ApiDates.formatUtc(now)
+                val from = ApiDates.formatUtc(now.minus(days.toLong(), ChronoUnit.DAYS))
 
                 val items = repository.getCombinedHistory(from, to)
                 repository.insertHistory(items)
+
+                repository.pruneHistoryBefore(from)
                 items
             }
 
@@ -152,7 +150,7 @@ class HistoryViewModel @Inject constructor(
         } catch (e: Exception) {
             if (isRefresh || _history.value.isEmpty()) {
                 val localizedContext = localeManager.createLocaleContext(context)
-                _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
+                _error.value = ErrorMessageUtil.standardizeError(e, localizedContext)
             }
             android.util.Log.e("HistoryViewModel", "Error fetching history", e)
         } finally {
@@ -297,19 +295,15 @@ class HistoryViewModel @Inject constructor(
         }
 
 
-        val standalones = result.filter {
-            it.redirectionParentId == null && it.id !in parentIds
-        }
-
         val orphanChildren = result.filter { item ->
             val parentId = item.redirectionParentId
             parentId != null && parentId !in parentIds
         }
-        (standalones + orphanChildren).sortedByDescending { it.date }.forEach { item ->
+        orphanChildren.sortedByDescending { it.date }.forEach { item ->
             displayItems.add(
                 HistoryDisplayItem(
                     item = item,
-                    isChild = item.redirectionParentId != null,
+                    isChild = true,
                     sourceContactName = contactNameResolver.getContactName(item.sourceNumber),
                     destinationContactName = contactNameResolver.getContactName(item.destinationNumber)
                 )

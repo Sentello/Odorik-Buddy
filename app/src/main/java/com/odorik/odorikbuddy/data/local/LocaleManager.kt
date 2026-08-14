@@ -33,10 +33,10 @@ class LocaleManager @Inject constructor(
         val lang = LanguagePreferences.getPreferredLanguage(base)
         val localeList = LocaleListCompat.forLanguageTags(lang)
         val platformLocales = localeList.unwrap() as? android.os.LocaleList ?: android.os.LocaleList.getEmptyLocaleList()
-        return base.createConfigurationContext(
-            base.resources.configuration.apply {
-                setLocales(platformLocales)
-            }
-        )
+
+
+        val config = android.content.res.Configuration(base.resources.configuration)
+        config.setLocales(platformLocales)
+        return base.createConfigurationContext(config)
     }
 }

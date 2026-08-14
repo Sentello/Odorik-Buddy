@@ -1,8 +1,6 @@
 package com.odorik.odorikbuddy.ui.components
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -34,9 +32,51 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
+import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.theme.Motion
+import com.odorik.odorikbuddy.ui.theme.ScreenAccent
+
+@Composable
+fun GradientHeader(
+    title: String,
+    iconVector: ImageVector,
+    accent: ScreenAccent,
+    onBackClick: (() -> Unit)? = null,
+    onActionClick: (() -> Unit)? = null,
+    actionIcon: ImageVector? = null,
+    actionContentDescription: String? = null,
+    actionTint: Color? = null,
+    iconSize: Dp = 24.dp,
+    iconContainerSize: Dp = 44.dp,
+    iconCornerRadius: Dp = 12.dp,
+    iconRotation: Float = 0f,
+    modifier: Modifier = Modifier
+) {
+    val main = accent.main()
+    val secondary = accent.secondary()
+    GradientHeader(
+        title = title,
+        iconVector = iconVector,
+        backgroundBrush = Brush.verticalGradient(
+            colors = listOf(main.copy(alpha = 0.35f), Color.Transparent)
+        ),
+        iconGradientBrush = Brush.linearGradient(colors = listOf(main, secondary)),
+        onBackClick = onBackClick,
+        onActionClick = onActionClick,
+        actionIcon = actionIcon,
+        actionContentDescription = actionContentDescription,
+        actionTint = actionTint ?: main,
+        iconSize = iconSize,
+        iconContainerSize = iconContainerSize,
+        iconCornerRadius = iconCornerRadius,
+        iconRotation = iconRotation,
+        modifier = modifier
+    )
+}
 
 @Composable
 fun GradientHeader(
@@ -49,9 +89,9 @@ fun GradientHeader(
     actionIcon: ImageVector? = null,
     actionContentDescription: String? = null,
     actionTint: Color = MaterialTheme.colorScheme.primary,
-    iconSize: androidx.compose.ui.unit.Dp = 24.dp,
-    iconContainerSize: androidx.compose.ui.unit.Dp = 44.dp,
-    iconCornerRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    iconSize: Dp = 24.dp,
+    iconContainerSize: Dp = 44.dp,
+    iconCornerRadius: Dp = 12.dp,
     iconRotation: Float = 0f,
     modifier: Modifier = Modifier
 ) {
@@ -63,10 +103,7 @@ fun GradientHeader(
 
     val iconScale by animateFloatAsState(
         targetValue = if (iconVisible) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+        animationSpec = Motion.emphasizedSpring,
         label = "iconScale"
     )
 
@@ -89,7 +126,7 @@ fun GradientHeader(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.a11y_back),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -112,7 +149,7 @@ fun GradientHeader(
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = title,
-                    fontSize = getResponsiveTitleLargeSize(),
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)

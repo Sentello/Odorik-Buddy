@@ -192,7 +192,7 @@ class OdorikTileWidget : GlanceAppWidget() {
                 contentAlignment = Alignment.Center
             ) {
                 TextWithShadow(
-                    text = "Select Tile",
+                    text = context.getString(com.odorik.odorikbuddy.R.string.widget_select_tile),
                     style = TextStyle(color = androidx.glance.unit.ColorProvider(Color.White))
                 )
             }

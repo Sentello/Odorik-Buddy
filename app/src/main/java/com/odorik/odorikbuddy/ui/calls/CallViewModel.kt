@@ -7,8 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
-import com.odorik.odorikbuddy.data.local.SecurePreferences
-import com.odorik.odorikbuddy.data.model.CallInfo
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
 import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
@@ -19,6 +17,7 @@ import com.odorik.odorikbuddy.domain.usecase.NoSharedNumbersException
 import com.odorik.odorikbuddy.domain.usecase.NoSourceNumberException
 import com.odorik.odorikbuddy.domain.usecase.OneShotCallCoordinatorUseCase
 import com.odorik.odorikbuddy.domain.usecase.SharedNumberNotFoundException
+import com.odorik.odorikbuddy.util.BackoffPolicy
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -40,14 +39,10 @@ class CallViewModel @Inject constructor(
     private val callUseCase: CallUseCase,
     private val oneShotCallCoordinatorUseCase: OneShotCallCoordinatorUseCase,
     private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
-    private val securePreferences: SecurePreferences,
     private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context,
     private val appPreferences: AppPreferences
 ) : ViewModel() {
-
-    private val _callList = MutableStateFlow<List<CallInfo>>(emptyList())
-    val callList: StateFlow<List<CallInfo>> = _callList
 
     private val _callResult = MutableStateFlow<String>("")
     val callResult: StateFlow<String> = _callResult
@@ -60,6 +55,11 @@ class CallViewModel @Inject constructor(
 
     private val _isRetrying = MutableStateFlow(false)
     val isRetrying: StateFlow<Boolean> = _isRetrying
+
+    private val retryBackoff = BackoffPolicy()
+
+    private val _isCallbackLoading = MutableStateFlow(false)
+    val isCallbackLoading: StateFlow<Boolean> = _isCallbackLoading
 
     private val _callerId = MutableStateFlow("")
     val callerId: StateFlow<String> = _callerId
@@ -106,14 +106,14 @@ class CallViewModel @Inject constructor(
     val useCallerIdPrefix: StateFlow<Boolean> = _useCallerIdPrefix
 
     private fun getUseCallerIdPrefix(): Boolean {
-        return securePreferences.getString("use_caller_id_prefix", "false")?.toBoolean() ?: false
+        return appPreferences.getString("use_caller_id_prefix", "false")?.toBoolean() ?: false
     }
 
     private val _selectedTab = MutableStateFlow(getSelectedTab())
     val selectedTab: StateFlow<String> = _selectedTab
 
     private fun getSelectedTab(): String {
-        val savedString = securePreferences.getString("calls_selected_tab", null)
+        val savedString = appPreferences.getString("calls_selected_tab", null)
         val defaultTitle = "callback_title"
         val tabOrder = getTabOrder()
         return if (savedString?.toIntOrNull() != null) {
@@ -121,7 +121,7 @@ class CallViewModel @Inject constructor(
             val oldIndex = savedString.toInt()
             val migratedTitle = if (oldIndex in tabOrder.indices) tabOrder[oldIndex] else defaultTitle
 
-            securePreferences.saveString("calls_selected_tab", migratedTitle)
+            appPreferences.saveString("calls_selected_tab", migratedTitle)
             migratedTitle
         } else {
 
@@ -133,7 +133,7 @@ class CallViewModel @Inject constructor(
     val tabOrder: StateFlow<List<String>> = _tabOrder
 
     private fun getTabOrder(): List<String> {
-        val savedOrder = securePreferences.getString("calls_tab_order", null)
+        val savedOrder = appPreferences.getString("calls_tab_order", null)
         val defaultOrder = listOf("callback_title", "oneshot_call", "tiles_title")
 
         if (savedOrder == null) return defaultOrder
@@ -151,21 +151,22 @@ class CallViewModel @Inject constructor(
     val phoneNumber: StateFlow<String> = _phoneNumber
 
     private fun getPhoneNumber(): String {
-        return securePreferences.getString("phone_number", "") ?: ""
+        return appPreferences.getString("phone_number", "") ?: ""
     }
 
     fun startErrorRetry() {
         if (_isRetrying.value) return
         _isRetrying.value = true
         viewModelScope.launch {
-            while (_isRetrying.value) {
-                kotlinx.coroutines.delay(5000)
+            var attempt = 0
+            while (_isRetrying.value && attempt < retryBackoff.maxAttempts) {
+                attempt++
+                kotlinx.coroutines.delay(retryBackoff.delayBeforeAttempt(attempt))
                 if (!_isRetrying.value) break
-                getLines()
-                if (_error.value == null) {
-                    _isRetrying.value = false
-                }
+                getLinesInternal()
+                if (_error.value == null) break
             }
+            _isRetrying.value = false
         }
     }
 
@@ -185,16 +186,15 @@ class CallViewModel @Inject constructor(
             }
         }
 
-        _callerId.value = securePreferences.getString("caller_id", "") ?: ""
-        _callbackRecipient.value = securePreferences.getString("recipient", "") ?: ""
-        _oneShotRecipient.value = securePreferences.getString("oneshot_recipient", "") ?: ""
-        _selectedLine.value = securePreferences.getString("selected_line", null)?.toIntOrNull()
+        _callerId.value = appPreferences.getString("caller_id", "") ?: ""
+        _callbackRecipient.value = appPreferences.getString("recipient", "") ?: ""
+        _oneShotRecipient.value = appPreferences.getString("oneshot_recipient", "") ?: ""
+        _selectedLine.value = appPreferences.getString("selected_line", null)?.toIntOrNull()
         _useCallerIdPrefix.value = getUseCallerIdPrefix()
         _tabOrder.value = getTabOrder()
 
 
 
-        getCallList()
         getLines()
     }
 
@@ -206,7 +206,7 @@ class CallViewModel @Inject constructor(
 
     fun updateTabOrder(newOrder: List<String>) {
         _tabOrder.value = newOrder
-        securePreferences.saveString("calls_tab_order", newOrder.joinToString(","))
+        appPreferences.saveString("calls_tab_order", newOrder.joinToString(","))
     }
 
     fun getTabIndexByTitle(title: String): Int {
@@ -216,33 +216,33 @@ class CallViewModel @Inject constructor(
     fun updateSelectedTab(tabTitle: String) {
         if (tabTitle in _tabOrder.value) {
             _selectedTab.value = tabTitle
-            securePreferences.saveString("calls_selected_tab", tabTitle)
+            appPreferences.saveString("calls_selected_tab", tabTitle)
         }
     }
 
     fun updateCallerId(newCallerId: String) {
         _callerId.value = newCallerId
-        securePreferences.saveString("caller_id", newCallerId)
+        appPreferences.saveString("caller_id", newCallerId)
     }
 
     fun updateCallbackRecipient(newRecipient: String) {
         _callbackRecipient.value = newRecipient
-        securePreferences.saveString("recipient", newRecipient)
+        appPreferences.saveString("recipient", newRecipient)
     }
 
     fun updateOneShotRecipient(newRecipient: String) {
         _oneShotRecipient.value = newRecipient
-        securePreferences.saveString("oneshot_recipient", newRecipient)
+        appPreferences.saveString("oneshot_recipient", newRecipient)
     }
 
     fun updateSelectedLine(newLine: Int?) {
         _selectedLine.value = newLine
-        securePreferences.saveString("selected_line", newLine?.toString() ?: "")
+        appPreferences.saveString("selected_line", newLine?.toString() ?: "")
     }
 
     fun updateUseCallerIdPrefix(useCallerIdPrefix: Boolean) {
         _useCallerIdPrefix.value = useCallerIdPrefix
-        securePreferences.saveString("use_caller_id_prefix", useCallerIdPrefix.toString())
+        appPreferences.saveString("use_caller_id_prefix", useCallerIdPrefix.toString())
     }
 
     fun updateSelectedTabByIndex(tabIndex: Int) {
@@ -253,40 +253,42 @@ class CallViewModel @Inject constructor(
         }
     }
 
-    fun getCallList() {
-
-
+    fun getLines() {
+        viewModelScope.launch { getLinesInternal() }
     }
 
-    fun getLines() {
-        viewModelScope.launch {
-            val result = getLinesUseCase.execute()
-            result.onSuccess {
-                _lines.value = it
-                _error.value = null
-                _oneShotCallError.value = null
-                _callResult.value = ""
-                if (_selectedLine.value == null && it.isNotEmpty()) {
-                    _selectedLine.value = it.first().id
-                }
-            }.onFailure {
-                val localizedContext = localeManager.createLocaleContext(context)
-                _error.value = ErrorMessageUtil.standardizeError(it.message, localizedContext)
+    private suspend fun getLinesInternal() {
+        val result = getLinesUseCase.execute()
+        result.onSuccess {
+            _lines.value = it
+            _error.value = null
+            _oneShotCallError.value = null
+            _callResult.value = ""
+            if (_selectedLine.value == null && it.isNotEmpty()) {
+                _selectedLine.value = it.first().id
             }
+        }.onFailure {
+            val localizedContext = localeManager.createLocaleContext(context)
+            _error.value = ErrorMessageUtil.standardizeError(it, localizedContext)
         }
     }
 
     fun makeCall(callerId: String, recipient: String, line: String) {
+        if (_isCallbackLoading.value) return
+        _isCallbackLoading.value = true
         viewModelScope.launch {
-            _error.value = null
-            _callResult.value = ""
-            val result = callUseCase.execute(callerId, recipient, line)
-            result.onSuccess {
-                _callResult.value = it
-                getCallList()
-            }.onFailure {
-                val localizedContext = localeManager.createLocaleContext(context)
-                _error.value = ErrorMessageUtil.standardizeError(it.message, localizedContext)
+            try {
+                _error.value = null
+                _callResult.value = ""
+                val result = callUseCase.execute(callerId, recipient, line)
+                result.onSuccess {
+                    _callResult.value = it
+                }.onFailure {
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    _error.value = ErrorMessageUtil.standardizeError(it, localizedContext)
+                }
+            } finally {
+                _isCallbackLoading.value = false
             }
         }
     }
@@ -301,6 +303,7 @@ class CallViewModel @Inject constructor(
         useLineAsCallerId: Boolean,
         selectedLineId: Int? = null
     ) {
+        if (_isOneShotCallLoading.value) return
         viewModelScope.launch {
             _oneShotCallError.value = null
             _oneShotCallResult.value = ""
@@ -325,12 +328,12 @@ class CallViewModel @Inject constructor(
                         is NoSourceNumberException -> context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_source_number_configured)
                         is NoSharedNumbersException -> context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_available)
                         is SharedNumberNotFoundException -> context.getString(com.odorik.odorikbuddy.R.string.oneshot_error_no_shared_numbers_found)
-                        else -> ErrorMessageUtil.standardizeError("Error during One Shot Call setup: ${e.message}", localizedContext)
+                        else -> ErrorMessageUtil.standardizeError(e, localizedContext)
                     }
                 }
             } catch (e: Exception) {
                 val localizedContext = localeManager.createLocaleContext(context)
-                _oneShotCallError.value = ErrorMessageUtil.standardizeError("Error during One Shot Call setup: ${e.message}", localizedContext)
+                _oneShotCallError.value = ErrorMessageUtil.standardizeError(e, localizedContext)
             } finally {
                 _isOneShotCallLoading.value = false
             }

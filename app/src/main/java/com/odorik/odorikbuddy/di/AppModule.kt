@@ -2,7 +2,7 @@ package com.odorik.odorikbuddy.di
 
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
+import android.util.Log
 import androidx.room.Room
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.data.api.UpdateApi
@@ -25,22 +25,35 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+
+    private val PASSWORD_PARAM_REGEX = Regex("password=[^&\\s\"]+")
+
     @Provides
     @Singleton
-    fun provideOdorikApi(): OdorikApi {
-        val logging = HttpLoggingInterceptor().apply {
+    fun provideOkHttpClient(): OkHttpClient {
+        val logging = HttpLoggingInterceptor { message ->
+            Log.d("OkHttp", message.replace(PASSWORD_PARAM_REGEX, "password=<redacted>"))
+        }.apply {
             level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
         }
-        val httpClient = OkHttpClient.Builder()
+        return OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .build()
+    }
 
+    @Provides
+    @Singleton
+    fun provideOdorikApi(httpClient: OkHttpClient): OdorikApi {
         return Retrofit.Builder()
             .baseUrl("https://www.odorik.cz/api/v1/")
             .client(httpClient)
@@ -52,14 +65,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideUpdateApi(): UpdateApi {
-        val logging = HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-        }
-        val httpClient = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
-
+    fun provideUpdateApi(httpClient: OkHttpClient): UpdateApi {
         return Retrofit.Builder()
             .baseUrl("https://raw.githubusercontent.com/Sentello/Odorik-Buddy/refs/heads/main/")
             .client(httpClient)
@@ -105,7 +111,8 @@ object AppModule {
             OdorikDatabase.MIGRATION_3_4,
             OdorikDatabase.MIGRATION_4_5,
             OdorikDatabase.MIGRATION_5_6,
-            OdorikDatabase.MIGRATION_6_7
+            OdorikDatabase.MIGRATION_6_7,
+            OdorikDatabase.MIGRATION_7_8
         ).build()
     }
 
@@ -129,17 +136,16 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSharedPreferences(app: Application): SharedPreferences = app.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-
-    @Provides
-    @Singleton
     fun provideCurrencyFormatter(context: Context): CurrencyFormatter {
         return CurrencyFormatter(context)
     }
 
     @Provides
     @Singleton
-    fun provideAppPreferences(@dagger.hilt.android.qualifiers.ApplicationContext context: Context): AppPreferences {
-        return AppPreferences(context)
+    fun provideAppPreferences(
+        @dagger.hilt.android.qualifiers.ApplicationContext context: Context,
+        securePreferences: com.odorik.odorikbuddy.data.local.SecurePreferences
+    ): AppPreferences {
+        return AppPreferences(context, securePreferences)
     }
 }

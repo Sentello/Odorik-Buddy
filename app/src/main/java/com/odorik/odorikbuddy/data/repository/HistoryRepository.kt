@@ -28,8 +28,14 @@ class HistoryRepository @Inject constructor(
         val calls = if (callsResponse.isSuccessful) callsResponse.body() ?: emptyList() else throw Exception(callsResponse.errorBody()?.string() ?: "Failed to fetch call history")
         val sms = if (smsResponse.isSuccessful) smsResponse.body() ?: emptyList() else throw Exception(smsResponse.errorBody()?.string() ?: "Failed to fetch sms history")
 
+        mergeAndTag(calls, sms)
+    }
 
-        (calls + sms).sortedByDescending { it.date }
+    companion object {
+
+        fun mergeAndTag(calls: List<HistoryItem>, sms: List<HistoryItem>): List<HistoryItem> =
+            (calls.map { it.copy(eventTypeRaw = "call") } + sms.map { it.copy(eventTypeRaw = "sms") })
+                .sortedByDescending { it.date }
     }
 
 
@@ -40,5 +46,10 @@ class HistoryRepository @Inject constructor(
 
     suspend fun getCachedHistory(): List<HistoryItem> {
         return historyDao.getAllHistory()
+    }
+
+
+    suspend fun pruneHistoryBefore(minIsoDate: String) {
+        historyDao.deleteOlderThan(minIsoDate)
     }
 }

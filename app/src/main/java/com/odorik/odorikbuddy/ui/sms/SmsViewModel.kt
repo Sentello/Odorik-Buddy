@@ -11,6 +11,7 @@ import com.odorik.odorikbuddy.data.repository.SmsRepository
 import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetPhoneNumbersForContactUseCase
+import com.odorik.odorikbuddy.util.BackoffPolicy
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import com.odorik.odorikbuddy.util.SmsDraftHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +45,9 @@ class SmsViewModel @Inject constructor(
     private val _sendResult = MutableStateFlow<String?>(null)
     val sendResult: StateFlow<String?> = _sendResult
 
+    private val _isSending = MutableStateFlow(false)
+    val isSending: StateFlow<Boolean> = _isSending
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -55,6 +59,8 @@ class SmsViewModel @Inject constructor(
 
     private val _isRetrying = MutableStateFlow(false)
     val isRetrying: StateFlow<Boolean> = _isRetrying
+
+    private val retryBackoff = BackoffPolicy()
 
 
     private val _recipient = MutableStateFlow("")
@@ -85,14 +91,15 @@ class SmsViewModel @Inject constructor(
         if (_isRetrying.value) return
         _isRetrying.value = true
         viewModelScope.launch {
-            while (_isRetrying.value) {
-                kotlinx.coroutines.delay(5000)
+            var attempt = 0
+            while (_isRetrying.value && attempt < retryBackoff.maxAttempts) {
+                attempt++
+                kotlinx.coroutines.delay(retryBackoff.delayBeforeAttempt(attempt))
                 if (!_isRetrying.value) break
-                fetchAllowedSenders()
-                if (_error.value == null) {
-                    _isRetrying.value = false
-                }
+                fetchAllowedSendersInternal()
+                if (_error.value == null) break
             }
+            _isRetrying.value = false
         }
     }
 
@@ -106,7 +113,11 @@ class SmsViewModel @Inject constructor(
         }
     }
 
-    fun fetchAllowedSenders() = viewModelScope.launch {
+    fun fetchAllowedSenders() {
+        viewModelScope.launch { fetchAllowedSendersInternal() }
+    }
+
+    private suspend fun fetchAllowedSendersInternal() {
         _error.value = null
         val result = smsRepository.getAllowedSenders()
         result.onSuccess {
@@ -114,27 +125,35 @@ class SmsViewModel @Inject constructor(
             _error.value = null
         }.onFailure { e ->
             val localizedContext = localeManager.createLocaleContext(context)
-            _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
+            _error.value = ErrorMessageUtil.standardizeError(e, localizedContext)
         }
     }
 
-    fun sendSms(recipient: String, message: String, sender: String?) = viewModelScope.launch {
-        _sendResult.value = null
-        _error.value = null
+    fun sendSms(recipient: String, message: String, sender: String?) {
+        if (_isSending.value) return
+        _isSending.value = true
+        viewModelScope.launch {
+            try {
+                _sendResult.value = null
+                _error.value = null
 
-        val result = smsRepository.sendSms(
-            recipient = recipient,
-            message = message,
-            sender = sender,
-            delayed = _delayed.value.takeIf { it.isNotBlank() }
-        )
+                val result = smsRepository.sendSms(
+                    recipient = recipient,
+                    message = message,
+                    sender = sender,
+                    delayed = _delayed.value.takeIf { it.isNotBlank() }
+                )
 
-        result.onSuccess {
-            _sendResult.value = it
-            clearDraft()
-        }.onFailure { e ->
-            val localizedContext = localeManager.createLocaleContext(context)
-            _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
+                result.onSuccess {
+                    _sendResult.value = it
+                    clearDraft()
+                }.onFailure { e ->
+                    val localizedContext = localeManager.createLocaleContext(context)
+                    _error.value = ErrorMessageUtil.standardizeError(e, localizedContext)
+                }
+            } finally {
+                _isSending.value = false
+            }
         }
     }
 

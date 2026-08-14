@@ -44,7 +44,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -62,8 +61,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -74,12 +71,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.components.GradientHeader
-import com.odorik.odorikbuddy.ui.components.darkModeBorder
-import com.odorik.odorikbuddy.ui.theme.SettingsAccent
-import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
-import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
-import com.odorik.odorikbuddy.util.getResponsiveCardPadding
-import com.odorik.odorikbuddy.util.getResponsiveSpacing
+import com.odorik.odorikbuddy.ui.components.TransparentListItem
+import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
+import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
+import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
@@ -163,7 +158,7 @@ fun OwnNumbersScreen(
         }
     }
 
-    val pullRefreshState = rememberPullRefreshState(isLoading && uiState !is OwnNumbersViewModel.UiState.Loading, {
+    val pullRefreshState = rememberPullRefreshState(isLoading && uiState !is BaseNumbersViewModel.UiState.Loading, {
         viewModel.loadData(isRefresh = true, contentResolver = context.contentResolver)
     })
 
@@ -173,12 +168,7 @@ fun OwnNumbersScreen(
             GradientHeader(
                 title = stringResource(R.string.own_numbers),
                 iconVector = Icons.Default.Phone,
-                backgroundBrush = Brush.verticalGradient(
-                    colors = listOf(SettingsAccent.copy(alpha = 0.35f), Color.Transparent)
-                ),
-                iconGradientBrush = Brush.linearGradient(
-                    colors = listOf(SettingsAccent, SettingsAccentLight)
-                ),
+                accent = ScreenAccents.Settings,
                 onBackClick = { internalNavController.popBackStack() }
             )
         },
@@ -191,27 +181,27 @@ fun OwnNumbersScreen(
                 .pullRefresh(pullRefreshState)
         ) {
             when (val currentState = uiState) {
-                is OwnNumbersViewModel.UiState.Loading -> {
+                is BaseNumbersViewModel.UiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = SettingsAccent)
+                        CircularProgressIndicator(color = ScreenAccents.Settings.main())
                     }
                 }
-                is OwnNumbersViewModel.UiState.Error -> {
+                is BaseNumbersViewModel.UiState.Error -> {
                     RoutesErrorState(
                         title = stringResource(R.string.error_loading_own_numbers),
                         error = currentState.message,
                         onRetry = { viewModel.loadData(isRefresh = true, contentResolver = context.contentResolver) }
                     )
                 }
-                is OwnNumbersViewModel.UiState.Success -> {
+                is BaseNumbersViewModel.UiState.Success -> {
 
-                    val baseSpacing = getResponsiveSpacing()
-                    val cardPadding = getResponsiveCardPadding()
-                    val bodyLargeSize = getResponsiveBodyLargeSize()
-                    val bodySubtitleSize = bodyLargeSize * 0.85f
+                    val baseSpacing = LocalAppDimens.current.spacing
+                    val cardPadding = LocalAppDimens.current.cardPadding
 
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .constrainedContentWidth(),
                         contentPadding = PaddingValues(bottom = baseSpacing)
                     ) {
                         items(
@@ -236,8 +226,6 @@ fun OwnNumbersScreen(
                                 viewModel = viewModel,
                                 cardPadding = cardPadding,
                                 baseSpacing = baseSpacing,
-                                bodyLargeSize = bodyLargeSize,
-                                bodySubtitleSize = bodySubtitleSize,
                                 onAddRule = {
                                     viewModel.resetDialogState()
                                     showAddDialog = true
@@ -252,10 +240,10 @@ fun OwnNumbersScreen(
             }
 
             PullRefreshIndicator(
-                refreshing = isLoading && uiState !is OwnNumbersViewModel.UiState.Loading,
+                refreshing = isLoading && uiState !is BaseNumbersViewModel.UiState.Loading,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
-                contentColor = SettingsAccent
+                contentColor = ScreenAccents.Settings.main()
             )
         }
     }
@@ -268,7 +256,7 @@ fun OwnNumbersScreen(
             },
             title = { Text(stringResource(R.string.add_rule)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/2)) {
+                Column(verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing/2)) {
                     val dialogSourceNumber by viewModel.dialogSourceNumber.collectAsState()
                     val dialogRingingNumber by viewModel.dialogRingingNumber.collectAsState()
                     val dialogUseCallerIdPrefix by viewModel.dialogUseCallerIdPrefix.collectAsState()
@@ -279,7 +267,7 @@ fun OwnNumbersScreen(
                         label = {
                             Text(
                                 stringResource(R.string.source_number),
-                                fontSize = getResponsiveBodyLargeSize()
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -295,7 +283,7 @@ fun OwnNumbersScreen(
                         label = {
                             Text(
                                 stringResource(R.string.ringing_number),
-                                fontSize = getResponsiveBodyLargeSize()
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -316,12 +304,12 @@ fun OwnNumbersScreen(
                             checked = dialogUseCallerIdPrefix,
                             onCheckedChange = { viewModel.onUseCallerIdPrefixChange(it) },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = SettingsAccent
+                                checkedColor = ScreenAccents.Settings.main()
                             )
                         )
                         Text(
                             stringResource(R.string.use_line_number_as_caller_id),
-                            fontSize = getResponsiveBodyLargeSize()
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
@@ -380,7 +368,7 @@ fun OwnNumbersScreen(
 
     LaunchedEffect(error) {
 
-        if (uiState !is OwnNumbersViewModel.UiState.Error && error != null) {
+        if (uiState !is BaseNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
         }
@@ -399,27 +387,24 @@ fun OwnNumberItem(
     viewModel: OwnNumbersViewModel,
     cardPadding: androidx.compose.ui.unit.Dp,
     baseSpacing: androidx.compose.ui.unit.Dp,
-    bodyLargeSize: androidx.compose.ui.unit.TextUnit,
-    bodySubtitleSize: androidx.compose.ui.unit.TextUnit,
     onAddRule: () -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = cardPadding, vertical = baseSpacing / 2)
-            .darkModeBorder(RoundedCornerShape(16.dp)),
+            .padding(horizontal = cardPadding, vertical = baseSpacing / 2),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            ListItem(
+            TransparentListItem(
                 headlineContent = {
                     Text(
                         text = publicNumberDisplayName,
-                        fontSize = bodyLargeSize,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -431,9 +416,9 @@ fun OwnNumberItem(
                                 routesForThisNumber.size,
                                 routesForThisNumber.size
                             ),
-                            fontSize = bodySubtitleSize,
+                            style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = SettingsAccent
+                            color = ScreenAccents.Settings.main()
                         )
                     }
                 } else null,
@@ -441,8 +426,8 @@ fun OwnNumberItem(
                     {
                         Icon(
                             imageVector = Icons.Default.Info,
-                            contentDescription = "Has rules",
-                            tint = SettingsAccent
+                            contentDescription = stringResource(R.string.a11y_has_rules),
+                            tint = ScreenAccents.Settings.main()
                         )
                     }
                 } else null,
@@ -463,7 +448,7 @@ fun OwnNumberItem(
                         if (isLoading && selectedPublicNumber == number.publicNumber) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = SettingsAccent
+                                color = ScreenAccents.Settings.main()
                             )
                         } else {
 
@@ -472,7 +457,7 @@ fun OwnNumberItem(
                                     val sourceName = viewModel.getContactName(route.sourceNumber)
                                     val ringingName = viewModel.getContactName(route.ringingNumber)
 
-                                    ListItem(
+                                    TransparentListItem(
                                         headlineContent = { Text(sourceName) },
                                         supportingContent = { Text("→ $ringingName") },
                                         trailingContent = {
@@ -508,7 +493,7 @@ fun OwnNumberItem(
                                 vertical = baseSpacing / 2
                             ),
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                            containerColor = SettingsAccent
+                            containerColor = ScreenAccents.Settings.main()
                         )
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)

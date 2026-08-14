@@ -15,11 +15,6 @@
     <string name="select_line">Vybrat linku</string>
     <string name="call">Volat</string>
     <string name="callback_call_button">Objednat hovor</string>
-    <string name="from_label">Od:</string>
-    <string name="to_label">Do:</string>
-    <string name="duration_label">Doba trvání:</string>
-    <string name="cost_label">Cena:</string>
-    <string name="time_label">Čas:</string>
     <string name="sender">Odesílatel</string>
     <string name="select_sender">Odesílatel</string>
     <string name="message">Zpráva (max 765 znaků)</string>
@@ -69,7 +64,6 @@
     <string name="history_title">Historie volání a SMS</string>
     <string name="number_coppied">Zkopírováno %s do schránky</string>
     <string name="callback_title">Zpětné</string>
-    <string name="call_history_title">Historie hovorů</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Přehled útraty</string>
     <string name="todays_spending">Dnešní útrata</string>
@@ -110,6 +104,26 @@
     <string name="a11y_dark_mode">Tmavý režim</string>
     <string name="a11y_language">Jazyk aplikace</string>
     <string name="a11y_line_card">Linka: %s</string>
+    <string name="a11y_odorik_logo">Logo Odorik</string>
+    <string name="a11y_navigate_to_tab">Přejít na kartu %1$s</string>
+    <string name="a11y_has_rules">Má pravidla</string>
+    <string name="a11y_back">Zpět</string>
+    <string name="a11y_balance_icon">Ikona zůstatku</string>
+    <string name="a11y_current_balance">Aktuální zůstatek: %1$s</string>
+    <string name="a11y_spending_summary_icon">Ikona přehledu útraty</string>
+    <string name="a11y_weekly_chart">Graf útraty za posledních 7 dní. %1$s. Průměr: %2$s</string>
+    <string name="a11y_weekly_chart_icon">Ikona grafu týdenní útraty</string>
+    <string name="a11y_interactive_chart">Interaktivní sloupcový graf týdenní útraty s čárou průměru. Podrobnosti zobrazíte klepnutím na sloupec.</string>
+    <string name="a11y_drag_to_reorder">Přetažením změníte pořadí</string>
+    <string name="a11y_hide_password">Skrýt heslo</string>
+    <string name="a11y_show_password">Zobrazit heslo</string>
+    <string name="a11y_sms_char_count">%1$d znaků, %2$s</string>
+    <string name="widget_select_tile">Vyberte dlaždici</string>
+    <plurals name="a11y_sms_segments">
+        <item quantity="one">%d zpráva</item>
+        <item quantity="few">%d zprávy</item>
+        <item quantity="other">%d zpráv</item>
+    </plurals>
     <string name="rang_duration">Zvonilo %ds</string>
     <string name="today">Dneska</string>
     <string name="yesterday">Včera</string>
@@ -167,6 +181,7 @@
     <string name="error_invalid_source_number">Neplatné zdrojové číslo</string>
     <string name="error_redirection_loop">Smyčka přesměrování</string>
     <string name="error_route_generic">Operace s pravidlem selhala</string>
+    <string name="error_no_phone_app">Není k dispozici žádná aplikace pro telefonování</string>
     <string name="navigate_to_routing_settings">Přejít na nastavení směrování</string>
     <string name="no_history_found">Žádná historie nenalezena</string>
     <string name="pull_to_refresh_or_change_period_in_settings">Potáhněte pro obnovení nebo změňte období v nastavení</string>
@@ -217,9 +232,6 @@
     <string name="shared_numbers">Sdílená čísla</string>
     <string name="own_numbers">Vlastní čísla</string>
     <string name="own_numbers_description">Čísla, která jsou ve vašem vlastnictví</string>
-    <string name="no_spending_data_available">Nejsou k dispozici žádné údaje o útratě</string>
-    <string name="no_data_available">Nejsou k dispozici žádná data</string>
-    <string name="no_weekly_spending_data_available">Nejsou k dispozici žádné týdenní údaje o útratě</string>
     <string name="weekly_average">Průměr: %.2f Kč</string>
     <string name="chart_spending">Útrata</string>
     <string name="chart_average">Průměr</string>
@@ -237,7 +249,6 @@
     <string name="widget_error_callback_failed">Zpětné volání selhalo</string>
     <string name="widget_error_unknown">Neznámá chyba</string>
     <string name="error_failed_to_load_credit">Nepodařilo se načíst kredit</string>
-    <string name="error_failed_to_load_user_info">Nepodařilo se načíst informace o uživateli</string>
     <string name="error_unknown_generic">Neznámá chyba</string>
     <string name="spending_for_date">Útrata za %1$s: %2$.2f Kč</string>
     <string name="end_date_before_start_date">Koncové datum nemůže být před počátečním datem.</string>
@@ -247,7 +258,12 @@
 
     <!-- App Update and About Strings -->
     <string name="about_app">O aplikaci</string>
-    <string name="about_app_description">Odorik Buddy je neoficiální aplikace pro služby Odorik.cz.</string>
+    <!-- Settings list supporting line: short, no legal jargon -->
+    <string name="about_app_summary">Neoficiální aplikace pro odorik.cz</string>
+    <!-- About dialog: what the app does -->
+    <string name="about_app_description">Správa kreditu, hovorů, SMS, historie a přesměrování Odorik na jednom místě.</string>
+    <!-- About dialog: affiliation only (once) -->
+    <string name="about_fan_app">Neoficiální fanouškovský projekt. Není spojený s miniTEL s.r.o. ani s odorik.cz</string>
     <string name="github_repository">GitHub Repozitář</string>
     <string name="discussion_forum">Diskuzní fórum</string>
     <string name="app_update">Aktualizace aplikace</string>
@@ -319,6 +335,11 @@
     <string name="widget_config_extra_large">Extra velká</string>
     <string name="widget_preview">Náhled</string>
 
+    <string name="permission_required_title">Vyžadováno oprávnění</string>
+    <string name="call_permission_denied_message">Přímé volání vyžaduje oprávnění k telefonování. Bylo trvale zamítnuto — povolte ho v nastavení systému.</string>
+    <string name="notification_permission_denied_message">Upozornění na aktualizace vyžadují oprávnění k oznámením. Bylo trvale zamítnuto — povolte ho v nastavení systému.</string>
+    <string name="open_settings">Otevřít nastavení</string>
+
     <!-- Další běžné UI řetězce -->
     <string name="dismiss">Zavřít</string>
     <string name="delete">Smazat</string>
@@ -336,4 +357,23 @@
     <string name="save_widget">Přidat na domovskou obrazovku</string>
     <string name="select_tile_first">Nejprve vyberte dlaždici výše</string>
     <string name="widget_live_preview">Náhled widgetu</string>
+
+    <!-- Sprint G theme -->
+    <string name="settings_appearance">Vzhled</string>
+    <string name="theme_mode_system">Podle systému</string>
+    <string name="theme_mode_light">Světlý</string>
+    <string name="theme_mode_dark">Tmavý</string>
+    <string name="settings_color_theme">Barevný motiv</string>
+    <string name="app_theme_standard">Standardní</string>
+    <string name="app_theme_material_you">Material You</string>
+    <string name="app_theme_material_you_subtitle">Barvy podle tapety</string>
+    <string name="app_theme_odorik">Odorik</string>
+    <string name="app_theme_odorik_subtitle">Červený motiv podle odorik.cz</string>
+    <string name="no_spending_in_period">V tomto období žádná útrata</string>
+    <string name="edit_tiles">Upravit dlaždice</string>
+    <string name="done">Hotovo</string>
+    <string name="odorik_website">Web Odorik</string>
+    <string name="widget_style_odorik">Odorik červená</string>
+    <string name="widget_tap_to_open">Klepnutím otevřete</string>
+
 </resources>

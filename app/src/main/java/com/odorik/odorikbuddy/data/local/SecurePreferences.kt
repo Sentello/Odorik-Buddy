@@ -1,6 +1,8 @@
 package com.odorik.odorikbuddy.data.local
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -8,17 +10,37 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SecurePreferences @Inject constructor(@ApplicationContext context: Context) {
+class SecurePreferences @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+    companion object {
+        private const val PREFS_FILE = "secure_prefs"
+        private const val TAG = "SecurePreferences"
+    }
 
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        "secure_prefs",
-        masterKeyAlias,
-        context,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+
+    private val sharedPreferences: SharedPreferences by lazy { createPreferences() }
+
+
+    private fun createPreferences(): SharedPreferences {
+        return try {
+            create()
+        } catch (e: Exception) {
+            Log.w(TAG, "Encrypted prefs unreadable, resetting", e)
+            context.deleteSharedPreferences(PREFS_FILE)
+            create()
+        }
+    }
+
+    private fun create(): SharedPreferences {
+        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        return EncryptedSharedPreferences.create(
+            PREFS_FILE,
+            masterKeyAlias,
+            context,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     fun saveUser(user: String) {
         sharedPreferences.edit().putString("user", user).apply()
@@ -44,9 +66,9 @@ class SecurePreferences @Inject constructor(@ApplicationContext context: Context
         sharedPreferences.edit().remove("password").apply()
     }
 
-    fun saveString(key: String, value: String) {
-        sharedPreferences.edit().putString(key, value).apply()
-    }
+
+
+
 
     fun getString(key: String, defaultValue: String? = null): String? {
         return sharedPreferences.getString(key, defaultValue)

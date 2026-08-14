@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.odorik.odorikbuddy.data.api.UpdateApi
 import com.odorik.odorikbuddy.model.AppUpdateInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class UpdateRepository @Inject constructor(
@@ -31,6 +32,8 @@ class UpdateRepository @Inject constructor(
             } else {
                 Result.failure(Exception("API Error: ${response.code()} ${response.message()}"))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

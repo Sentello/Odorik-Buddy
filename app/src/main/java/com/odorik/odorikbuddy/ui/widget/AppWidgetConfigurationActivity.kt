@@ -15,7 +15,6 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,7 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -73,13 +71,9 @@ import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.repository.TileRepository
 import com.odorik.odorikbuddy.ui.calls.TileColorHelper
 import com.odorik.odorikbuddy.ui.components.GradientHeader
-import com.odorik.odorikbuddy.ui.components.darkModeBorder
+import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
-import com.odorik.odorikbuddy.ui.theme.SettingsAccent
-import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
-import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
-import com.odorik.odorikbuddy.util.getResponsiveCardPadding
-import com.odorik.odorikbuddy.util.getResponsiveSpacing
+import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -151,12 +145,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         GradientHeader(
                             title = stringResource(R.string.widget_config_title),
                             iconVector = Icons.Default.Widgets,
-                            backgroundBrush = Brush.verticalGradient(
-                                colors = listOf(SettingsAccent.copy(alpha = 0.15f), Color.Transparent)
-                            ),
-                            iconGradientBrush = Brush.linearGradient(
-                                colors = listOf(SettingsAccent, SettingsAccentLight)
-                            ),
+                            accent = ScreenAccents.Settings,
                             onBackClick = { finish() }
                         )
                     }
@@ -194,15 +183,15 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         androidx.compose.runtime.key(contactsMap) {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = getResponsiveSpacing())
+                contentPadding = PaddingValues(bottom = LocalAppDimens.current.spacing)
             ) {
                 item {
                     Text(
                         text = stringResource(R.string.widget_config_instruction),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(
-                            horizontal = getResponsiveCardPadding(),
-                            vertical = getResponsiveSpacing()
+                            horizontal = LocalAppDimens.current.cardPadding,
+                            vertical = LocalAppDimens.current.spacing
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -213,8 +202,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = getResponsiveCardPadding())
-                            .padding(bottom = getResponsiveSpacing())
+                            .padding(horizontal = LocalAppDimens.current.cardPadding)
+                            .padding(bottom = LocalAppDimens.current.spacing)
                     ) {
                         Text(
                             text = stringResource(R.string.widget_style),
@@ -253,8 +242,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = getResponsiveCardPadding())
-                                .padding(vertical = getResponsiveSpacing() / 2)
+                                .padding(horizontal = LocalAppDimens.current.cardPadding)
+                                .padding(vertical = LocalAppDimens.current.spacing / 2)
                         ) {
                             Text(
                                 text = stringResource(R.string.widget_live_preview),
@@ -281,8 +270,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = getResponsiveCardPadding())
-                                .padding(top = getResponsiveSpacing(), bottom = getResponsiveSpacing() / 2)
+                                .padding(horizontal = LocalAppDimens.current.cardPadding)
+                                .padding(top = LocalAppDimens.current.spacing, bottom = LocalAppDimens.current.spacing / 2)
                         ) {
                             Text(
                                 text = stringResource(R.string.widget_colors),
@@ -332,7 +321,10 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                         )
                                     }
                                     items(TileColorHelper.allBaseColors) { baseColor ->
-                                        val display = TileColorHelper.resolveColor(baseColor, isSystemInDarkTheme())
+                                        val display = TileColorHelper.resolveColor(
+                                            baseColor,
+                                            com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
+                                        )
                                             ?: Color(baseColor)
                                         ColorSwatch(
                                             color = display,
@@ -377,7 +369,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     val isSelected = selectedTileId == tile.id
 
 
-                    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+                    val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
                     val tileBg = TileColorHelper.resolveColor(tile.color, isSystemDark)
                         ?: MaterialTheme.colorScheme.surface
                     val tileText = if (tile.textColor != null) {
@@ -391,8 +383,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     ElevatedCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing() / 2)
-                            .darkModeBorder(RoundedCornerShape(16.dp))
+                            .padding(horizontal = LocalAppDimens.current.cardPadding, vertical = LocalAppDimens.current.spacing / 2)
                             .clickable {
                                 selectedTileId = tile.id
 
@@ -411,26 +402,26 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             if (tile.label.isNotEmpty()) {
                                 Text(
                                     text = tile.label,
-                                    fontSize = getResponsiveBodyLargeSize(),
+                                    style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = tileText
                                 )
                                 Text(
                                     text = contactName,
-                                    fontSize = getResponsiveBodyLargeSize() * 0.9f,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = tileText.copy(alpha = 0.75f)
                                 )
                             } else {
                                 Text(
                                     text = contactName,
-                                    fontSize = getResponsiveBodyLargeSize(),
+                                    style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = tileText
                                 )
                                 if (contactName != tile.recipient) {
                                     Text(
                                         text = tile.recipient,
-                                        fontSize = getResponsiveBodyLargeSize() * 0.9f,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = tileText.copy(alpha = 0.75f)
                                     )
                                 }
@@ -438,8 +429,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
 
                             Text(
                                 text = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
-                                fontSize = getResponsiveBodyLargeSize() * 0.8f,
-                                color = if (tile.color != null) tileText.copy(alpha = 0.85f) else SettingsAccent,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (tile.color != null) tileText.copy(alpha = 0.85f) else ScreenAccents.Settings.main(),
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -474,7 +465,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         enabled = canSave,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = getResponsiveCardPadding(), vertical = 16.dp)
+                            .padding(horizontal = LocalAppDimens.current.cardPadding, vertical = 16.dp)
                             .navigationBarsPadding()
                     ) {
                         Text(
@@ -494,7 +485,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         shape: androidx.compose.ui.graphics.Shape,
         modifier: Modifier = Modifier
     ) {
-        val primaryColor = SettingsAccent
+        val primaryColor = ScreenAccents.Settings.main()
         val outlineColor = MaterialTheme.colorScheme.outlineVariant
         val onSurfaceColor = MaterialTheme.colorScheme.onSurface
 
@@ -588,7 +579,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         customColor: Long?,
         customTextColor: Long?
     ) {
-        val isSystemDark = isSystemInDarkTheme()
+        val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
 
 
         val bgColor = when {

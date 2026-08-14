@@ -5,9 +5,10 @@ import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.AppPreferences
+import com.odorik.odorikbuddy.data.local.AppTheme
 import com.odorik.odorikbuddy.data.local.LocaleManager
-import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
+import com.odorik.odorikbuddy.data.local.ThemeMode
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
@@ -28,11 +29,11 @@ class SettingsViewModel @Inject constructor(
     private val themeManager: ThemeManager,
     private val localeManager: LocaleManager,
     private val appPreferences: AppPreferences,
-    private val securePreferences: SecurePreferences,
     private val updateWorkManager: UpdateWorkManager
 ) : ViewModel() {
 
-    val isDarkMode: State<Boolean> = themeManager.isDarkMode
+    val themeMode: State<ThemeMode> = themeManager.themeMode
+    val appTheme: State<AppTheme> = themeManager.appTheme
 
     private val _language = MutableStateFlow(localeManager.getPreferredLanguage())
     val language: StateFlow<String> = _language.asStateFlow()
@@ -65,13 +66,15 @@ class SettingsViewModel @Inject constructor(
     private fun getHistoryPeriod(): Int = appPreferences.historyPeriodDays
 
     private fun getPhoneNumber(): String {
-        return securePreferences.getString("phone_number", "") ?: ""
+        return appPreferences.getString("phone_number", "") ?: ""
     }
 
-    private fun getDirectCallsEnabled(): Boolean = appPreferences.directCallsEnabled
+    fun setThemeMode(mode: ThemeMode) {
+        themeManager.setThemeMode(mode)
+    }
 
-    fun setDarkMode(enabled: Boolean) {
-        themeManager.setDarkMode(enabled)
+    fun setAppTheme(theme: AppTheme) {
+        themeManager.setAppTheme(theme)
     }
 
     fun setLanguage(lang: String) {
@@ -85,13 +88,12 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setPhoneNumber(number: String) {
-
         val formattedNumber = if (number.startsWith("+")) {
             number.replace("+", "00")
         } else {
             number
         }
-        securePreferences.saveString("phone_number", formattedNumber)
+        appPreferences.saveString("phone_number", formattedNumber)
         _phoneNumber.value = formattedNumber
     }
 

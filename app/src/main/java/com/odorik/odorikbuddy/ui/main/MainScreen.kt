@@ -1,9 +1,13 @@
 package com.odorik.odorikbuddy.ui.main
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.exclude
@@ -11,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -35,6 +40,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.calls.CallScreen
 import com.odorik.odorikbuddy.ui.dashboard.DashboardScreen
 import com.odorik.odorikbuddy.ui.dashboard.DateRangePickerScreen
@@ -46,8 +52,7 @@ import com.odorik.odorikbuddy.ui.routes.RoutesScreen
 import com.odorik.odorikbuddy.ui.settings.RoutingOptionsScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
-import com.odorik.odorikbuddy.util.getResponsiveNavigationLabelSize
-import com.odorik.odorikbuddy.util.shouldShowNavigationLabels
+import com.odorik.odorikbuddy.ui.theme.Motion
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,8 +76,7 @@ fun MainScreen(navController: NavController) {
                 )
                 items.forEach { screen ->
                     val label = stringResource(screen.titleRes)
-                    val showLabels = shouldShowNavigationLabels()
-                    val labelFontSize = getResponsiveNavigationLabelSize()
+                    val tabDescription = stringResource(R.string.a11y_navigate_to_tab, label)
                     val isSelected = when (screen) {
                         BottomNavItem.Dashboard -> {
                             currentDestination?.hierarchy?.any { it.route == screen.route } == true ||
@@ -84,11 +88,8 @@ fun MainScreen(navController: NavController) {
                     }
 
                     val scale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.25f else 1.0f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        ),
+                        targetValue = if (isSelected) 1.15f else 1.0f,
+                        animationSpec = Motion.emphasizedSpring,
                         label = "IconScale"
                     )
 
@@ -100,19 +101,18 @@ fun MainScreen(navController: NavController) {
                                 modifier = Modifier.scale(scale)
                             )
                         },
-                        label = if (showLabels) {
-                            {
-                                Text(
-                                    text = label,
-                                    fontSize = labelFontSize,
-                                    maxLines = 1
-                                )
-                            }
-                        } else null,
+                        label = {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = screen.accentColor.copy(alpha = 0.2f),
-                            selectedIconColor = screen.accentColor,
-                            selectedTextColor = screen.accentColor
+                            indicatorColor = screen.screenAccent.main().copy(alpha = 0.2f),
+                            selectedIconColor = screen.screenAccent.main(),
+                            selectedTextColor = screen.screenAccent.main()
                         ),
                         selected = isSelected,
                         onClick = {
@@ -136,7 +136,7 @@ fun MainScreen(navController: NavController) {
                         },
                         modifier = Modifier.semantics {
                             role = Role.Tab
-                            contentDescription = "Navigate to $label tab"
+                            contentDescription = tabDescription
                         }
                     )
                 }
@@ -148,20 +148,54 @@ fun MainScreen(navController: NavController) {
             startDestination = viewModel.getLastScreen(),
             modifier = Modifier
                 .padding(innerPadding)
-                .consumeWindowInsets(innerPadding)
+                .consumeWindowInsets(innerPadding),
+            enterTransition = {
+                fadeIn(tween(Motion.durMedium, delayMillis = Motion.durShort)) +
+                    scaleIn(initialScale = 0.92f, animationSpec = tween(Motion.durMedium, delayMillis = Motion.durShort))
+            },
+            exitTransition = { fadeOut(tween(Motion.durShort)) },
+            popEnterTransition = {
+                fadeIn(tween(Motion.durMedium, delayMillis = Motion.durShort)) +
+                    scaleIn(initialScale = 0.92f, animationSpec = tween(Motion.durMedium, delayMillis = Motion.durShort))
+            },
+            popExitTransition = { fadeOut(tween(Motion.durShort)) }
         ) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen(navController = bottomNavController) }
             composable(BottomNavItem.Calls.route) { CallScreen() }
             composable(BottomNavItem.Sms.route) { SmsScreen() }
             composable(BottomNavItem.History.route) { HistoryScreen() }
-            composable(NavigationRoutes.DATE_RANGE_PICKER) { DateRangePickerScreen(navController = bottomNavController) }
+            composable(
+                NavigationRoutes.DATE_RANGE_PICKER,
+                enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+            ) { DateRangePickerScreen(navController = bottomNavController) }
             navigation(startDestination = SettingsRoutes.SETTINGS_HOME, route = BottomNavItem.Settings.route) {
                 composable(SettingsRoutes.SETTINGS_HOME) {
                     SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)
                 }
-                composable(SettingsRoutes.ROUTES_SCREEN) { RoutesScreen(internalNavController = bottomNavController) }
-                composable(SettingsRoutes.OWN_NUMBERS_SCREEN) { OwnNumbersScreen(internalNavController = bottomNavController) }
-                composable(SettingsRoutes.ROUTING_OPTIONS_SCREEN) {
+                composable(
+                    SettingsRoutes.ROUTES_SCREEN,
+                    enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                    exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                    popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                    popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+                ) { RoutesScreen(internalNavController = bottomNavController) }
+                composable(
+                    SettingsRoutes.OWN_NUMBERS_SCREEN,
+                    enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                    exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                    popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                    popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+                ) { OwnNumbersScreen(internalNavController = bottomNavController) }
+                composable(
+                    SettingsRoutes.ROUTING_OPTIONS_SCREEN,
+                    enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                    exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                    popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                    popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+                ) {
                     RoutingOptionsScreen(internalNavController = bottomNavController)
                 }
             }

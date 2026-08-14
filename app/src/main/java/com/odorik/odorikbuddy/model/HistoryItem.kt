@@ -65,16 +65,20 @@ data class HistoryItem(
 
     @SerializedName("recording")
     @ColumnInfo(name = "recording")
-    val recording: String? = null
+    val recording: String? = null,
+
+    @SerializedName("event_type")
+    @ColumnInfo(name = "event_type")
+    val eventTypeRaw: String? = null
 ) {
     val eventType: String
-        get() = if (length != null) "call" else "sms"
+        get() = eventTypeRaw ?: if (length != null) "call" else "sms"
 
     val isCall: Boolean
-        get() = length != null
+        get() = eventType == "call"
 
     val isSms: Boolean
-        get() = length == null
+        get() = eventType == "sms"
 
     val isIncoming: Boolean
         get() = direction == "in"

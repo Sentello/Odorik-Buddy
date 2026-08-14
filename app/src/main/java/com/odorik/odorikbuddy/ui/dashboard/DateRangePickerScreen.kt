@@ -1,8 +1,6 @@
 package com.odorik.odorikbuddy.ui.dashboard
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,13 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
@@ -29,13 +25,11 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -47,20 +41,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.odorik.odorikbuddy.R
-import com.odorik.odorikbuddy.ui.components.darkModeBorder
-import com.odorik.odorikbuddy.ui.theme.DashboardAccent
-import com.odorik.odorikbuddy.ui.theme.DashboardAccentLight
-import com.odorik.odorikbuddy.util.getResponsiveCardPadding
-import com.odorik.odorikbuddy.util.getResponsiveSpacing
-import com.odorik.odorikbuddy.util.getResponsiveTitleLargeSize
+import com.odorik.odorikbuddy.ui.components.GradientHeader
+import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
+import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.Instant
@@ -83,6 +72,8 @@ fun DateRangePickerScreen(navController: NavController) {
         topBar = {
             GradientHeader(
                 title = stringResource(R.string.select_date_range),
+                iconVector = Icons.Default.DateRange,
+                accent = ScreenAccents.Dashboard,
                 onBackClick = { navController.popBackStack() }
             )
         },
@@ -95,7 +86,7 @@ fun DateRangePickerScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(getResponsiveSpacing()),
+                .padding(LocalAppDimens.current.spacing),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -103,19 +94,18 @@ fun DateRangePickerScreen(navController: NavController) {
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = getResponsiveSpacing())
-                    .darkModeBorder(RoundedCornerShape(20.dp)),
+                    .padding(bottom = LocalAppDimens.current.spacing),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
+                Column(modifier = Modifier.padding(LocalAppDimens.current.cardPadding)) {
                     Text(
                         text = stringResource(R.string.quick_select),
-                        fontSize = getResponsiveTitleLargeSize(),
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = getResponsiveSpacing())
+                        modifier = Modifier.padding(bottom = LocalAppDimens.current.spacing)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -129,7 +119,7 @@ fun DateRangePickerScreen(navController: NavController) {
                                 endDate = monday.plusDays(6)
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = ScreenAccents.Dashboard.main())
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
@@ -150,7 +140,7 @@ fun DateRangePickerScreen(navController: NavController) {
                                 endDate = now
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = ScreenAccents.Dashboard.main())
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
@@ -172,7 +162,7 @@ fun DateRangePickerScreen(navController: NavController) {
                                 endDate = lastMonth.with(java.time.temporal.TemporalAdjusters.lastDayOfMonth())
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DashboardAccent)
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = ScreenAccents.Dashboard.main())
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
@@ -192,18 +182,18 @@ fun DateRangePickerScreen(navController: NavController) {
             }
 
             ElevatedCard(
-                modifier = Modifier.fillMaxWidth().darkModeBorder(RoundedCornerShape(20.dp)),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(getResponsiveCardPadding())) {
+                Column(modifier = Modifier.padding(LocalAppDimens.current.cardPadding)) {
                     Text(
                         text = stringResource(R.string.custom_date_range),
-                        fontSize = getResponsiveTitleLargeSize(),
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = getResponsiveSpacing())
+                        modifier = Modifier.padding(bottom = LocalAppDimens.current.spacing)
                     )
 
                     OutlinedButton(
@@ -215,7 +205,7 @@ fun DateRangePickerScreen(navController: NavController) {
                             Icons.Default.DateRange,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = DashboardAccent
+                            tint = ScreenAccents.Dashboard.main()
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.start_date, startDate.toString()))
@@ -230,7 +220,7 @@ fun DateRangePickerScreen(navController: NavController) {
                             Icons.Default.DateRange,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = DashboardAccent
+                            tint = ScreenAccents.Dashboard.main()
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.end_date, endDate.toString()))
@@ -254,7 +244,7 @@ fun DateRangePickerScreen(navController: NavController) {
                                 }
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = DashboardAccent)
+                            colors = ButtonDefaults.buttonColors(containerColor = ScreenAccents.Dashboard.main())
                         ) {
                             Text(stringResource(R.string.apply))
                         }
@@ -316,69 +306,4 @@ fun DateRangePickerScreen(navController: NavController) {
         }
     }
 }
-@Composable
-private fun GradientHeader(
-    title: String,
-    onBackClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = androidx.compose.ui.graphics.Color.Transparent,
-        shadowElevation = 4.dp
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            DashboardAccentLight.copy(alpha = 0.35f),
-                            androidx.compose.ui.graphics.Color.Transparent
-                        )
-                    )
-                )
-                .statusBarsPadding()
-                .padding(horizontal = 4.dp, vertical = 12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
 
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(DashboardAccent, DashboardAccentLight)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = androidx.compose.ui.graphics.Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = title,
-                    fontSize = getResponsiveTitleLargeSize(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-    }
-}

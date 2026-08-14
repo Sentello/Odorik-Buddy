@@ -16,4 +16,7 @@ interface HistoryDao {
 
     @Query("DELETE FROM history")
     suspend fun clearHistory()
+
+    @Query("DELETE FROM history WHERE date < :minIsoDate")
+    suspend fun deleteOlderThan(minIsoDate: String)
 }

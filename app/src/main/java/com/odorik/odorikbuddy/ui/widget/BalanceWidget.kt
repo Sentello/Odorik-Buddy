@@ -124,6 +124,7 @@ class BalanceWidget : GlanceAppWidget() {
             "TRANSLUCENT" -> ColorProvider(Color.White.copy(alpha = 0.7f))
             "DARK" -> ColorProvider(Color(0xFF1E1E1E))
             "LIGHT" -> ColorProvider(Color(0xFFF5F5F5))
+            "ODORIK" -> ColorProvider(Color(0xFFC00012))
             else -> GlanceTheme.colors.surface
         }
 
@@ -131,14 +132,22 @@ class BalanceWidget : GlanceAppWidget() {
         val mainTextColor = when (textColorStyle) {
             "WHITE" -> ColorProvider(Color.White)
             "BLACK" -> ColorProvider(Color.Black)
-            "AUTO" -> if (bgStyle == "DARK") ColorProvider(Color.White) else if (bgStyle == "LIGHT") ColorProvider(Color.Black) else GlanceTheme.colors.onSurface
+            "AUTO" -> when (bgStyle) {
+                "DARK", "ODORIK" -> ColorProvider(Color.White)
+                "LIGHT", "TRANSLUCENT" -> ColorProvider(Color.Black)
+                else -> GlanceTheme.colors.onSurface
+            }
             else -> GlanceTheme.colors.onSurface
         }
 
         val secondaryTextColor = when (textColorStyle) {
              "WHITE" -> ColorProvider(Color.White.copy(0.7f))
              "BLACK" -> ColorProvider(Color.Black.copy(0.7f))
-             "AUTO" -> if (bgStyle == "DARK") ColorProvider(Color.White.copy(0.7f)) else if (bgStyle == "LIGHT") ColorProvider(Color.Black.copy(0.6f)) else GlanceTheme.colors.onSurfaceVariant
+             "AUTO" -> when (bgStyle) {
+                 "DARK", "ODORIK" -> ColorProvider(Color.White.copy(0.7f))
+                 "LIGHT", "TRANSLUCENT" -> ColorProvider(Color.Black.copy(0.6f))
+                 else -> GlanceTheme.colors.onSurfaceVariant
+             }
              else -> GlanceTheme.colors.onSurfaceVariant
         }
 
@@ -167,7 +176,7 @@ class BalanceWidget : GlanceAppWidget() {
 
                 Image(
                     provider = ImageProvider(R.drawable.ic_odorik_logo),
-                    contentDescription = "Odorik Logo",
+                    contentDescription = context.getString(R.string.a11y_odorik_logo),
                     modifier = GlanceModifier.size(48.dp)
                 )
 
@@ -181,18 +190,23 @@ class BalanceWidget : GlanceAppWidget() {
 
                     if (isLoading) {
                         Text(
-                            text = context.getString(R.string.loading),
+                            text = if (balance != null) {
+                                currencyFormatter.formatCurrency(balance, language) + " …"
+                            } else {
+                                "…"
+                            },
                             style = TextStyle(
                                 color = mainTextColor,
-                                fontSize = 16.sp
+                                fontSize = balanceFontSize,
+                                fontWeight = FontWeight.Bold
                             )
                         )
                     } else if (error != null) {
                          Text(
-                            text = context.getString(R.string.retry),
+                            text = context.getString(R.string.widget_tap_to_open),
                             style = TextStyle(
                                 color = GlanceTheme.colors.error,
-                                fontSize = 16.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )

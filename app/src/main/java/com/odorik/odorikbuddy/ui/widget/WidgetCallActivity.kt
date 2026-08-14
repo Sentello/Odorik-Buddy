@@ -1,6 +1,5 @@
 package com.odorik.odorikbuddy.ui.widget
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -26,13 +25,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.AppPreferences
-import com.odorik.odorikbuddy.data.local.SecurePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.data.repository.TileRepository
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
-import com.odorik.odorikbuddy.domain.usecase.CreateRouteUseCase
-import com.odorik.odorikbuddy.domain.usecase.GetSharedPublicNumbersUseCase
 import com.odorik.odorikbuddy.ui.calls.CallViewModel
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
 import com.odorik.odorikbuddy.util.PhoneCallLauncher
@@ -47,22 +43,10 @@ class WidgetCallActivity : ComponentActivity() {
     lateinit var tileRepository: TileRepository
 
     @Inject
-    lateinit var createRouteUseCase: CreateRouteUseCase
-
-    @Inject
     lateinit var callUseCase: CallUseCase
 
     @Inject
-    lateinit var getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase
-
-    @Inject
-    lateinit var securePreferences: SecurePreferences
-
-    @Inject
     lateinit var themeManager: ThemeManager
-
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
 
     @Inject
     lateinit var appPreferences: AppPreferences
@@ -97,40 +81,67 @@ class WidgetCallActivity : ComponentActivity() {
                     } else if (!oneShotError.isNullOrEmpty()) {
                         showErrorAndFinish(oneShotError!!)
                         callViewModel.resetOneShotCallError()
-            val globalCallerId = securePreferences.getString("caller_id", "") ?: ""
-            val callerId = if (!tile.callerId.isNullOrBlank()) tile.callerId else globalCallerId
+                    }
+                }
 
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(R.string.widget_call_connecting),
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        } else {
 
-            val globalLine = securePreferences.getString("selected_line", null)
-            val lineId = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLine
-
-            if (callerId.isBlank()) {
-                showErrorAndFinish(getString(R.string.callback_error_no_caller_id))
-                return
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
+        }
 
-            val result = callUseCase.execute(
-                callerId = callerId,
-                recipient = tile.recipient,
-                line = lineId ?: ""
-            )
+        lifecycleScope.launch {
 
-            result.onSuccess {
-                Toast.makeText(this, getString(R.string.callback_success_notification, tile.recipient), Toast.LENGTH_SHORT).show()
+            if (!callViewModel.isOneShotCallLoading.value) {
+                handleTileAction(tileId)
+            } else {
                 finish()
-            }.onFailure {
-
-                showErrorAndFinish(it.message ?: getString(R.string.widget_error_callback_failed))
             }
-
-        } catch (e: Exception) {
-             showErrorAndFinish(e.message ?: getString(R.string.widget_error_unknown))
         }
     }
 
-    private suspend fun handleOneShotCall(tile: TileEntity) {
+    private suspend fun handleTileAction(tileId: Int) {
+        val tile = tileRepository.getTileById(tileId)
+        if (tile == null) {
+            showErrorAndFinish(getString(R.string.widget_error_tile_not_found))
+            return
+        }
 
-        val globalLineIdStr = securePreferences.getString("selected_line", null)
+        if (tile.callType == "CALLBACK") {
+            handleCallback(tile)
+        } else {
+            handleOneShotCall(tile)
+        }
+    }
+
+    private suspend fun handleCallback(tile: TileEntity) {
+        try {
+
+        val globalLineIdStr = appPreferences.getString("selected_line", null)
         val targetLineIdStr = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLineIdStr
         val targetLineId = targetLineIdStr?.toIntOrNull()
 

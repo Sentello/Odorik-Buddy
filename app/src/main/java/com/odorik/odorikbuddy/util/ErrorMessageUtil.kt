@@ -3,9 +3,31 @@ package com.odorik.odorikbuddy.util
 import android.content.Context
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.repository.AuthenticationException
+import com.odorik.odorikbuddy.data.repository.CredentialsNotSetException
+import java.io.IOException
+import java.net.UnknownHostException
 
 
 object ErrorMessageUtil {
+
+
+    fun errorResFor(throwable: Throwable?): Int? = when (throwable) {
+        is CredentialsNotSetException -> R.string.auth_credentials_not_set
+        is AuthenticationException -> R.string.invalid_credentials
+        is UnknownHostException -> R.string.error_host_unresolvable
+        is IOException -> R.string.error_network_unreachable
+        else -> null
+    }
+
+
+    fun standardizeError(throwable: Throwable?, context: Context, localeManager: LocaleManager? = null): String {
+        errorResFor(throwable)?.let {
+            val localizedContext = localeManager?.createLocaleContext(context) ?: context
+            return localizedContext.getString(it)
+        }
+        return standardizeError(throwable?.message, context, localeManager)
+    }
 
 
     fun standardizeError(errorMessage: String?, context: Context, localeManager: LocaleManager? = null): String {

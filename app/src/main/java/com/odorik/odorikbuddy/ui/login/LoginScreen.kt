@@ -17,15 +17,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -41,19 +44,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
-import com.odorik.odorikbuddy.ui.components.darkModeBorder
-import com.odorik.odorikbuddy.ui.theme.SmsAccent
-import com.odorik.odorikbuddy.ui.theme.SmsAccentLight
+import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,10 +65,10 @@ fun LoginScreen(
     var userId by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(true) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val loginUiState by viewModel.loginUiState.collectAsState()
     val focusManager = LocalFocusManager.current
-
 
     LaunchedEffect(loginUiState) {
         if (loginUiState is LoginUiState.Success) {
@@ -80,27 +81,31 @@ fun LoginScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(SmsAccentLight, SmsAccent)
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.primary
+                    )
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
         ElevatedCard(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-                .darkModeBorder(RoundedCornerShape(24.dp)),
-            shape = RoundedCornerShape(24.dp)
+                .constrainedContentWidth()
+                .padding(24.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            )
         ) {
             Column(
-                modifier = Modifier
-                    .padding(24.dp),
+                modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_odorik_logo),
-                    contentDescription = "Odorik Logo",
+                    contentDescription = stringResource(R.string.a11y_odorik_logo),
                     modifier = Modifier
                         .height(80.dp)
                         .padding(bottom = 16.dp)
@@ -138,13 +143,32 @@ fun LoginScreen(
                         viewModel.onPasswordChanged()
                     },
                     label = { Text(stringResource(R.string.password)) },
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) {
+                                    Icons.Default.VisibilityOff
+                                } else {
+                                    Icons.Default.Visibility
+                                },
+                                contentDescription = stringResource(
+                                    if (passwordVisible) R.string.a11y_hide_password
+                                    else R.string.a11y_show_password
+                                )
+                            )
+                        }
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -176,7 +200,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
                 if (loginUiState is LoginUiState.Error) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
@@ -190,7 +213,7 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                                imageVector = Icons.Default.ErrorOutline,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp)
@@ -214,15 +237,12 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SmsAccent
-                    )
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     if (loginUiState is LoginUiState.Loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp
                         )
                     } else {

@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.repository.AuthenticationException
 import com.odorik.odorikbuddy.data.repository.UserRepository
-import com.odorik.odorikbuddy.domain.usecase.AuthenticationException
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

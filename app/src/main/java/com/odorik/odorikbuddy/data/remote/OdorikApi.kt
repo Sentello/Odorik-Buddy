@@ -103,17 +103,6 @@ interface OdorikApi {
         @Query("password") password: String
     ): Response<String>
 
-    @FormUrlEncoded
-    @POST("public_numbers/{number}/routes.json")
-    suspend fun createRouteWithLineCredentials(
-        @Path("number") number: String,
-        @Field("source_number") sourceNumber: String,
-        @Field("ringing_number") ringingNumber: String,
-        @Query("replace_by_source_number") replaceBySource: String? = null,
-        @Query("user") user: String,
-        @Query("password") password: String
-    ): Response<String>
-
     @DELETE("public_numbers/{number}/routes/{id}.json")
     suspend fun deleteRoute(
         @Path("number") number: String,

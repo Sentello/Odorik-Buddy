@@ -3,17 +3,17 @@ package com.odorik.odorikbuddy.ui.dashboard
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
-import com.odorik.odorikbuddy.data.local.SecurePreferences
-import com.odorik.odorikbuddy.data.model.UserInfo
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
-import com.odorik.odorikbuddy.domain.usecase.GetUserInfoUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.util.ApiDates
+import com.odorik.odorikbuddy.util.BackoffPolicy
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.joinAll
@@ -30,9 +30,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getCreditUseCase: GetCreditUseCase,
-    private val getUserInfoUseCase: GetUserInfoUseCase,
     private val historyRepository: HistoryRepository,
-    private val securePreferences: SecurePreferences,
+    private val appPreferences: AppPreferences,
     private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -45,9 +44,6 @@ class DashboardViewModel @Inject constructor(
 
     private val _credit = MutableStateFlow<UiState<Double>>(UiState.Loading)
     val credit: StateFlow<UiState<Double>> = _credit
-
-    private val _userInfo = MutableStateFlow<UiState<UserInfo>>(UiState.Loading)
-    val userInfo: StateFlow<UiState<UserInfo>> = _userInfo
 
     private val _todaysSpending = MutableStateFlow(0.0)
     val todaysSpending: StateFlow<Double> = _todaysSpending
@@ -81,6 +77,8 @@ class DashboardViewModel @Inject constructor(
     private val _isRetrying = MutableStateFlow(false)
     val isRetrying: StateFlow<Boolean> = _isRetrying
 
+    private val retryBackoff = BackoffPolicy()
+
     init {
         loadSavedDateRange()
 
@@ -100,14 +98,15 @@ class DashboardViewModel @Inject constructor(
         if (_isRetrying.value) return
         _isRetrying.value = true
         viewModelScope.launch {
-            while (_isRetrying.value) {
-                kotlinx.coroutines.delay(5000)
+            var attempt = 0
+            while (_isRetrying.value && attempt < retryBackoff.maxAttempts) {
+                attempt++
+                kotlinx.coroutines.delay(retryBackoff.delayBeforeAttempt(attempt))
                 if (!_isRetrying.value) break
-                refresh()
-                if (_error.value == null) {
-                    _isRetrying.value = false
-                }
+                loadDataInternal(false)
+                if (_error.value == null) break
             }
+            _isRetrying.value = false
         }
     }
 
@@ -123,36 +122,37 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun loadData(isInitialLoad: Boolean) {
-        viewModelScope.launch {
-            if (isInitialLoad) _isInitialLoading.value = true else _isRefreshing.value = true
+        viewModelScope.launch { loadDataInternal(isInitialLoad) }
+    }
 
-            _error.value = null
+    private suspend fun loadDataInternal(isInitialLoad: Boolean) {
+        if (isInitialLoad) _isInitialLoading.value = true else _isRefreshing.value = true
 
-            if (isInitialLoad) {
-                _credit.value = UiState.Loading
-                _userInfo.value = UiState.Loading
+        _error.value = null
+
+        if (isInitialLoad) {
+            _credit.value = UiState.Loading
+        }
+
+        try {
+
+            if (isInitialLoad && appPreferences.getString("dashboard_start_date") == null) {
+                val (start, end) = getCurrentWeekRange()
+                _startDate.value = start
+                _endDate.value = end
             }
 
-            try {
-
-                if (isInitialLoad && securePreferences.getString("dashboard_start_date") == null) {
-                    val (start, end) = getCurrentWeekRange()
-                    _startDate.value = start
-                    _endDate.value = end
-                }
-
+            coroutineScope {
                 val creditJob = launch { getCredit() }
-                val userInfoJob = launch { getUserInfo() }
                 val spendingJob = launch { fetchSpendingData() }
-
-                listOf(creditJob, userInfoJob, spendingJob).joinAll()
-
-            } catch (e: Exception) {
-                val localizedContext = localeManager.createLocaleContext(context)
-                _error.value = ErrorMessageUtil.standardizeError(e.message, localizedContext)
-            } finally {
-                if (isInitialLoad) _isInitialLoading.value = false else _isRefreshing.value = false
+                listOf(creditJob, spendingJob).joinAll()
             }
+
+        } catch (e: Exception) {
+            val localizedContext = localeManager.createLocaleContext(context)
+            _error.value = ErrorMessageUtil.standardizeError(e, localizedContext)
+        } finally {
+            if (isInitialLoad) _isInitialLoading.value = false else _isRefreshing.value = false
         }
     }
 
@@ -165,8 +165,8 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun loadSavedDateRange() {
-        val startStr = securePreferences.getString("dashboard_start_date")
-        val endStr = securePreferences.getString("dashboard_end_date")
+        val startStr = appPreferences.getString("dashboard_start_date")
+        val endStr = appPreferences.getString("dashboard_end_date")
         if (startStr != null && endStr != null) {
             try {
                 val startEpoch = startStr.toLong()
@@ -188,8 +188,8 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun saveDateRange(start: java.time.LocalDate, end: java.time.LocalDate) {
-        securePreferences.saveString("dashboard_start_date", start.toEpochDay().toString())
-        securePreferences.saveString("dashboard_end_date", end.toEpochDay().toString())
+        appPreferences.saveString("dashboard_start_date", start.toEpochDay().toString())
+        appPreferences.saveString("dashboard_end_date", end.toEpochDay().toString())
     }
 
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
@@ -197,8 +197,8 @@ class DashboardViewModel @Inject constructor(
 
 
         if (newStartDate == currentStart && newEndDate == currentEnd) {
-            securePreferences.clearString("dashboard_start_date")
-            securePreferences.clearString("dashboard_end_date")
+            appPreferences.clearString("dashboard_start_date")
+            appPreferences.clearString("dashboard_end_date")
         } else {
             saveDateRange(newStartDate, newEndDate)
         }
@@ -215,8 +215,8 @@ class DashboardViewModel @Inject constructor(
         val (start, end) = getCurrentWeekRange()
         _startDate.value = start
         _endDate.value = end
-        securePreferences.clearString("dashboard_start_date")
-        securePreferences.clearString("dashboard_end_date")
+        appPreferences.clearString("dashboard_start_date")
+        appPreferences.clearString("dashboard_end_date")
 
         viewModelScope.launch {
             fetchSpendingData()
@@ -229,25 +229,15 @@ class DashboardViewModel @Inject constructor(
             _credit.value = UiState.Success(it)
         }.onFailure {
             val localizedContext = localeManager.createLocaleContext(context)
-            val errorMessage = ErrorMessageUtil.standardizeError(it.message ?: context.getString(R.string.error_failed_to_load_credit), localizedContext)
+            val errorMessage = ErrorMessageUtil.standardizeError(it, localizedContext)
             _credit.value = UiState.Error(errorMessage)
             _error.value = errorMessage
         }
     }
 
-    private suspend fun getUserInfo() {
-        val result = getUserInfoUseCase.execute()
-        result.onSuccess {
-            _userInfo.value = UiState.Success(it)
-        }.onFailure {
-            _userInfo.value = UiState.Error(it.message ?: context.getString(R.string.error_failed_to_load_user_info))
-        }
-    }
-
     private suspend fun fetchSpendingData() {
-        val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
-        val to = isoFormat.format(Date.from(_endDate.value.atTime(23, 59, 59).atZone(java.time.ZoneId.systemDefault()).toInstant()))
-        val from = isoFormat.format(Date.from(_startDate.value.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()))
+        val to = ApiDates.formatUtc(_endDate.value.atTime(23, 59, 59).atZone(java.time.ZoneId.systemDefault()).toInstant())
+        val from = ApiDates.formatUtc(_startDate.value.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant())
 
         try {
             val history = historyRepository.getCombinedHistory(from, to)
@@ -258,7 +248,7 @@ class DashboardViewModel @Inject constructor(
             _error.value = null
         } catch (e: Exception) {
             val localizedContext = localeManager.createLocaleContext(context)
-            val errorMessage = ErrorMessageUtil.standardizeError(e.message, localizedContext)
+            val errorMessage = ErrorMessageUtil.standardizeError(e, localizedContext)
             _error.value = errorMessage
 
             try {
@@ -333,6 +323,6 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun parseIsoDate(isoDate: String): Date {
-        return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault()).parse(isoDate) ?: Date(0)
+        return ApiDates.parse(isoDate)?.let { Date.from(it) } ?: Date(0)
     }
 }

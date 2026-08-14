@@ -9,8 +9,8 @@ import com.odorik.odorikbuddy.model.HistoryItem
 
 @Database(
     entities = [HistoryItem::class, TileEntity::class],
-    version = 7,
-    exportSchema = false
+    version = 8,
+    exportSchema = true
 )
 abstract class OdorikDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
@@ -65,6 +65,12 @@ abstract class OdorikDatabase : RoomDatabase() {
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE tiles ADD COLUMN widgetStyle TEXT NOT NULL DEFAULT 'SQUARE'")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE history ADD COLUMN event_type TEXT")
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.odorik.odorikbuddy.data.repository
 
 import com.odorik.odorikbuddy.data.remote.OdorikApi
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class SmsRepository @Inject constructor(
@@ -24,6 +25,8 @@ class SmsRepository @Inject constructor(
             } else {
                 Result.failure(Exception("HTTP error: ${response.code()}"))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -56,6 +59,8 @@ class SmsRepository @Inject constructor(
             } else {
                 Result.failure(Exception("HTTP error: ${response.code()}"))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

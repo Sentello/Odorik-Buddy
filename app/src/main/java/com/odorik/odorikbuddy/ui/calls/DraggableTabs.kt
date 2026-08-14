@@ -48,8 +48,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.odorik.odorikbuddy.ui.theme.CallAccent
-import com.odorik.odorikbuddy.ui.theme.CallAccentLight
+import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.AppConstants.SWIPE_THRESHOLD
 import kotlin.math.roundToInt
 
@@ -257,7 +257,7 @@ fun DraggableTab(
             .background(
                 if (isSelected) {
                     Brush.linearGradient(
-                        colors = listOf(CallAccent, CallAccentLight)
+                        colors = listOf(ScreenAccents.Calls.main(), ScreenAccents.Calls.secondary())
                     )
                 } else {
                     Brush.linearGradient(
@@ -283,7 +283,7 @@ fun DraggableTab(
                 Spacer(modifier = Modifier.height(2.dp))
                 Icon(
                     imageVector = Icons.Default.DragHandle,
-                    contentDescription = "Drag to reorder",
+                    contentDescription = stringResource(R.string.a11y_drag_to_reorder),
                     modifier = Modifier.size(14.dp),
                     tint = textColor
                 )

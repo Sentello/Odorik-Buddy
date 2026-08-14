@@ -20,28 +20,22 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.components.GradientHeader
-import com.odorik.odorikbuddy.ui.components.darkModeBorder
+import com.odorik.odorikbuddy.ui.components.TransparentListItem
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
-import com.odorik.odorikbuddy.ui.theme.SettingsAccent
-import com.odorik.odorikbuddy.ui.theme.SettingsAccentLight
-import com.odorik.odorikbuddy.util.getResponsiveBodyLargeSize
-import com.odorik.odorikbuddy.util.getResponsiveCardPadding
-import com.odorik.odorikbuddy.util.getResponsiveSpacing
+import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
+import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,12 +49,7 @@ fun RoutingOptionsScreen(
             GradientHeader(
                 title = stringResource(R.string.section_routing),
                 iconVector = Icons.Default.Settings,
-                backgroundBrush = Brush.verticalGradient(
-                    colors = listOf(SettingsAccent.copy(alpha = 0.35f), Color.Transparent)
-                ),
-                iconGradientBrush = Brush.linearGradient(
-                    colors = listOf(SettingsAccent, SettingsAccentLight)
-                ),
+                accent = ScreenAccents.Settings,
                 onBackClick = { internalNavController.popBackStack() }
             )
         }
@@ -69,36 +58,35 @@ fun RoutingOptionsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(bottom = getResponsiveSpacing()),
-            verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing()/4),
+            contentPadding = PaddingValues(bottom = LocalAppDimens.current.spacing),
+            verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing/4),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = getResponsiveCardPadding(), vertical = getResponsiveSpacing()/2)
-                        .darkModeBorder(RoundedCornerShape(16.dp)),
+                        .padding(horizontal = LocalAppDimens.current.cardPadding, vertical = LocalAppDimens.current.spacing/2),
                     shape = RoundedCornerShape(16.dp),
-                     colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     ),
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
                     Column {
 
-                        ListItem(
+                        TransparentListItem(
                             headlineContent = {
                                 Text(
                                     text = stringResource(R.string.shared_numbers),
-                                    fontSize = getResponsiveBodyLargeSize(),
+                                    style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                             },
                             supportingContent = {
                                 Text(
                                     text = stringResource(R.string.shared_number),
-                                    fontSize = getResponsiveBodyLargeSize() * 0.85f,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
@@ -113,7 +101,7 @@ fun RoutingOptionsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Contacts,
                                     contentDescription = null,
-                                    tint = SettingsAccent
+                                    tint = ScreenAccents.Settings.main()
                                 )
                             },
                             modifier = Modifier.clickable { internalNavController.navigate(SettingsRoutes.ROUTES_SCREEN) }
@@ -125,18 +113,18 @@ fun RoutingOptionsScreen(
                         )
 
 
-                        ListItem(
+                        TransparentListItem(
                             headlineContent = {
                                 Text(
                                     text = stringResource(R.string.own_numbers),
-                                    fontSize = getResponsiveBodyLargeSize(),
+                                    style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                             },
                             supportingContent = {
                                 Text(
                                     text = stringResource(R.string.own_numbers_description),
-                                    fontSize = getResponsiveBodyLargeSize() * 0.85f,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
@@ -151,7 +139,7 @@ fun RoutingOptionsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Phone,
                                     contentDescription = null,
-                                    tint = SettingsAccent
+                                    tint = ScreenAccents.Settings.main()
                                 )
                             },
                             modifier = Modifier.clickable { internalNavController.navigate(SettingsRoutes.OWN_NUMBERS_SCREEN) }

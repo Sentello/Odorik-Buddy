@@ -15,11 +15,6 @@
     <string name="select_line">Select Line</string>
     <string name="call">Call</string>
     <string name="callback_call_button">Call me</string>
-    <string name="from_label">From:</string>
-    <string name="to_label">To:</string>
-    <string name="duration_label">Duration:</string>
-    <string name="cost_label">Cost:</string>
-    <string name="time_label">Time:</string>
     <string name="sender">Sender</string>
     <string name="select_sender">Select Sender</string>
     <string name="message">Message (max 765 chars)</string>
@@ -69,7 +64,6 @@
     <string name="history_title">Call &amp; SMS History</string>
     <string name="number_coppied">Copied %s to clipboard</string>
     <string name="callback_title">Callback</string>
-    <string name="call_history_title">Call History</string>
     <string name="sms_title">SMS</string>
     <string name="spending_summary">Spending Summary</string>
     <string name="todays_spending">Today\'s Spending</string>
@@ -110,6 +104,25 @@
     <string name="a11y_dark_mode">Dark mode</string>
     <string name="a11y_language">App language</string>
     <string name="a11y_line_card">Line: %s</string>
+    <string name="a11y_odorik_logo">Odorik logo</string>
+    <string name="a11y_navigate_to_tab">Navigate to %1$s tab</string>
+    <string name="a11y_has_rules">Has rules</string>
+    <string name="a11y_back">Back</string>
+    <string name="a11y_balance_icon">Balance icon</string>
+    <string name="a11y_current_balance">Current balance: %1$s</string>
+    <string name="a11y_spending_summary_icon">Spending summary icon</string>
+    <string name="a11y_weekly_chart">Weekly spending chart for last 7 days. %1$s. Average: %2$s</string>
+    <string name="a11y_weekly_chart_icon">Weekly spending chart icon</string>
+    <string name="a11y_interactive_chart">Interactive bar chart of weekly spending with average line. Tap bars for details.</string>
+    <string name="a11y_drag_to_reorder">Drag to reorder</string>
+    <string name="a11y_hide_password">Hide password</string>
+    <string name="a11y_show_password">Show password</string>
+    <string name="a11y_sms_char_count">%1$d characters, %2$s</string>
+    <string name="widget_select_tile">Select Tile</string>
+    <plurals name="a11y_sms_segments">
+        <item quantity="one">%d message</item>
+        <item quantity="other">%d messages</item>
+    </plurals>
     <string name="rang_duration">Rang %ds</string>
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
@@ -167,6 +180,7 @@
     <string name="error_invalid_source_number">Invalid Source Number</string>
     <string name="error_redirection_loop">Redirection Loop</string>
     <string name="error_route_generic">Route operation failed</string>
+    <string name="error_no_phone_app">No phone app available to place the call</string>
     <string name="navigate_to_routing_settings">Navigate to routing settings</string>
     <string name="no_history_found">No history found</string>
     <string name="pull_to_refresh_or_change_period_in_settings">Pull to refresh or change the period in settings</string>
@@ -213,9 +227,6 @@
     <string name="shared_numbers">Shared Numbers</string>
     <string name="own_numbers">Own Numbers</string>
     <string name="own_numbers_description">Numbers that are owned by you</string>
-    <string name="no_spending_data_available">No spending data available</string>
-    <string name="no_data_available">No data available</string>
-    <string name="no_weekly_spending_data_available">No weekly spending data available</string>
     <string name="weekly_average">Average: %.2f CZK</string>
     <string name="chart_spending">Spending</string>
     <string name="chart_average">Average</string>
@@ -233,7 +244,6 @@
     <string name="widget_error_callback_failed">Callback failed</string>
     <string name="widget_error_unknown">Unknown error</string>
     <string name="error_failed_to_load_credit">Failed to load credit</string>
-    <string name="error_failed_to_load_user_info">Failed to load user info</string>
     <string name="error_unknown_generic">Unknown error</string>
     <string name="spending_for_date">Spending for %1$s: %2$.2f CZK</string>
     <string name="end_date_before_start_date">End date cannot be before start date.</string>
@@ -243,7 +253,12 @@
 
     <!-- App Update and About Strings -->
     <string name="about_app">About App</string>
-    <string name="about_app_description">Odorik Buddy is an unofficial companion app for Odorik.cz services.</string>
+    <!-- Settings list supporting line: short, no legal jargon -->
+    <string name="about_app_summary">Unofficial companion for odorik.cz</string>
+    <!-- About dialog: what the app does -->
+    <string name="about_app_description">Manage your Odorik credit, calls, SMS, history, and routing from one place.</string>
+    <!-- About dialog: affiliation only (once) -->
+    <string name="about_fan_app">Unofficial fan project. Not affiliated with miniTEL s.r.o. or odorik.cz.</string>
     <string name="github_repository">GitHub Repository</string>
     <string name="discussion_forum">Discussion Forum</string>
     <string name="app_update">App Update</string>
@@ -315,6 +330,11 @@
     <string name="widget_config_extra_large">Extra Large</string>
     <string name="widget_preview">Preview</string>
 
+    <string name="permission_required_title">Permission required</string>
+    <string name="call_permission_denied_message">Direct calling needs the phone permission. It was denied permanently — allow it in the system settings.</string>
+    <string name="notification_permission_denied_message">Update notifications need the notification permission. It was denied permanently — allow it in the system settings.</string>
+    <string name="open_settings">Open settings</string>
+
     <!-- Additional common UI strings -->
     <string name="dismiss">Dismiss</string>
     <string name="delete">Delete</string>
@@ -332,4 +352,23 @@
     <string name="save_widget">Add to Home Screen</string>
     <string name="select_tile_first">Select a tile above</string>
     <string name="widget_live_preview">Live Preview</string>
+
+    <!-- Sprint G theme -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="theme_mode_system">System default</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="settings_color_theme">Color theme</string>
+    <string name="app_theme_standard">Standard</string>
+    <string name="app_theme_material_you">Material You</string>
+    <string name="app_theme_material_you_subtitle">Colors from your wallpaper</string>
+    <string name="app_theme_odorik">Odorik</string>
+    <string name="app_theme_odorik_subtitle">Red theme inspired by odorik.cz</string>
+    <string name="no_spending_in_period">No spending in this period</string>
+    <string name="edit_tiles">Edit tiles</string>
+    <string name="done">Done</string>
+    <string name="odorik_website">Odorik website</string>
+    <string name="widget_style_odorik">Odorik red</string>
+    <string name="widget_tap_to_open">Tap to open</string>
+
 </resources>

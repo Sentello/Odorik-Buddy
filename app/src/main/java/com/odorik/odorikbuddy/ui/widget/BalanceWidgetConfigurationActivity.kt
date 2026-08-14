@@ -56,7 +56,7 @@ import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
-import com.odorik.odorikbuddy.ui.theme.SettingsAccent
+import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -153,6 +153,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                                     "TRANSLUCENT" -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                     "DARK" -> Color(0xFF1E1E1E)
                                     "LIGHT" -> Color(0xFFF5F5F5)
+                                    "ODORIK" -> Color(0xFFC00012)
                                     else -> MaterialTheme.colorScheme.surface
                                 }
                             )
@@ -172,7 +173,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(SettingsAccent),
+                                    .background(ScreenAccents.Settings.main()),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text("O", color = Color.White, fontWeight = FontWeight.Bold)
@@ -189,7 +190,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                                         else -> MaterialTheme.typography.titleLarge.fontSize
                                     },
                                     color = when (selectedTextColor) {
-                                        "AUTO" -> if (selectedBackground == "DARK") Color.White else MaterialTheme.colorScheme.onSurface
+                                        "AUTO" -> if (selectedBackground == "DARK" || selectedBackground == "ODORIK") Color.White else if (selectedBackground == "TRANSLUCENT" || selectedBackground == "LIGHT") Color.Black else MaterialTheme.colorScheme.onSurface
                                         "WHITE" -> Color.White
                                         "BLACK" -> Color.Black
                                         else -> MaterialTheme.colorScheme.onSurface
@@ -199,7 +200,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                                     text = "12:45",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = when (selectedTextColor) {
-                                        "AUTO" -> if (selectedBackground == "DARK") Color.White.copy(0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                        "AUTO" -> if (selectedBackground == "DARK" || selectedBackground == "ODORIK") Color.White.copy(0.7f) else if (selectedBackground == "TRANSLUCENT" || selectedBackground == "LIGHT") Color.Black.copy(0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
                                         "WHITE" -> Color.White.copy(0.7f)
                                         "BLACK" -> Color.Black.copy(0.7f)
                                         else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -218,7 +219,8 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                             "TRANSPARENT" to stringResource(R.string.widget_config_transparent),
                             "TRANSLUCENT" to stringResource(R.string.widget_config_translucent),
                             "DARK" to stringResource(R.string.widget_config_dark),
-                            "LIGHT" to stringResource(R.string.widget_config_light)
+                            "LIGHT" to stringResource(R.string.widget_config_light),
+                            "ODORIK" to stringResource(R.string.widget_style_odorik)
                         )
                         FlowRowCompat {
                             backgrounds.forEach { (key, label) ->

@@ -1,35 +1,11 @@
 package com.odorik.odorikbuddy.domain.usecase
 
-import com.odorik.odorikbuddy.data.remote.OdorikApi
-import com.odorik.odorikbuddy.data.repository.UserRepository
+import com.odorik.odorikbuddy.data.repository.CallRepository
 import javax.inject.Inject
 
 class CallUseCase @Inject constructor(
-    private val odorikApi: OdorikApi,
-    private val userRepository: UserRepository
+    private val callRepository: CallRepository
 ) {
-    suspend fun execute(callerId: String, recipient: String, line: String): Result<String> {
-        return try {
-            val (userId, password) = userRepository.requireCredentials()
-            val response = odorikApi.call(
-                user = userId,
-                password = password,
-                caller = callerId,
-                recipient = recipient,
-                line = line
-            )
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body?.startsWith("error") == true) {
-                    Result.failure(Exception(body))
-                } else {
-                    Result.success(body ?: "")
-                }
-            } else {
-                Result.failure(Exception("HTTP error: ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    suspend fun execute(callerId: String, recipient: String, line: String): Result<String> =
+        callRepository.callback(callerId, recipient, line)
 }

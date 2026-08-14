@@ -5,6 +5,7 @@ import com.odorik.odorikbuddy.model.PublicNumber
 import com.odorik.odorikbuddy.model.Route
 import com.odorik.odorikbuddy.model.SharedPublicNumber
 import com.odorik.odorikbuddy.util.OdorikResponseParser
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class RoutingRepository @Inject constructor(
@@ -22,6 +23,8 @@ class RoutingRepository @Inject constructor(
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -36,6 +39,8 @@ class RoutingRepository @Inject constructor(
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -50,6 +55,8 @@ class RoutingRepository @Inject constructor(
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -76,6 +83,8 @@ class RoutingRepository @Inject constructor(
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -90,7 +99,7 @@ class RoutingRepository @Inject constructor(
         sipPassword: String
     ): Result<String> {
         return try {
-            val response = odorikApi.createRouteWithLineCredentials(
+            val response = odorikApi.createRoute(
                 number = publicNumber,
                 sourceNumber = sourceNumber,
                 ringingNumber = ringingNumber,
@@ -103,6 +112,8 @@ class RoutingRepository @Inject constructor(
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -117,6 +128,8 @@ class RoutingRepository @Inject constructor(
             } else {
                 Result.failure(Exception(response.errorBody()?.string()))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

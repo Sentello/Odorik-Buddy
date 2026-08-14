@@ -64,7 +64,10 @@ private val Context.dataStore by preferencesDataStore(
 
 
 @Singleton
-class AppPreferences @Inject constructor(@ApplicationContext private val context: Context) {
+class AppPreferences @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val securePreferences: SecurePreferences
+) {
 
     private val dataStore = context.dataStore
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -74,6 +77,7 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     @Volatile private var _directCallsEnabled = false
     @Volatile private var _autoUpdateEnabled = false
     @Volatile private var _historyPeriodDays = 90
+    @Volatile private var stringValues: Map<String, String> = emptyMap()
 
     init {
 
@@ -90,17 +94,16 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
         _directCallsEnabled = prefs[booleanPreferencesKey(KEY_DIRECT_CALLS_ENABLED)] ?: false
         _autoUpdateEnabled = prefs[booleanPreferencesKey(KEY_AUTO_UPDATE_ENABLED)] ?: false
         _historyPeriodDays = prefs[intPreferencesKey(KEY_HISTORY_PERIOD_DAYS)] ?: 90
+        stringValues = prefs.asMap().entries
+            .mapNotNull { (key, value) -> (value as? String)?.let { key.name to it } }
+            .toMap()
     }
 
 
     private fun ensureLoaded() {
         if (loaded) return
         runBlocking(Dispatchers.IO) {
-            loadMutex.withLock {
-                if (loaded) return@withLock
-                applyFrom(dataStore.data.first())
-                loaded = true
-            }
+            ensureLoadedSuspend()
         }
     }
 
@@ -144,6 +147,27 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
         }
 
 
+    fun getString(key: String, defaultValue: String? = null): String? {
+        ensureLoaded()
+        return stringValues[key] ?: defaultValue
+    }
+
+    fun saveString(key: String, value: String) {
+
+        stringValues = stringValues + (key to value)
+        scope.launch {
+            dataStore.edit { it[stringPreferencesKey(key)] = value }
+        }
+    }
+
+    fun clearString(key: String) {
+        stringValues = stringValues - key
+        scope.launch {
+            dataStore.edit { it.remove(stringPreferencesKey(key)) }
+        }
+    }
+
+
     suspend fun getHistoryPeriodDaysSuspend(): Int {
         ensureLoadedSuspend()
         return _historyPeriodDays
@@ -153,14 +177,44 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
         if (loaded) return
         loadMutex.withLock {
             if (loaded) return
+            migrateFromSecurePreferencesIfNeeded()
             applyFrom(dataStore.data.first())
             loaded = true
         }
+    }
+
+
+    private suspend fun migrateFromSecurePreferencesIfNeeded() {
+        val migratedFlag = booleanPreferencesKey(KEY_SECURE_PREFS_MIGRATED)
+        if (dataStore.data.first()[migratedFlag] == true) return
+
+        val values = MIGRATED_KEYS.mapNotNull { key ->
+            securePreferences.getString(key)?.let { key to it }
+        }
+        dataStore.edit { prefs ->
+            values.forEach { (key, value) ->
+
+                if (prefs[stringPreferencesKey(key)] == null) {
+                    prefs[stringPreferencesKey(key)] = value
+                }
+            }
+            prefs[migratedFlag] = true
+        }
+        MIGRATED_KEYS.forEach { securePreferences.clearString(it) }
     }
 
     companion object {
         const val KEY_DIRECT_CALLS_ENABLED = "direct_calls_enabled"
         const val KEY_HISTORY_PERIOD_DAYS = "history_period_days"
         const val KEY_AUTO_UPDATE_ENABLED = "auto_update_enabled"
+        const val KEY_SECURE_PREFS_MIGRATED = "secure_prefs_migrated"
+
+
+        val MIGRATED_KEYS = listOf(
+            "phone_number", "caller_id", "recipient", "oneshot_recipient",
+            "selected_line", "use_caller_id_prefix", "calls_selected_tab",
+            "calls_tab_order", "dashboard_start_date", "dashboard_end_date",
+            "last_screen"
+        )
     }
 }

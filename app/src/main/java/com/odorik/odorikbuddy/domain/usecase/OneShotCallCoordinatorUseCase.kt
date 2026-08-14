@@ -1,7 +1,8 @@
 package com.odorik.odorikbuddy.domain.usecase
 
-import com.odorik.odorikbuddy.data.local.SecurePreferences
+import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.model.Line
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class NoSourceNumberException : Exception("No source number configured")
@@ -9,7 +10,7 @@ class NoSharedNumbersException : Exception("No shared numbers available")
 class SharedNumberNotFoundException : Exception("No shared numbers found")
 
 class OneShotCallCoordinatorUseCase @Inject constructor(
-    private val securePreferences: SecurePreferences,
+    private val appPreferences: AppPreferences,
     private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
     private val getLinesUseCase: GetLinesUseCase,
     private val createRouteUseCase: CreateRouteUseCase
@@ -20,7 +21,7 @@ class OneShotCallCoordinatorUseCase @Inject constructor(
         selectedLineId: Int?
     ): Result<String> {
         return try {
-            val currentPhoneNumber = securePreferences.getString("phone_number", "") ?: ""
+            val currentPhoneNumber = appPreferences.getString("phone_number", "") ?: ""
             if (currentPhoneNumber.isEmpty()) {
                 return Result.failure(NoSourceNumberException())
             }
@@ -72,6 +73,8 @@ class OneShotCallCoordinatorUseCase @Inject constructor(
             }
 
             Result.success(lastSharedNumber)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
