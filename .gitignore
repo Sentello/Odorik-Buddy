@@ -1,40 +1,79 @@
-*.iml
-.gradle
-/local.properties
-/.idea
-.DS_Store
-/build
-app/build/
+# ---------------------------------------------------------------------------
+# Gradle / Kotlin
+# ---------------------------------------------------------------------------
+.gradle/
+.kotlin/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ---------------------------------------------------------------------------
+# Android build output
+# ---------------------------------------------------------------------------
 app/release/
-/captures
-.externalNativeBuild
-.cxx
-*.hprof
-*.pyc
-*~
-keystore.properties
-
-# Python virtual environments
-.venv/
-venv/
-__pycache__/
-
-# Log files
-*.log
-
-# Environment variables
-.env
-
-# Sensitive files
-heslo.txt
-odorikbuddy.jks
-debug.keystore
-
-# Build artifacts
+app/debug/
+/captures/
+.externalNativeBuild/
+.cxx/
 *.apk
 *.aab
 *.aar
-*.zip
+*.ap_
+*.dex
+output-metadata.json
 
-# Local History
-/.history
+# ---------------------------------------------------------------------------
+# Local machine config
+# ---------------------------------------------------------------------------
+local.properties
+
+# ---------------------------------------------------------------------------
+# Signing & secrets (never commit)
+# ---------------------------------------------------------------------------
+*.jks
+*.keystore
+*.p12
+*.pem
+keystore.properties
+heslo.txt
+google-services.json
+.env
+.env.*
+
+# ---------------------------------------------------------------------------
+# IDEs & editors
+# ---------------------------------------------------------------------------
+*.iml
+/.idea/
+.vscode/
+.fleet/
+/.history/
+*.swp
+*~
+
+# ---------------------------------------------------------------------------
+# Claude Code local state
+# ---------------------------------------------------------------------------
+.claude/worktrees/
+.claude/settings.local.json
+
+# ---------------------------------------------------------------------------
+# OS files
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Python tooling (remove_comments.py)
+# ---------------------------------------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ---------------------------------------------------------------------------
+# Logs, dumps & archives
+# ---------------------------------------------------------------------------
+*.log
+*.hprof
+*.zip
