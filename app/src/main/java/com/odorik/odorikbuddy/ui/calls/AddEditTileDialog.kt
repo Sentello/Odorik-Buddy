@@ -44,6 +44,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,7 @@ import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,22 +106,25 @@ fun AddEditTileDialog(
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
 
+    val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
-            contactUri?.let {
-                val numbers = callViewModel.getPhoneNumbersFromContact(context.contentResolver, it)
-                if (numbers.isNotEmpty()) {
-                    if (numbers.size == 1) {
-                        val number = numbers.first()
-                        if (contactFieldToUpdate == ContactField.RECIPIENT) {
-                            recipient = number
-                        } else if (contactFieldToUpdate == ContactField.CALLER_ID) {
-                            callerId = number
+            contactUri?.let { uri ->
+                contactScope.launch {
+                    val numbers = callViewModel.getPhoneNumbersFromContact(context.contentResolver, uri)
+                    if (numbers.isNotEmpty()) {
+                        if (numbers.size == 1) {
+                            val number = numbers.first()
+                            if (contactFieldToUpdate == ContactField.RECIPIENT) {
+                                recipient = number
+                            } else if (contactFieldToUpdate == ContactField.CALLER_ID) {
+                                callerId = number
+                            }
+                        } else {
+                            phoneNumbers = numbers
+                            showPhoneNumberDialog = true
                         }
-                    } else {
-                        phoneNumbers = numbers
-                        showPhoneNumberDialog = true
                     }
                 }
             }

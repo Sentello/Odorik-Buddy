@@ -84,7 +84,8 @@ fun TilesScreen(
 
 
     val callResult by callViewModel.callResult.collectAsState()
-    val error by callViewModel.error.collectAsState()
+    val callbackError by callViewModel.callbackError.collectAsState()
+    val linesError by callViewModel.linesError.collectAsState()
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
@@ -96,7 +97,8 @@ fun TilesScreen(
 
 
     val currentCallResult = callResult
-    val currentError = error
+    val currentCallbackError = callbackError
+    val currentLinesError = linesError
     val currentOneShotCallResult = oneShotCallResult
     val currentOneShotCallError = oneShotCallError
 
@@ -206,10 +208,11 @@ fun TilesScreen(
                                     }
 
 
-                                    val activeError = if (!currentOneShotCallError.isNullOrEmpty()) {
-                                        currentOneShotCallError
-                                    } else {
-                                        currentError
+
+                                    val activeError = when {
+                                        !currentOneShotCallError.isNullOrEmpty() -> currentOneShotCallError
+                                        !currentCallbackError.isNullOrEmpty() -> currentCallbackError
+                                        else -> currentLinesError
                                     }
 
                                     if (!activeError.isNullOrEmpty()) {

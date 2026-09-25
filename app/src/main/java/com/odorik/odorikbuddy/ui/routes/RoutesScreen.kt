@@ -56,6 +56,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +76,7 @@ import com.odorik.odorikbuddy.ui.components.TransparentListItem
 import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
@@ -130,19 +132,22 @@ fun RoutesScreen(
 
     var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
 
+    val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
-            contactUri?.let {
-                val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, it)
-                if (numbers.size == 1) {
-                    when (fieldBeingPicked) {
-                        "source" -> viewModel.onSourceNumberChange(numbers.first())
-                        "ringing" -> viewModel.onRingingNumberChange(numbers.first())
+            contactUri?.let { uri ->
+                contactScope.launch {
+                    val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, uri)
+                    if (numbers.size == 1) {
+                        when (fieldBeingPicked) {
+                            "source" -> viewModel.onSourceNumberChange(numbers.first())
+                            "ringing" -> viewModel.onRingingNumberChange(numbers.first())
+                        }
+                    } else if (numbers.size > 1) {
+                        phoneNumbersForSelection = numbers
+                        showPhoneNumberDialog = true
                     }
-                } else if (numbers.size > 1) {
-                    phoneNumbersForSelection = numbers
-                    showPhoneNumberDialog = true
                 }
             }
         }
@@ -482,6 +487,10 @@ fun SharedNumberItem(
     baseSpacing: androidx.compose.ui.unit.Dp,
     onAddRule: () -> Unit
 ) {
+
+
+    var routeIdToDelete by remember { mutableStateOf<Long?>(null) }
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -555,10 +564,7 @@ fun SharedNumberItem(
                                         supportingContent = { Text("→ $ringingName") },
                                         trailingContent = {
                                             IconButton(onClick = {
-                                                viewModel.deleteRoute(
-                                                    number.publicNumber,
-                                                    route.id
-                                                )
+                                                routeIdToDelete = route.id
                                             }) {
                                                 Icon(
                                                     Icons.Default.Delete,
@@ -597,5 +603,36 @@ fun SharedNumberItem(
                 }
             }
         }
+    }
+
+    if (routeIdToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { routeIdToDelete = null },
+            title = { Text(stringResource(R.string.delete_rule)) },
+            text = { Text(stringResource(R.string.delete_rule_confirm)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        routeIdToDelete?.let { viewModel.deleteRoute(number.publicNumber, it) }
+                        routeIdToDelete = null
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                        contentColor = ScreenAccents.Settings.main()
+                    )
+                ) {
+                    Text(stringResource(R.string.yes))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { routeIdToDelete = null },
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                        contentColor = ScreenAccents.Settings.main()
+                    )
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }

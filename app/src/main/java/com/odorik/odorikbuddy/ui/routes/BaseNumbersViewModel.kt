@@ -11,12 +11,14 @@ import com.odorik.odorikbuddy.domain.usecase.DeleteRouteUseCase
 import com.odorik.odorikbuddy.domain.usecase.GetRoutesForNumberUseCase
 import com.odorik.odorikbuddy.model.Route
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 abstract class BaseNumbersViewModel<T : Any>(
@@ -187,6 +189,11 @@ abstract class BaseNumbersViewModel<T : Any>(
         }
     }
 
-    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> =
+
+    suspend fun getPhoneNumbersFromContact(
+        contentResolver: ContentResolver,
+        contactUri: Uri
+    ): List<String> = withContext(Dispatchers.IO) {
         publicNumbersDelegate.getPhoneNumbersFromContact(contentResolver, contactUri)
+    }
 }

@@ -58,6 +58,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +73,7 @@ import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,7 +88,8 @@ fun CallbackTab(
     val recipient by viewModel.callbackRecipient.collectAsState()
     val callerContactName by viewModel.callerContactName.collectAsState()
     val recipientContactName by viewModel.callbackRecipientContactName.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val callbackError by viewModel.callbackError.collectAsState()
+    val linesError by viewModel.linesError.collectAsState()
     val selectedLine by viewModel.selectedLine.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
@@ -98,21 +101,24 @@ fun CallbackTab(
 
     val context = LocalContext.current
 
+    val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
-            contactUri?.let {
-                val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, it)
-                if (numbers.size == 1) {
-                    val number = numbers.first()
-                    when (currentContactField) {
-                        ContactField.CALLER_ID -> viewModel.updateCallerId(number)
-                        ContactField.RECIPIENT -> viewModel.updateCallbackRecipient(number)
-                        null -> {}
+            contactUri?.let { uri ->
+                contactScope.launch {
+                    val numbers = viewModel.getPhoneNumbersFromContact(context.contentResolver, uri)
+                    if (numbers.size == 1) {
+                        val number = numbers.first()
+                        when (currentContactField) {
+                            ContactField.CALLER_ID -> viewModel.updateCallerId(number)
+                            ContactField.RECIPIENT -> viewModel.updateCallbackRecipient(number)
+                            null -> {}
+                        }
+                    } else if (numbers.size > 1) {
+                        phoneNumbers = numbers
+                        showPhoneNumberDialog = true
                     }
-                } else if (numbers.size > 1) {
-                    phoneNumbers = numbers
-                    showPhoneNumberDialog = true
                 }
             }
         }
@@ -354,9 +360,11 @@ fun CallbackTab(
                     Spacer(modifier = Modifier.height(12.dp))
                     CallApiMessage(response = callResult, visible = true)
                 }
-                if (error?.isNotEmpty() == true) {
+
+                val activeError = callbackError?.takeIf { it.isNotEmpty() } ?: linesError
+                if (!activeError.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    ErrorMessage(errorText = error ?: "", visible = true)
+                    ErrorMessage(errorText = activeError, visible = true)
                 }
             }
         }

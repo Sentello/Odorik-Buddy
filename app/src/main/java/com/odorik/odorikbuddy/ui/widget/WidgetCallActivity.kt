@@ -22,28 +22,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
-import com.odorik.odorikbuddy.data.local.entity.TileEntity
-import com.odorik.odorikbuddy.data.repository.TileRepository
-import com.odorik.odorikbuddy.domain.usecase.CallUseCase
 import com.odorik.odorikbuddy.ui.calls.CallViewModel
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
 import com.odorik.odorikbuddy.util.PhoneCallLauncher
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class WidgetCallActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var tileRepository: TileRepository
-
-    @Inject
-    lateinit var callUseCase: CallUseCase
 
     @Inject
     lateinit var themeManager: ThemeManager
@@ -64,12 +54,14 @@ class WidgetCallActivity : ComponentActivity() {
 
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
-                val isLoading by callViewModel.isOneShotCallLoading.collectAsStateWithLifecycle()
+                val isCallbackLoading by callViewModel.isCallbackLoading.collectAsStateWithLifecycle()
+                val isOneShotLoading by callViewModel.isOneShotCallLoading.collectAsStateWithLifecycle()
                 val oneShotResult by callViewModel.oneShotCallResult.collectAsStateWithLifecycle()
                 val oneShotError by callViewModel.oneShotCallError.collectAsStateWithLifecycle()
+                val callbackError by callViewModel.callbackError.collectAsStateWithLifecycle()
 
 
-                LaunchedEffect(oneShotResult, oneShotError) {
+                LaunchedEffect(oneShotResult) {
                     if (oneShotResult.isNotEmpty()) {
                         PhoneCallLauncher.launch(
                             context = this@WidgetCallActivity,
@@ -78,9 +70,29 @@ class WidgetCallActivity : ComponentActivity() {
                         )
                         callViewModel.resetOneShotCallResult()
                         finish()
-                    } else if (!oneShotError.isNullOrEmpty()) {
-                        showErrorAndFinish(oneShotError!!)
+                    }
+                }
+
+
+                LaunchedEffect(Unit) {
+                    callViewModel.widgetCallbackSucceeded.collect { recipient ->
+                        Toast.makeText(
+                            this@WidgetCallActivity,
+                            getString(R.string.callback_success_notification, recipient),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        finish()
+                    }
+                }
+
+                LaunchedEffect(oneShotError, callbackError) {
+                    val message = oneShotError?.takeIf { it.isNotEmpty() }
+                        ?: callbackError?.takeIf { it.isNotEmpty() }
+                    if (message != null) {
+
+                        showErrorAndFinish(message)
                         callViewModel.resetOneShotCallError()
+                        callViewModel.resetCallbackError()
                     }
                 }
 
@@ -93,20 +105,15 @@ class WidgetCallActivity : ComponentActivity() {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (isCallbackLoading || isOneShotLoading) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = stringResource(R.string.widget_call_connecting),
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodyLarge
-                            )
-                        } else {
-
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -114,43 +121,8 @@ class WidgetCallActivity : ComponentActivity() {
             }
         }
 
-        lifecycleScope.launch {
 
-            if (!callViewModel.isOneShotCallLoading.value) {
-                handleTileAction(tileId)
-            } else {
-                finish()
-            }
-        }
-    }
-
-    private suspend fun handleTileAction(tileId: Int) {
-        val tile = tileRepository.getTileById(tileId)
-        if (tile == null) {
-            showErrorAndFinish(getString(R.string.widget_error_tile_not_found))
-            return
-        }
-
-        if (tile.callType == "CALLBACK") {
-            handleCallback(tile)
-        } else {
-            handleOneShotCall(tile)
-        }
-    }
-
-    private suspend fun handleCallback(tile: TileEntity) {
-        try {
-
-        val globalLineIdStr = appPreferences.getString("selected_line", null)
-        val targetLineIdStr = if (!tile.lineId.isNullOrBlank()) tile.lineId else globalLineIdStr
-        val targetLineId = targetLineIdStr?.toIntOrNull()
-
-
-        callViewModel.makeOneShotCall(
-            targetRecipient = tile.recipient,
-            useLineAsCallerId = tile.useLineAsCallerId,
-            selectedLineId = targetLineId
-        )
+        callViewModel.dispatchWidgetTileAction(tileId)
     }
 
     private fun showErrorAndFinish(message: String) {

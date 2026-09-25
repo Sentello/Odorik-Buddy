@@ -37,6 +37,20 @@ class VersionUtilsTest {
     }
 
     @Test
+    fun `leading v prefix is ignored`() {
+        assertTrue(VersionUtils.isNewer("v1.5.1", "1.5.0"))
+        assertFalse(VersionUtils.isNewer("v1.5.0", "1.5.0"))
+        assertEquals(0, VersionUtils.compare("v1.4.4", "1.4.4"))
+        assertEquals(0, VersionUtils.compare("V1.4.4", "v1.4.4"))
+    }
+
+    @Test
+    fun `pre-release and build suffixes are ignored`() {
+        assertEquals(0, VersionUtils.compare("1.5.0-beta1", "1.5.0"))
+        assertTrue(VersionUtils.isNewer("v1.5.1-rc1", "1.5.0"))
+    }
+
+    @Test
     fun `non-numeric segments count as zero`() {
         assertFalse(VersionUtils.isNewer("abc", "0.0.0"))
         assertTrue(VersionUtils.isNewer("1.0", "abc"))

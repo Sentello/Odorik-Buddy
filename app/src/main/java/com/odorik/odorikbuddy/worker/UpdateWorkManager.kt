@@ -31,26 +31,29 @@ class UpdateWorkManager @Inject constructor(
         private const val UPDATE_CHECK_WORK_NAME = "update_check_work"
     }
 
+
     fun scheduleUpdateCheck() {
-        if (!isAutoUpdateEnabled()) return
+        scope.launch {
+            if (!isAutoUpdateEnabled()) return@launch
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresBatteryNotLow(true)
-            .build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+                .build()
 
-        val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-            7, TimeUnit.DAYS
-        )
-            .setConstraints(constraints)
-            .setInitialDelay(1, TimeUnit.HOURS)
-            .build()
+            val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
+                7, TimeUnit.DAYS
+            )
+                .setConstraints(constraints)
+                .setInitialDelay(1, TimeUnit.HOURS)
+                .build()
 
-        workManager.enqueueUniquePeriodicWork(
-            UPDATE_CHECK_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            updateWorkRequest
-        )
+            workManager.enqueueUniquePeriodicWork(
+                UPDATE_CHECK_WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP,
+                updateWorkRequest
+            )
+        }
     }
 
     fun cancelUpdateCheck() {

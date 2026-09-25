@@ -13,8 +13,8 @@ object VersionUtils {
 
 
     fun compare(v1: String, v2: String): Int {
-        val parts1 = v1.split(".").map { it.trim().toIntOrNull() ?: 0 }
-        val parts2 = v2.split(".").map { it.trim().toIntOrNull() ?: 0 }
+        val parts1 = segments(v1)
+        val parts2 = segments(v2)
         for (i in 0 until maxOf(parts1.size, parts2.size)) {
             val a = parts1.getOrNull(i) ?: 0
             val b = parts2.getOrNull(i) ?: 0
@@ -22,4 +22,13 @@ object VersionUtils {
         }
         return 0
     }
+
+
+    private fun segments(version: String): List<Int> =
+        version.trim()
+            .removePrefix("v")
+            .removePrefix("V")
+            .takeWhile { it.isDigit() || it == '.' }
+            .split(".")
+            .map { it.toIntOrNull() ?: 0 }
 }

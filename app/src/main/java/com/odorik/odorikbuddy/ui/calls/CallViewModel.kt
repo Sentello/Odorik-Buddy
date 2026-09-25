@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.model.Line
+import com.odorik.odorikbuddy.data.repository.TileRepository
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
 import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
@@ -21,6 +22,7 @@ import com.odorik.odorikbuddy.util.BackoffPolicy
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,6 +42,7 @@ class CallViewModel @Inject constructor(
     private val callUseCase: CallUseCase,
     private val oneShotCallCoordinatorUseCase: OneShotCallCoordinatorUseCase,
     private val getSharedPublicNumbersUseCase: GetSharedPublicNumbersUseCase,
+    private val tileRepository: TileRepository,
     private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context,
     private val appPreferences: AppPreferences
@@ -50,8 +54,13 @@ class CallViewModel @Inject constructor(
     private val _lines = MutableStateFlow<List<Line>>(emptyList())
     val lines: StateFlow<List<Line>> = _lines
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
+
+    private val _linesError = MutableStateFlow<String?>(null)
+    val linesError: StateFlow<String?> = _linesError
+
+
+    private val _callbackError = MutableStateFlow<String?>(null)
+    val callbackError: StateFlow<String?> = _callbackError
 
     private val _isRetrying = MutableStateFlow(false)
     val isRetrying: StateFlow<Boolean> = _isRetrying
@@ -164,7 +173,7 @@ class CallViewModel @Inject constructor(
                 kotlinx.coroutines.delay(retryBackoff.delayBeforeAttempt(attempt))
                 if (!_isRetrying.value) break
                 getLinesInternal()
-                if (_error.value == null) break
+                if (_linesError.value == null) break
             }
             _isRetrying.value = false
         }
@@ -177,7 +186,7 @@ class CallViewModel @Inject constructor(
     init {
 
         viewModelScope.launch {
-            error.collect { currentError ->
+            linesError.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
                     startErrorRetry()
                 } else {
@@ -261,43 +270,10 @@ class CallViewModel @Inject constructor(
         val result = getLinesUseCase.execute()
         result.onSuccess {
             _lines.value = it
-            _error.value = null
-            _oneShotCallError.value = null
-            _callResult.value = ""
-            if (_selectedLine.value == null && it.isNotEmpty()) {
-                _selectedLine.value = it.first().id
-            }
-        }.onFailure {
-            val localizedContext = localeManager.createLocaleContext(context)
-            _error.value = ErrorMessageUtil.standardizeError(it, localizedContext)
-        }
-    }
 
-    fun makeCall(callerId: String, recipient: String, line: String) {
-        if (_isCallbackLoading.value) return
-        _isCallbackLoading.value = true
-        viewModelScope.launch {
-            try {
-                _error.value = null
-                _callResult.value = ""
-                val result = callUseCase.execute(callerId, recipient, line)
-                result.onSuccess {
-                    _callResult.value = it
-                }.onFailure {
-                    val localizedContext = localeManager.createLocaleContext(context)
-                    _error.value = ErrorMessageUtil.standardizeError(it, localizedContext)
-                }
-            } finally {
-                _isCallbackLoading.value = false
-            }
-        }
-    }
-
-    fun getPhoneNumbersFromContact(contentResolver: ContentResolver, contactUri: Uri): List<String> {
-        return getPhoneNumbersForContactUseCase(contentResolver, contactUri)
-    }
-
-
+     * @param selectedLineId Optional specific line ID (used by widgets that have per-tile line configuration).
+     *                       If null, falls back to the globally selected line.
+     */
     fun makeOneShotCall(
         targetRecipient: String,
         useLineAsCallerId: Boolean,
@@ -340,6 +316,54 @@ class CallViewModel @Inject constructor(
         }
     }
 
+
+
+    private var widgetDispatchClaimed = false
+
+    private val _widgetCallbackSucceeded = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    val widgetCallbackSucceeded = _widgetCallbackSucceeded.asSharedFlow()
+
+
+    fun dispatchWidgetTileAction(tileId: Int) {
+        if (widgetDispatchClaimed) return
+        widgetDispatchClaimed = true
+
+        viewModelScope.launch {
+            val tile = tileRepository.getTileById(tileId)
+            if (tile == null) {
+                _callbackError.value =
+                    context.getString(com.odorik.odorikbuddy.R.string.widget_error_tile_not_found)
+                return@launch
+            }
+
+            val globalLine = appPreferences.getString("selected_line", null)
+            val lineId = tile.lineId?.takeIf { it.isNotBlank() } ?: globalLine
+
+            if (tile.callType == "CALLBACK") {
+                val globalCallerId = appPreferences.getString("caller_id", "") ?: ""
+                val callerId = tile.callerId?.takeIf { it.isNotBlank() } ?: globalCallerId
+                if (callerId.isBlank()) {
+                    _callbackError.value =
+                        context.getString(com.odorik.odorikbuddy.R.string.callback_error_no_caller_id)
+                    return@launch
+                }
+
+                _isCallbackLoading.value = true
+                makeCallInternal(callerId, tile.recipient, lineId ?: "")
+                if (_callbackError.value == null) {
+                    _widgetCallbackSucceeded.tryEmit(tile.recipient)
+                }
+            } else {
+                makeOneShotCall(
+                    targetRecipient = tile.recipient,
+                    useLineAsCallerId = tile.useLineAsCallerId,
+                    selectedLineId = lineId?.toIntOrNull()
+                )
+            }
+        }
+    }
+
     fun resetCallResult() {
         _callResult.value = ""
     }
@@ -350,5 +374,9 @@ class CallViewModel @Inject constructor(
 
     fun resetOneShotCallError() {
         _oneShotCallError.value = null
+    }
+
+    fun resetCallbackError() {
+        _callbackError.value = null
     }
 }

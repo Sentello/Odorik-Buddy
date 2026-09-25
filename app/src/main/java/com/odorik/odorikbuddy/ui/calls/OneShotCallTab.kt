@@ -62,6 +62,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,6 +78,7 @@ import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +93,7 @@ fun OneShotCallTab(
     val selectedLine by callViewModel.selectedLine.collectAsState()
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
-    val error by callViewModel.error.collectAsState()
+    val linesError by callViewModel.linesError.collectAsState()
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
@@ -103,21 +105,24 @@ fun OneShotCallTab(
 
     val useCallerIdPrefix by callViewModel.useCallerIdPrefix.collectAsState()
 
+    val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
         onResult = { contactUri ->
-            contactUri?.let {
-                val numbers = callViewModel.getPhoneNumbersFromContact(context.contentResolver, it)
-                if (numbers.size == 1) {
-                    val number = numbers.first()
-                    when (currentContactField) {
-                        ContactField.CALLER_ID -> callViewModel.updateCallerId(number)
-                        ContactField.RECIPIENT -> callViewModel.updateOneShotRecipient(number)
-                        null -> {}
+            contactUri?.let { uri ->
+                contactScope.launch {
+                    val numbers = callViewModel.getPhoneNumbersFromContact(context.contentResolver, uri)
+                    if (numbers.size == 1) {
+                        val number = numbers.first()
+                        when (currentContactField) {
+                            ContactField.CALLER_ID -> callViewModel.updateCallerId(number)
+                            ContactField.RECIPIENT -> callViewModel.updateOneShotRecipient(number)
+                            null -> {}
+                        }
+                    } else if (numbers.size > 1) {
+                        phoneNumbers = numbers
+                        showPhoneNumberDialog = true
                     }
-                } else if (numbers.size > 1) {
-                    phoneNumbers = numbers
-                    showPhoneNumberDialog = true
                 }
             }
         }
@@ -395,7 +400,7 @@ fun OneShotCallTab(
                 val activeError = if (!oneShotCallError.isNullOrEmpty()) {
                     oneShotCallError
                 } else {
-                    error
+                    linesError
                 }
 
                 if (!activeError.isNullOrEmpty() && !isOneShotCallLoading) {

@@ -285,7 +285,8 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     val allowedSenders by viewModel.allowedSenders.collectAsState()
     val sendResult by viewModel.sendResult.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val sendError by viewModel.sendError.collectAsState()
+    val sendersError by viewModel.sendersError.collectAsState()
     val recipientContactName by viewModel.recipientContactName.collectAsState()
 
     var recipient by remember { mutableStateOf("") }
@@ -547,7 +548,9 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    if (error != null) ApiMessage(response = error!!, isError = true, visible = true)
+
+                    val activeError = sendError ?: sendersError
+                    if (activeError != null) ApiMessage(response = activeError, isError = true, visible = true)
                     if (sendResult != null) ApiMessage(response = sendResult!!, isError = false, visible = true)
                     Spacer(modifier = Modifier.height(100.dp))
                 }

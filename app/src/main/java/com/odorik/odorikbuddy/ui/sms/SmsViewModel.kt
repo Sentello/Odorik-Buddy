@@ -48,8 +48,13 @@ class SmsViewModel @Inject constructor(
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
+
+    private val _sendersError = MutableStateFlow<String?>(null)
+    val sendersError: StateFlow<String?> = _sendersError
+
+
+    private val _sendError = MutableStateFlow<String?>(null)
+    val sendError: StateFlow<String?> = _sendError
 
     private val _delayed = MutableStateFlow("")
     val delayed: StateFlow<String> = _delayed
@@ -73,7 +78,7 @@ class SmsViewModel @Inject constructor(
     init {
 
         viewModelScope.launch {
-            error.collect { currentError ->
+            sendersError.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
                     startErrorRetry()
                 } else {
@@ -97,7 +102,7 @@ class SmsViewModel @Inject constructor(
                 kotlinx.coroutines.delay(retryBackoff.delayBeforeAttempt(attempt))
                 if (!_isRetrying.value) break
                 fetchAllowedSendersInternal()
-                if (_error.value == null) break
+                if (_sendersError.value == null) break
             }
             _isRetrying.value = false
         }
@@ -118,14 +123,15 @@ class SmsViewModel @Inject constructor(
     }
 
     private suspend fun fetchAllowedSendersInternal() {
-        _error.value = null
+
+        _sendersError.value = null
         val result = smsRepository.getAllowedSenders()
         result.onSuccess {
             _allowedSenders.value = it
-            _error.value = null
+            _sendersError.value = null
         }.onFailure { e ->
             val localizedContext = localeManager.createLocaleContext(context)
-            _error.value = ErrorMessageUtil.standardizeError(e, localizedContext)
+            _sendersError.value = ErrorMessageUtil.standardizeError(e, localizedContext)
         }
     }
 
@@ -135,7 +141,7 @@ class SmsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _sendResult.value = null
-                _error.value = null
+                _sendError.value = null
 
                 val result = smsRepository.sendSms(
                     recipient = recipient,
@@ -149,7 +155,7 @@ class SmsViewModel @Inject constructor(
                     clearDraft()
                 }.onFailure { e ->
                     val localizedContext = localeManager.createLocaleContext(context)
-                    _error.value = ErrorMessageUtil.standardizeError(e, localizedContext)
+                    _sendError.value = ErrorMessageUtil.standardizeError(e, localizedContext)
                 }
             } finally {
                 _isSending.value = false
