@@ -181,7 +181,8 @@ def atomic_write(path: Path, text: str) -> None:
     fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), prefix=path.name, suffix=".tmp")
     tmp = Path(tmp_name)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        # newline="" keeps the line endings exactly as they are in *text*.
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
             handle.write(text)
         shutil.copymode(str(path), str(tmp))
         os.replace(str(tmp), str(path))
@@ -194,16 +195,22 @@ def process_kotlin_file(file_path: Path, dry_run: bool = False,
                         keep_blank_lines: bool = False) -> str:
     """Process a single Kotlin file. Returns 'modified', 'unchanged' or 'error'."""
     try:
-        content = file_path.read_text(encoding="utf-8")
+        # newline="" preserves the file's own line endings instead of
+        # silently rewriting the whole file to LF.
+        with file_path.open(encoding="utf-8", newline="") as handle:
+            content = handle.read()
     except (OSError, UnicodeDecodeError) as e:
         logging.error("Failed to read %s: %s", file_path, e)
         return "error"
 
+    crlf = "\r\n" in content
     try:
-        new_content = remove_comments(content, keep_blank_lines)
+        new_content = remove_comments(content.replace("\r\n", "\n"), keep_blank_lines)
     except UnterminatedComment as e:
         logging.error("Skipping %s: %s", file_path, e)
         return "error"
+    if crlf:
+        new_content = new_content.replace("\n", "\r\n")
 
     if new_content == content:
         logging.debug("No comments to remove from %s", file_path)
