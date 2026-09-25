@@ -25,7 +25,6 @@ class RefreshBalanceAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-
         updateAppWidgetState(context, glanceId) { prefs ->
             prefs[BalanceWidget.isLoadingKey] = true
             prefs.remove(BalanceWidget.errorKey)
@@ -43,7 +42,7 @@ class RefreshBalanceAction : ActionCallback {
         updateAppWidgetState(context, glanceId) { prefs ->
             prefs[BalanceWidget.isLoadingKey] = false
             prefs[BalanceWidget.lastUpdatedKey] = System.currentTimeMillis()
-
+            
             result.onSuccess { balance ->
                 prefs[BalanceWidget.balanceKey] = balance
                 prefs.remove(BalanceWidget.errorKey)

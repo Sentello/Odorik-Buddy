@@ -1,6 +1,5 @@
 package com.odorik.odorikbuddy.ui.calls
 
-
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,14 +73,13 @@ fun AddEditTileDialog(
     val context = LocalContext.current
     var label by remember { mutableStateOf(tile?.label ?: "") }
     var recipient by remember { mutableStateOf(tile?.recipient ?: "") }
-
+    
     val tabOrder by callViewModel.tabOrder.collectAsState()
-
-
+    
     val callTypeOptions = remember(tabOrder) {
         val callbackIndex = tabOrder.indexOf("callback_title").takeIf { it >= 0 } ?: Int.MAX_VALUE
         val oneshotIndex = tabOrder.indexOf("oneshot_call").takeIf { it >= 0 } ?: Int.MAX_VALUE
-
+        
         if (oneshotIndex < callbackIndex) {
             listOf("ONESHOT" to R.string.call_type_oneshot, "CALLBACK" to R.string.call_type_callback)
         } else {
@@ -91,21 +89,21 @@ fun AddEditTileDialog(
 
     var callType by remember { mutableStateOf(tile?.callType ?: callTypeOptions.first().first) }
     var selectedLineId by remember { mutableStateOf(tile?.lineId) }
-    var callerId by remember { mutableStateOf(tile?.callerId ?: "") }
+    var callerId by remember { mutableStateOf(tile?.callerId ?: "") } 
     var useLineAsCallerId by remember { mutableStateOf(tile?.useLineAsCallerId ?: false) }
     var selectedColor by remember { mutableStateOf(tile?.color) }
     var selectedTextColor by remember { mutableStateOf(tile?.textColor) }
 
     var contactFieldToUpdate by remember { mutableStateOf<ContactField?>(null) }
-
+    
     var lineDropdownExpanded by remember { mutableStateOf(false) }
     var typeDropdownExpanded by remember { mutableStateOf(false) }
-
+    
     var validationError by remember { mutableStateOf<String?>(null) }
-
+    
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
-
+    
     val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
@@ -149,7 +147,7 @@ fun AddEditTileDialog(
             requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
-
+    
     val colors = TileColorHelper.allBaseColors
     val textColors = TileColorHelper.textColors
 
@@ -163,7 +161,6 @@ fun AddEditTileDialog(
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 ExposedDropdownMenuBox(
                     expanded = typeDropdownExpanded,
                     onExpandedChange = { typeDropdownExpanded = !typeDropdownExpanded }
@@ -189,19 +186,18 @@ fun AddEditTileDialog(
                     }
                 }
 
-
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
                     label = { Text(stringResource(R.string.label_optional)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-
+                
                 val recipientField = @Composable {
                     OutlinedTextField(
                         value = recipient,
                         onValueChange = { recipient = it },
-                        label = { Text(stringResource(R.string.called_number)) },
+                        label = { Text(stringResource(R.string.called_number)) }, 
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
@@ -280,8 +276,7 @@ fun AddEditTileDialog(
                         Text(stringResource(R.string.use_line_number_as_caller_id))
                     }
                 }
-
-
+                
                 Text(stringResource(R.string.color), style = MaterialTheme.typography.bodySmall)
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -289,7 +284,6 @@ fun AddEditTileDialog(
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
                     item {
-
                          Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -299,7 +293,7 @@ fun AddEditTileDialog(
                                 .clickable { selectedColor = null }
                         )
                     }
-
+                    
                     items(colors) { color ->
                         val displayColor = TileColorHelper.resolveColor(
                             color,
@@ -316,7 +310,6 @@ fun AddEditTileDialog(
                     }
                 }
 
-
                 Text(stringResource(R.string.text_color), style = MaterialTheme.typography.bodySmall)
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -324,7 +317,6 @@ fun AddEditTileDialog(
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
                     item {
-
                          Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -334,7 +326,7 @@ fun AddEditTileDialog(
                                 .clickable { selectedTextColor = null }
                         )
                     }
-
+                    
                     items(textColors) { color ->
                         Box(
                             modifier = Modifier
@@ -346,7 +338,7 @@ fun AddEditTileDialog(
                         )
                     }
                 }
-
+                
                 if (validationError != null) {
                     Text(
                         text = validationError!!,
@@ -363,7 +355,7 @@ fun AddEditTileDialog(
                     val isLineSelected = selectedLineId != null
                     val isRecipientValid = recipient.isNotBlank()
                     val isCallerIdValid = if (callType == "CALLBACK") callerId.isNotBlank() else true
-
+                    
                     if (isLineSelected && isRecipientValid && isCallerIdValid) {
                          onSave(
                             TileData(
@@ -396,7 +388,7 @@ fun AddEditTileDialog(
             }
         }
     )
-
+    
     if (showPhoneNumberDialog) {
         AlertDialog(
             onDismissRequest = { showPhoneNumberDialog = false },

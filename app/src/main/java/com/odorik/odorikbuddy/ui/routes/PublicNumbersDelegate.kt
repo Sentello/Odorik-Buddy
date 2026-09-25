@@ -24,7 +24,6 @@ class PublicNumbersDelegate @Inject constructor(
         contactNameResolver.loadContacts(contentResolver)
     }
 
-
     fun getContactName(number: String): String {
         val resolved = contactNameResolver.getContactName(number)
         if (resolved == number) return number

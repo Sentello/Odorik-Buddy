@@ -90,7 +90,6 @@ fun RoutesScreen(
     val routesMap by viewModel.routesMap.collectAsState()
     val error by viewModel.error.collectAsState()
 
-
     var selectedPublicNumber by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -102,32 +101,25 @@ fun RoutesScreen(
     val context = LocalContext.current
 
 
-
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-
                 viewModel.loadContacts(context.contentResolver)
             }
         }
     )
 
-
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
-
                 viewModel.loadContacts(context.contentResolver)
             }
             else -> {
-
                 readContactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
         }
     }
-
-
 
 
     var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -169,7 +161,6 @@ fun RoutesScreen(
             contactPickerLauncher.launch(null)
         } else {
             launcherToTrigger = { contactPickerLauncher.launch(null) }
-
             requestPermissionLauncherForPicker.launch(Manifest.permission.READ_CONTACTS)
         }
     }
@@ -210,7 +201,6 @@ fun RoutesScreen(
                     )
                 }
                 is BaseNumbersViewModel.UiState.Success -> {
-
                     val baseSpacing = LocalAppDimens.current.spacing
                     val cardPadding = LocalAppDimens.current.cardPadding
 
@@ -226,8 +216,7 @@ fun RoutesScreen(
                         ) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
-
-
+                            
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
                             SharedNumberItem(
@@ -255,7 +244,7 @@ fun RoutesScreen(
                     }
                 }
             }
-
+            
             PullRefreshIndicator(
                 refreshing = isLoading && uiState !is BaseNumbersViewModel.UiState.Loading,
                 state = pullRefreshState,
@@ -266,15 +255,12 @@ fun RoutesScreen(
     }
 
 
-
     LaunchedEffect(error) {
-
         if (uiState !is BaseNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
         }
     }
-
 
     if (showAddDialog && selectedPublicNumber != null) {
         AlertDialog(
@@ -487,8 +473,6 @@ fun SharedNumberItem(
     baseSpacing: androidx.compose.ui.unit.Dp,
     onAddRule: () -> Unit
 ) {
-
-
     var routeIdToDelete by remember { mutableStateOf<Long?>(null) }
 
     ElevatedCard(
@@ -553,7 +537,6 @@ fun SharedNumberItem(
                                 color = ScreenAccents.Settings.main()
                             )
                         } else {
-
                             Column(modifier = Modifier.heightIn(max = 300.dp)) {
                                 routesForThisNumber.forEach { route ->
                                     val sourceName = viewModel.getContactName(route.sourceNumber)

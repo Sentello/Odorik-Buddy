@@ -7,7 +7,6 @@ import javax.inject.Inject
 
 class LoadContactsUseCase @Inject constructor() {
 
-
     operator fun invoke(contentResolver: ContentResolver): Map<String, String> {
         val projection = arrayOf(
             ContactsContract.CommonDataKinds.Phone.NUMBER,

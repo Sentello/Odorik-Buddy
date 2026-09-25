@@ -199,7 +199,6 @@ fun OwnNumbersScreen(
                     )
                 }
                 is BaseNumbersViewModel.UiState.Success -> {
-
                     val baseSpacing = LocalAppDimens.current.spacing
                     val cardPadding = LocalAppDimens.current.cardPadding
 
@@ -215,7 +214,7 @@ fun OwnNumbersScreen(
                         ) { number ->
                             val routesForThisNumber = routesMap[number.publicNumber].orEmpty()
                             val hasRules = routesForThisNumber.isNotEmpty()
-
+                            
                             val publicNumberDisplayName = viewModel.getContactName(number.publicNumber)
 
                             OwnNumberItem(
@@ -243,7 +242,7 @@ fun OwnNumbersScreen(
                     }
                 }
             }
-
+            
             PullRefreshIndicator(
                 refreshing = isLoading && uiState !is BaseNumbersViewModel.UiState.Loading,
                 state = pullRefreshState,
@@ -372,7 +371,6 @@ fun OwnNumbersScreen(
     }
 
     LaunchedEffect(error) {
-
         if (uiState !is BaseNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
@@ -394,8 +392,6 @@ fun OwnNumberItem(
     baseSpacing: androidx.compose.ui.unit.Dp,
     onAddRule: () -> Unit
 ) {
-
-
     var routeIdToDelete by remember { mutableStateOf<Long?>(null) }
 
     ElevatedCard(
@@ -460,7 +456,6 @@ fun OwnNumberItem(
                                 color = ScreenAccents.Settings.main()
                             )
                         } else {
-
                             Column(modifier = Modifier.heightIn(max = 300.dp)) {
                                 routesForThisNumber.forEach { route ->
                                     val sourceName = viewModel.getContactName(route.sourceNumber)

@@ -52,16 +52,16 @@ internal fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing/2)) {
                 Text(
-                    "${stringResource(R.string.line_name_label)} ${line.name}",
+                    "${stringResource(R.string.line_name_label)} ${line.name}", 
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    "${stringResource(R.string.caller_id_label_settings)} ${line.callerId}",
+                    "${stringResource(R.string.caller_id_label_settings)} ${line.callerId}", 
                     style = MaterialTheme.typography.bodyLarge
                 )
                 line.publicNumber?.let {
                     Text(
-                        "${stringResource(R.string.public_number_label)} ${it}",
+                        "${stringResource(R.string.public_number_label)} ${it}", 
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -95,7 +95,7 @@ internal fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
                 )
                 if (line.connectedDevices.isEmpty()) {
                     Text(
-                        stringResource(R.string.none),
+                        stringResource(R.string.none), 
                         style = MaterialTheme.typography.bodyLarge
                     )
                 } else {
@@ -104,13 +104,13 @@ internal fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
                             val ipAddress = device.publicSocket.substringBefore(':')
                             Column {
                                 Text(
-                                    "• ${device.userAgent}",
+                                    "• ${device.userAgent}", 
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    "  IP: $ipAddress",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    "  IP: $ipAddress", 
+                                    style = MaterialTheme.typography.bodySmall, 
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -132,7 +132,7 @@ fun PhoneNumberInputDialog(
     onDismiss: () -> Unit
 ) {
     var phoneNumberInput by remember { mutableStateOf(currentNumber) }
-
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.personal_phone_number)) },
@@ -146,11 +146,11 @@ fun PhoneNumberInputDialog(
                 OutlinedTextField(
                     value = phoneNumberInput,
                     onValueChange = { phoneNumberInput = it },
-                    label = {
+                    label = { 
                         Text(
                             stringResource(R.string.personal_phone_number),
                             style = MaterialTheme.typography.bodyLarge
-                        )
+                        ) 
                     },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -289,9 +289,9 @@ fun UpdateInfoDialog(
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-
+    
     val cannotOpenUrlString = stringResource(R.string.cannot_open_url)
-
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.app_update)) },
@@ -311,7 +311,7 @@ fun UpdateInfoDialog(
                             "${stringResource(R.string.latest_version)}: ${updateInfo.version}",
                             style = MaterialTheme.typography.bodyLarge
                         )
-
+                        
                         if (isUpdateAvailable) {
                             Text(
                                 stringResource(R.string.update_available),
@@ -343,13 +343,13 @@ fun UpdateInfoDialog(
         confirmButton = {
             if (updateInfo != null && isUpdateAvailable) {
                 TextButton(
-                    onClick = {
+                    onClick = { 
                         try {
                             uriHandler.openUri(updateInfo.downloadUrl)
                         } catch (e: Exception) {
                             android.widget.Toast.makeText(
-                                context,
-                                cannotOpenUrlString,
+                                context, 
+                                cannotOpenUrlString, 
                                 android.widget.Toast.LENGTH_LONG
                             ).show()
                         }
@@ -387,7 +387,6 @@ fun AboutDialog(
         title = { Text(stringResource(R.string.about_app)) },
         text = {
             Column {
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -412,7 +411,6 @@ fun AboutDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
 
                 Text(
                     text = stringResource(R.string.about_app_description),

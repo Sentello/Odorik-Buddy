@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 
-
 fun Context.findActivity(): Activity? {
     var current = this
     while (current is ContextWrapper) {
@@ -16,7 +15,6 @@ fun Context.findActivity(): Activity? {
     }
     return null
 }
-
 
 fun Context.openAppSettings() {
     val intent = Intent(

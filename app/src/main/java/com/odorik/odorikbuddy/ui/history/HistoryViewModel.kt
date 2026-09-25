@@ -76,12 +76,10 @@ class HistoryViewModel @Inject constructor(
     val contactsMap: StateFlow<Map<String, String>> = contactNameResolver.contactsMap
 
     init {
-
         viewModelScope.launch {
             fetchLinesInternal()
             fetchHistoryInternal(isRefresh = false)
         }
-
 
         viewModelScope.launch {
             contactNameResolver.contactsMap
@@ -116,14 +114,12 @@ class HistoryViewModel @Inject constructor(
                     _history.value = cachedDisplay
                     applyFilters()
                     _error.value = null
-
                     if (lastUpdateTimestamp != 0L &&
                         System.currentTimeMillis() - lastUpdateTimestamp <= STALE_THRESHOLD
                     ) {
                         _isRefreshing.value = false
                         return
                     }
-
                 }
             }
 
@@ -135,7 +131,6 @@ class HistoryViewModel @Inject constructor(
 
                 val items = repository.getCombinedHistory(from, to)
                 repository.insertHistory(items)
-
                 repository.pruneHistoryBefore(from)
                 items
             }
@@ -293,7 +288,6 @@ class HistoryViewModel @Inject constructor(
                 )
             }
         }
-
 
         val orphanChildren = result.filter { item ->
             val parentId = item.redirectionParentId

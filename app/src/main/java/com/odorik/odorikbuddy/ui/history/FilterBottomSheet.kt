@@ -44,9 +44,6 @@ import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 
 
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FilterBottomSheet(
@@ -59,7 +56,7 @@ internal fun FilterBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
+    
     var lineExpanded by remember { mutableStateOf(false) }
     var tempSelectedLine by remember { mutableStateOf(selectedLine) }
     var tempFilterNumber by remember { mutableStateOf(filterNumber) }
@@ -67,7 +64,7 @@ internal fun FilterBottomSheet(
     var tempEventDirectionFilter by remember { mutableStateOf(eventDirectionFilter) }
     var eventTypeExpanded by remember { mutableStateOf(false) }
     var eventDirectionExpanded by remember { mutableStateOf(false) }
-
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -89,7 +86,6 @@ internal fun FilterBottomSheet(
                 .fillMaxWidth()
                 .padding(bottom = LocalAppDimens.current.spacing * 2)
         ) {
-
             GradientHeader(
                 title = stringResource(R.string.filter_history),
                 iconVector = Icons.Default.FilterList,
@@ -98,7 +94,7 @@ internal fun FilterBottomSheet(
                 iconContainerSize = 40.dp,
                 iconCornerRadius = 10.dp
             )
-
+            
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,7 +105,6 @@ internal fun FilterBottomSheet(
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing)
             ) {
-
                 ExposedDropdownMenuBox(
                     expanded = lineExpanded,
                     onExpandedChange = { lineExpanded = !lineExpanded }
@@ -149,8 +144,7 @@ internal fun FilterBottomSheet(
                         }
                     }
                 }
-
-
+                
                 OutlinedTextField(
                     value = tempFilterNumber,
                     onValueChange = { tempFilterNumber = it },
@@ -162,8 +156,7 @@ internal fun FilterBottomSheet(
                         focusedLabelColor = ScreenAccents.History.main()
                     )
                 )
-
-
+                
                 ExposedDropdownMenuBox(
                     expanded = eventTypeExpanded,
                     onExpandedChange = { eventTypeExpanded = !eventTypeExpanded }
@@ -200,8 +193,7 @@ internal fun FilterBottomSheet(
                         }
                     }
                 }
-
-
+                
                 ExposedDropdownMenuBox(
                     expanded = eventDirectionExpanded,
                     onExpandedChange = { eventDirectionExpanded = !eventDirectionExpanded }
@@ -238,10 +230,9 @@ internal fun FilterBottomSheet(
                         }
                     }
                 }
-
+                
                 Spacer(modifier = Modifier.height(8.dp))
-
-
+                
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -252,7 +243,7 @@ internal fun FilterBottomSheet(
                             val numberChanged = tempFilterNumber != filterNumber
                             val eventTypeChanged = tempEventTypeFilter != eventTypeFilter
                             val eventDirectionChanged = tempEventDirectionFilter != eventDirectionFilter
-
+                            
                             if (lineChanged || numberChanged || eventTypeChanged || eventDirectionChanged) {
                                 viewModel.setSelectedLine(tempSelectedLine)
                                 viewModel.setFilterNumber(tempFilterNumber)
@@ -273,7 +264,7 @@ internal fun FilterBottomSheet(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
-
+                    
                     if (selectedLine != null || filterNumber.isNotEmpty() || eventTypeFilter != "all" || eventDirectionFilter != "all") {
                         Button(
                             onClick = {
@@ -305,8 +296,5 @@ internal fun FilterBottomSheet(
         }
     }
 }
-
-
-
 
 

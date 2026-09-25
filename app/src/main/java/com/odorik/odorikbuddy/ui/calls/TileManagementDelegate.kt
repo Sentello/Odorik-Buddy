@@ -50,7 +50,7 @@ class TileManagementDelegate @Inject constructor(
     ) {
         scope.launch {
             val nextPosition = if (tiles.isEmpty()) 0 else tiles.maxOf { it.position } + 1
-
+            
             val newTile = TileEntity(
                 position = nextPosition,
                 label = label,
@@ -94,7 +94,6 @@ class TileManagementDelegate @Inject constructor(
             )
             tileRepository.updateTile(updatedTile)
 
-
             widgetUpdateManager.refreshWidgetsUsingTile(tileId)
         }
     }
@@ -102,24 +101,23 @@ class TileManagementDelegate @Inject constructor(
     fun deleteTile(scope: CoroutineScope, tile: TileEntity) {
         scope.launch {
             tileRepository.deleteTile(tile)
-
             widgetUpdateManager.refreshWidgetsUsingTile(tile.id)
         }
     }
 
     fun onTileReordered(scope: CoroutineScope, tiles: List<TileEntity>, fromIndex: Int, toIndex: Int) {
         if (fromIndex == toIndex) return
-
+        
         val currentList = tiles.sortedBy { it.position }.toMutableList()
         if (fromIndex !in currentList.indices || toIndex !in currentList.indices) return
-
+        
         val item = currentList.removeAt(fromIndex)
         currentList.add(toIndex, item)
-
+        
         val updatedList = currentList.mapIndexed { index, tile ->
             tile.copy(position = index)
         }
-
+        
         scope.launch {
             tileRepository.updateTiles(updatedList)
         }

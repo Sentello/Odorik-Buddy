@@ -31,7 +31,6 @@ import com.odorik.odorikbuddy.util.PhoneCallLauncher
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-
 @AndroidEntryPoint
 class WidgetCallActivity : ComponentActivity() {
 
@@ -60,7 +59,6 @@ class WidgetCallActivity : ComponentActivity() {
                 val oneShotError by callViewModel.oneShotCallError.collectAsStateWithLifecycle()
                 val callbackError by callViewModel.callbackError.collectAsStateWithLifecycle()
 
-
                 LaunchedEffect(oneShotResult) {
                     if (oneShotResult.isNotEmpty()) {
                         PhoneCallLauncher.launch(
@@ -72,7 +70,6 @@ class WidgetCallActivity : ComponentActivity() {
                         finish()
                     }
                 }
-
 
                 LaunchedEffect(Unit) {
                     callViewModel.widgetCallbackSucceeded.collect { recipient ->
@@ -89,7 +86,6 @@ class WidgetCallActivity : ComponentActivity() {
                     val message = oneShotError?.takeIf { it.isNotEmpty() }
                         ?: callbackError?.takeIf { it.isNotEmpty() }
                     if (message != null) {
-
                         showErrorAndFinish(message)
                         callViewModel.resetOneShotCallError()
                         callViewModel.resetCallbackError()
@@ -120,7 +116,6 @@ class WidgetCallActivity : ComponentActivity() {
                 }
             }
         }
-
 
         callViewModel.dispatchWidgetTileAction(tileId)
     }

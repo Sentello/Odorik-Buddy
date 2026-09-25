@@ -90,7 +90,6 @@ fun DateRangePickerScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -180,7 +179,7 @@ fun DateRangePickerScreen(navController: NavController) {
                     }
                 }
             }
-
+            
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -195,7 +194,7 @@ fun DateRangePickerScreen(navController: NavController) {
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = LocalAppDimens.current.spacing)
                     )
-
+                    
                     OutlinedButton(
                         onClick = { showStartDatePicker = true },
                         modifier = Modifier.fillMaxWidth(),
@@ -267,8 +266,8 @@ fun DateRangePickerScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
-                    showStartDatePicker = false
+                TextButton(onClick = { 
+                    showStartDatePicker = false 
                     startDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0).atZone(ZoneId.systemDefault()).toLocalDate()
                 }) {
                     Text(stringResource(R.string.ok))
@@ -289,7 +288,7 @@ fun DateRangePickerScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(onClick = { 
                     showEndDatePicker = false
                     endDate = Instant.ofEpochMilli(datePickerState.selectedDateMillis ?: 0).atZone(ZoneId.systemDefault()).toLocalDate()
                 }) {

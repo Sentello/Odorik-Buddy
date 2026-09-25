@@ -50,9 +50,6 @@ import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.CurrencyFormatter
 
 
-
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HistoryListItem(
@@ -63,7 +60,7 @@ fun HistoryListItem(
     val item = displayItem.item
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
-
+    
     val statusColor = when {
         item.status == "missed" -> MaterialTheme.colorScheme.error
         item.direction == "in" -> ScreenAccents.CallIncoming.main()
@@ -102,7 +99,6 @@ fun HistoryListItem(
         )
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -117,16 +113,14 @@ fun HistoryListItem(
                     )
                     .align(Alignment.CenterVertically)
             ) {
-
                 Spacer(modifier = Modifier.width(4.dp))
             }
-
+            
             Column(modifier = Modifier.weight(1f)) {
-
                 if (displayItem.isChild) {
                     ChildConnector()
                 }
-
+                
                 Row(
                     modifier = Modifier
                         .padding(
@@ -138,11 +132,9 @@ fun HistoryListItem(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     EventIcon(item = item, statusColor = statusColor)
                     Spacer(modifier = Modifier.width(12.dp))
-
-
+                    
                     ItemDetails(
                         item = item,
                         displayItem = displayItem,
@@ -151,8 +143,7 @@ fun HistoryListItem(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-
-
+                    
                     PriceAndDuration(
                         item = item,
                         displayItem = displayItem,
@@ -164,9 +155,6 @@ fun HistoryListItem(
         }
     }
 }
-
-
-
 
 
 @Composable
@@ -201,7 +189,7 @@ internal fun EventIcon(
     val isCall = item.length != null
     val icon: ImageVector
     val backgroundColor: Color
-
+    
     if (isCall) {
         icon = when {
             item.status == "missed" -> Icons.AutoMirrored.Filled.PhoneMissed
@@ -215,7 +203,7 @@ internal fun EventIcon(
         icon = Icons.Default.Sms
         backgroundColor = ScreenAccents.History.main()
     }
-
+    
     Box(
         modifier = Modifier
             .size(36.dp)
@@ -252,15 +240,12 @@ internal fun ItemDetails(
     } else {
         contactName
     }
-
-
+    
     val relativeTime = formatRelativeTime(item.date, context)
-
-
+    
     val networkColor = getNetworkColor(item.destinationName)
-
+    
     Column(modifier = modifier) {
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "${stringResource(R.string.from_history)} $sourceDisplayName",
@@ -269,7 +254,6 @@ internal fun ItemDetails(
                 color = if (displayItem.isChild) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f, fill = false)
             )
-
             if (item.recording != null) {
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
@@ -280,8 +264,7 @@ internal fun ItemDetails(
                 )
             }
         }
-
-
+        
         Text(
             text = "${stringResource(R.string.to_history)} $destinationDisplayName",
             fontSize = if (displayItem.isChild) 12.sp else 14.sp,
@@ -302,13 +285,11 @@ internal fun ItemDetails(
                 }
             )
         )
-
-
+        
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 4.dp)
         ) {
-
             if (networkColor != null && item.destinationName != null) {
                 val networkLabelResId = when {
                     item.destinationName.contains("mobil", ignoreCase = true) -> R.string.network_mobile
@@ -334,8 +315,7 @@ internal fun ItemDetails(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
-
-
+            
             Text(
                 text = relativeTime,
                 style = MaterialTheme.typography.bodySmall,
@@ -353,9 +333,8 @@ internal fun PriceAndDuration(
     language: String
 ) {
     val formattedPrice = currencyFormatter.formatCurrency(item.price, language)
-
+    
     Column(horizontalAlignment = Alignment.End) {
-
         Text(
             text = formattedPrice,
             color = MaterialTheme.colorScheme.primary,
@@ -364,8 +343,7 @@ internal fun PriceAndDuration(
             textAlign = TextAlign.End,
             style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum")
         )
-
-
+        
         if (item.pricePerMinute != null && item.pricePerMinute > 0) {
             Text(
                 text = currencyFormatter.formatCurrency(item.pricePerMinute, language) + "/min",
@@ -374,7 +352,7 @@ internal fun PriceAndDuration(
                 textAlign = TextAlign.End
             )
         }
-
+        
         when {
             item.length != null && item.length > 0 -> {
                 DurationIndicator(
@@ -387,7 +365,6 @@ internal fun PriceAndDuration(
                     modifier = Modifier.padding(top = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Box(
                         modifier = Modifier
                             .height(6.dp)

@@ -8,13 +8,11 @@ import javax.inject.Singleton
 
 class AuthenticationException(message: String) : Exception(message)
 
-
 @Singleton
 class AccountRepository @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
-
 
     suspend fun getCredit(): Result<Double> {
         var responseString = ""

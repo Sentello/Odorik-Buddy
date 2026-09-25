@@ -29,7 +29,6 @@ class ThemeManager @Inject constructor(
         if (stored != null) {
             return runCatching { ThemeMode.valueOf(stored) }.getOrDefault(ThemeMode.SYSTEM)
         }
-
         if (sharedPreferences.contains(KEY_DARK_MODE)) {
             val dark = sharedPreferences.getBoolean(KEY_DARK_MODE, false)
             val migrated = if (dark) ThemeMode.DARK else ThemeMode.LIGHT

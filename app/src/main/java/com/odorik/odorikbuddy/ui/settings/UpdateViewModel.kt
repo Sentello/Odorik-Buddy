@@ -33,7 +33,6 @@ class UpdateViewModel @Inject constructor(
     val error: StateFlow<String?> = _error
 
     init {
-
         loadCachedUpdateInfo()
     }
 
@@ -44,7 +43,6 @@ class UpdateViewModel @Inject constructor(
     }
 
     fun checkForUpdates() {
-
         if (_isLoading.value) return
 
         viewModelScope.launch {
@@ -57,8 +55,6 @@ class UpdateViewModel @Inject constructor(
                     _isLoading.value = false
                 }
                 .onFailure { exception ->
-
-
                     _error.value = ErrorMessageUtil.standardizeError(
                         exception,
                         context,

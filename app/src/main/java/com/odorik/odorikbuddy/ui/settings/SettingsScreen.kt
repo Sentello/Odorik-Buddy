@@ -153,11 +153,9 @@ fun SettingsScreen(
 
     val uriHandler = LocalUriHandler.current
 
-
     val updateInfo by updateViewModel.updateInfo.collectAsState()
     val isUpdateLoading by updateViewModel.isLoading.collectAsState()
     val updateError by updateViewModel.error.collectAsState()
-
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -169,11 +167,9 @@ fun SettingsScreen(
                 !ActivityCompat.shouldShowRequestPermissionRationale(it, android.Manifest.permission.POST_NOTIFICATIONS)
             } == true
         ) {
-
             deniedPermissionMessageRes = R.string.notification_permission_denied_message
         }
     }
-
 
     val callPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -211,7 +207,7 @@ fun SettingsScreen(
                 accent = ScreenAccents.Settings,
                 iconRotation = gearRotation.value
             )
-
+            
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -222,7 +218,6 @@ fun SettingsScreen(
                     bottom = LocalAppDimens.current.spacing
                 )
             ) {
-
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_account),
@@ -245,7 +240,6 @@ fun SettingsScreen(
                         }
                     }
                 }
-
 
                 item {
                     SettingsSection(
@@ -280,7 +274,6 @@ fun SettingsScreen(
                         }
                     }
                 }
-
 
                 item {
                     SettingsSection(
@@ -334,7 +327,6 @@ fun SettingsScreen(
                     }
                 }
 
-
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_data),
@@ -356,14 +348,12 @@ fun SettingsScreen(
                     }
                 }
 
-
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_app),
                         icon = Icons.Default.Apps
                     ) {
                         Column {
-
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.auto_update_checking)) },
                                 supportingContent = { Text(stringResource(R.string.auto_update_checking_description)) },
@@ -403,8 +393,7 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
-
-
+                            
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.direct_calls)) },
                                 supportingContent = { Text(stringResource(R.string.direct_calls_description)) },
@@ -437,7 +426,6 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
 
-
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.about_app)) },
                                 supportingContent = {
@@ -453,7 +441,6 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
-
 
                             val isUpdateAvailable = updateViewModel.isUpdateAvailable()
                             TransparentListItem(
@@ -488,7 +475,6 @@ fun SettingsScreen(
                     }
                 }
 
-
                 item {
                     androidx.compose.material3.OutlinedButton(
                         onClick = { showLogoutDialog = true },
@@ -503,7 +489,7 @@ fun SettingsScreen(
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.Logout,
+                            Icons.AutoMirrored.Filled.Logout, 
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -622,7 +608,6 @@ fun SettingsScreen(
     }
 
 
-
     selectedLine?.let {
         LineInfoDialog(line = it, onDismiss = { viewModel.onDismissLineDialog() })
     }
@@ -697,8 +682,7 @@ fun SettingsScreen(
             onDismiss = { showPhoneNumberDialog = false }
         )
     }
-
-
+    
     if (showUpdateDialog) {
         val isUpdateAvailable = updateViewModel.isUpdateAvailable()
         UpdateInfoDialog(
@@ -709,8 +693,7 @@ fun SettingsScreen(
             onDismiss = { showUpdateDialog = false }
         )
     }
-
-
+    
     if (showAboutDialog) {
         AboutDialog(
             onDismiss = { showAboutDialog = false },

@@ -17,17 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
-
 val FabEdgePadding = 16.dp
 
-
 val FabSpacing = 12.dp
-
 
 val FabListBottomSpacing = 88.dp
 
 private val FabIconSize = 24.dp
-
 
 @Composable
 fun AppFab(

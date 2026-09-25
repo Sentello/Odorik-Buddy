@@ -53,13 +53,11 @@ import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.AppConstants.SWIPE_THRESHOLD
 import kotlin.math.roundToInt
 
-
 data class TabItem(
     val titleResId: Int,
     val title: String,
     val content: @Composable () -> Unit
 )
-
 
 @Composable
 fun DraggableTabs(
@@ -87,7 +85,6 @@ fun DraggableTabs(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
     ) {
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -114,14 +111,14 @@ fun DraggableTabs(
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 dragOffset.value += dragAmount.x
-
+                                
                                 val currentDraggingIdx = draggingIndex.value
                                 val initialIdx = initialDraggingIndex.value
                                 if (currentDraggingIdx >= 0 && initialIdx >= 0) {
                                     val tabWidth = size.width / currentTabOrder.size
                                     val newIndex = ((dragOffset.value + initialIdx * tabWidth) / tabWidth).roundToInt()
                                         .coerceIn(0, currentTabOrder.size - 1)
-
+                                    
                                     if (newIndex != currentDraggingIdx) {
                                         val newOrder = currentTabOrder.toMutableList()
                                         val draggedTitle = newOrder.removeAt(currentDraggingIdx)
@@ -166,8 +163,7 @@ fun DraggableTabs(
                 }
             }
         }
-
-
+        
         val selectedIndex = currentTabOrder.indexOf(selectedTabTitle)
         var swipeOffset by remember { mutableStateOf(0f) }
 
@@ -181,12 +177,10 @@ fun DraggableTabs(
                         onDragEnd = {
                             val threshold = SWIPE_THRESHOLD
                             if (swipeOffset > threshold) {
-
                                 if (selectedIndex > 0) {
                                     onTabSelected(currentTabOrder[selectedIndex - 1])
                                 }
                             } else if (swipeOffset < -threshold) {
-
                                 if (selectedIndex >= 0 && selectedIndex < currentTabOrder.size - 1) {
                                     onTabSelected(currentTabOrder[selectedIndex + 1])
                                 }
@@ -221,7 +215,6 @@ fun DraggableTabs(
     }
 }
 
-
 @Composable
 fun DraggableTab(
     titleResId: Int,
@@ -232,7 +225,7 @@ fun DraggableTab(
     modifier: Modifier = Modifier
 ) {
     val title = stringResource(titleResId)
-
+    
     val scale by animateFloatAsState(
         targetValue = if (isDragging) 1.05f else 1f,
         animationSpec = spring(
@@ -241,13 +234,13 @@ fun DraggableTab(
         ),
         label = "tabScale"
     )
-
+    
     val textColor by animateColorAsState(
         targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(durationMillis = 200),
         label = "tabTextColor"
     )
-
+    
     Box(
         modifier = modifier
             .fillMaxHeight()
@@ -278,7 +271,7 @@ fun DraggableTab(
                 color = textColor,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
             )
-
+            
             if (isDragging) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Icon(

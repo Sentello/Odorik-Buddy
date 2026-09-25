@@ -31,7 +31,6 @@ class UpdateWorkManager @Inject constructor(
         private const val UPDATE_CHECK_WORK_NAME = "update_check_work"
     }
 
-
     fun scheduleUpdateCheck() {
         scope.launch {
             if (!isAutoUpdateEnabled()) return@launch
@@ -81,7 +80,6 @@ class UpdateWorkManager @Inject constructor(
                     updateNotifier.notifyIfNeeded(updateInfo)
                 }
             } catch (e: Exception) {
-
             }
         }
     }

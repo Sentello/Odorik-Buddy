@@ -12,13 +12,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class WidgetUpdateManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
-
 
     fun refreshWidgetsUsingTile(tileId: Int) {
         scope.launch {
@@ -38,8 +36,11 @@ class WidgetUpdateManager @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                android.util.Log.w("WidgetUpdateManager", "Failed to refresh widgets for tile $tileId", e)
+            }
+        }
+    }
 
-     */
     fun refreshAllQuickDialWidgets() {
         scope.launch {
             try {

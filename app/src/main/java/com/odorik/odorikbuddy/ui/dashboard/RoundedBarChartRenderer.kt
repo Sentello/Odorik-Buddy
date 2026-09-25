@@ -9,7 +9,6 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.github.mikephil.charting.renderer.BarChartRenderer
 import com.github.mikephil.charting.utils.ViewPortHandler
 
-
 class RoundedBarChartRenderer(
     chart: BarDataProvider,
     animator: ChartAnimator,
@@ -55,7 +54,6 @@ class RoundedBarChartRenderer(
                 mRenderPaint.color = dataSet.getColor(j / 4)
             }
 
-
             if (dataSet.gradientColor != null) {
                 val gradientColor = dataSet.gradientColor
                 mRenderPaint.shader = android.graphics.LinearGradient(
@@ -77,7 +75,6 @@ class RoundedBarChartRenderer(
             roundedPath.reset()
             rectF.set(left, top, right, bottom)
 
-
             val radii = floatArrayOf(
                 radius, radius,
                 radius, radius,
@@ -91,7 +88,6 @@ class RoundedBarChartRenderer(
             if (drawBorder) {
                 c.drawPath(roundedPath, mBarBorderPaint)
             }
-
 
             mRenderPaint.shader = null
 

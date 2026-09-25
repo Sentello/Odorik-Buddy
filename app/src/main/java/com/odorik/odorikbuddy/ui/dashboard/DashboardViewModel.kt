@@ -82,7 +82,6 @@ class DashboardViewModel @Inject constructor(
     init {
         loadSavedDateRange()
 
-
         viewModelScope.launch {
             error.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -135,7 +134,6 @@ class DashboardViewModel @Inject constructor(
         }
 
         try {
-
             if (isInitialLoad && appPreferences.getString("dashboard_start_date") == null) {
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
@@ -174,13 +172,11 @@ class DashboardViewModel @Inject constructor(
                 _startDate.value = java.time.LocalDate.ofEpochDay(startEpoch)
                 _endDate.value = java.time.LocalDate.ofEpochDay(endEpoch)
             } catch (e: Exception) {
-
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
                 _endDate.value = end
             }
         } else {
-
             val (start, end) = getCurrentWeekRange()
             _startDate.value = start
             _endDate.value = end
@@ -194,18 +190,17 @@ class DashboardViewModel @Inject constructor(
 
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
         val (currentStart, currentEnd) = getCurrentWeekRange()
-
-
+        
         if (newStartDate == currentStart && newEndDate == currentEnd) {
             appPreferences.clearString("dashboard_start_date")
             appPreferences.clearString("dashboard_end_date")
         } else {
             saveDateRange(newStartDate, newEndDate)
         }
-
+        
         _startDate.value = newStartDate
         _endDate.value = newEndDate
-
+        
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -217,7 +212,7 @@ class DashboardViewModel @Inject constructor(
         _endDate.value = end
         appPreferences.clearString("dashboard_start_date")
         appPreferences.clearString("dashboard_end_date")
-
+        
         viewModelScope.launch {
             fetchSpendingData()
         }
@@ -253,8 +248,7 @@ class DashboardViewModel @Inject constructor(
 
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
-
-
+                
                 val filteredCache = cachedHistory.filter { item ->
                     try {
                         val itemDate = parseIsoDate(item.date).toInstant()

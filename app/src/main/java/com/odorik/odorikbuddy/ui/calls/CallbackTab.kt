@@ -75,7 +75,6 @@ import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallbackTab(
@@ -145,22 +144,21 @@ fun CallbackTab(
             requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
-
+    
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             viewModel.loadContacts(context.contentResolver)
         }
         contentVisible = true
     }
-
+    
     LaunchedEffect(callResult) {
         if (callResult.isNotEmpty() && !callResult.startsWith("error")) {
             delay(5000L)
             viewModel.resetCallResult()
         }
     }
-
-
+    
     val buttonInteractionSource = remember { MutableInteractionSource() }
     val isPressed by buttonInteractionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
@@ -181,14 +179,13 @@ fun CallbackTab(
     ) {
         AnimatedVisibility(
             visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(400)) +
+            enter = fadeIn(animationSpec = tween(400)) + 
                     slideInVertically(
                         initialOffsetY = { it / 4 },
                         animationSpec = tween(400)
                     )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -203,11 +200,10 @@ fun CallbackTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing)
                     ) {
-
                         OutlinedTextField(
                             value = callerId,
                             onValueChange = { viewModel.updateCallerId(it) },
-                            label = {
+                            label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Person,
@@ -230,19 +226,18 @@ fun CallbackTab(
                             trailingIcon = {
                                 IconButton(onClick = { pickContact(ContactField.CALLER_ID) }) {
                                     Icon(
-                                        Icons.Default.Contacts,
+                                        Icons.Default.Contacts, 
                                         contentDescription = stringResource(R.string.pick_caller_id),
                                         tint = ScreenAccents.Calls.main()
                                     )
                                 }
                             }
                         )
-
-
+                        
                         OutlinedTextField(
                             value = recipient,
                             onValueChange = { viewModel.updateCallbackRecipient(it) },
-                            label = {
+                            label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
@@ -265,15 +260,14 @@ fun CallbackTab(
                             trailingIcon = {
                                 IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
                                     Icon(
-                                        Icons.Default.Contacts,
+                                        Icons.Default.Contacts, 
                                         contentDescription = stringResource(R.string.pick_recipient),
                                         tint = ScreenAccents.Calls.main()
                                     )
                                 }
                             }
                         )
-
-
+                        
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
@@ -320,10 +314,9 @@ fun CallbackTab(
                                 }
                             }
                         }
-
+                        
                         Spacer(modifier = Modifier.height(8.dp))
-
-
+                        
                         Button(
                             onClick = {
                                 selectedLine?.let { lineId ->
@@ -354,13 +347,11 @@ fun CallbackTab(
                         }
                     }
                 }
-
-
+                
                 if (callResult.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     CallApiMessage(response = callResult, visible = true)
                 }
-
                 val activeError = callbackError?.takeIf { it.isNotEmpty() } ?: linesError
                 if (!activeError.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -369,7 +360,6 @@ fun CallbackTab(
             }
         }
     }
-
 
     if (showPhoneNumberDialog) {
         AlertDialog(

@@ -11,9 +11,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.R
 
-
 object PhoneCallLauncher {
-
 
     fun launch(
         context: Context,
@@ -24,7 +22,6 @@ object PhoneCallLauncher {
             context,
             Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
-
 
         val uri = Uri.fromParts("tel", phoneNumber, null)
         val intent = if (directCallsEnabled && hasCallPermission) {

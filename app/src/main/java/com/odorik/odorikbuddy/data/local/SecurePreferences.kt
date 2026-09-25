@@ -17,9 +17,7 @@ class SecurePreferences @Inject constructor(@ApplicationContext private val cont
         private const val TAG = "SecurePreferences"
     }
 
-
     private val sharedPreferences: SharedPreferences by lazy { createPreferences() }
-
 
     private fun createPreferences(): SharedPreferences {
         return try {
@@ -65,9 +63,6 @@ class SecurePreferences @Inject constructor(@ApplicationContext private val cont
     fun clearPassword() {
         sharedPreferences.edit().remove("password").apply()
     }
-
-
-
 
 
     fun getString(key: String, defaultValue: String? = null): String? {

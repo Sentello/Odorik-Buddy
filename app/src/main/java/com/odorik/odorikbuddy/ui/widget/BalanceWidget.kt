@@ -59,8 +59,7 @@ class BalanceWidget : GlanceAppWidget() {
         val lastUpdatedKey = longPreferencesKey("last_updated")
         val isLoadingKey = booleanPreferencesKey("is_loading")
         val errorKey = stringPreferencesKey("error")
-
-
+        
         val backgroundKey = stringPreferencesKey("bg_style")
         val textColorKey = stringPreferencesKey("text_color")
         val textSizeKey = stringPreferencesKey("text_size")
@@ -82,7 +81,7 @@ class BalanceWidget : GlanceAppWidget() {
                 val lastUpdated = prefs[lastUpdatedKey]
                 val isLoading = prefs[isLoadingKey] ?: false
                 val error = prefs[errorKey]
-
+                
                 val bgStyle = prefs[backgroundKey] ?: "SYSTEM"
                 val textColorStyle = prefs[textColorKey] ?: "AUTO"
                 val textSizeStyle = prefs[textSizeKey] ?: "NORMAL"
@@ -115,9 +114,7 @@ class BalanceWidget : GlanceAppWidget() {
         val currencyFormatter = CurrencyFormatter(context)
         val language = context.resources.configuration.locales[0].language
 
-
-
-
+        
         val bgColorProvider = when (bgStyle) {
             "SYSTEM" -> GlanceTheme.colors.surfaceVariant
             "TRANSPARENT" -> ColorProvider(Color.Transparent)
@@ -127,7 +124,6 @@ class BalanceWidget : GlanceAppWidget() {
             "ODORIK" -> ColorProvider(Color(0xFFC00012))
             else -> GlanceTheme.colors.surface
         }
-
 
         val mainTextColor = when (textColorStyle) {
             "WHITE" -> ColorProvider(Color.White)
@@ -139,7 +135,7 @@ class BalanceWidget : GlanceAppWidget() {
             }
             else -> GlanceTheme.colors.onSurface
         }
-
+        
         val secondaryTextColor = when (textColorStyle) {
              "WHITE" -> ColorProvider(Color.White.copy(0.7f))
              "BLACK" -> ColorProvider(Color.Black.copy(0.7f))
@@ -150,7 +146,6 @@ class BalanceWidget : GlanceAppWidget() {
              }
              else -> GlanceTheme.colors.onSurfaceVariant
         }
-
 
         val balanceFontSize = when (textSizeStyle) {
             "NORMAL" -> 22.sp
@@ -173,7 +168,6 @@ class BalanceWidget : GlanceAppWidget() {
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Image(
                     provider = ImageProvider(R.drawable.ic_odorik_logo),
                     contentDescription = context.getString(R.string.a11y_odorik_logo),
@@ -182,12 +176,10 @@ class BalanceWidget : GlanceAppWidget() {
 
                 Spacer(modifier = GlanceModifier.width(16.dp))
 
-
                 Column(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = GlanceModifier.fillMaxSize()
                 ) {
-
                     if (isLoading) {
                         Text(
                             text = if (balance != null) {
@@ -229,8 +221,7 @@ class BalanceWidget : GlanceAppWidget() {
                             )
                         )
                     }
-
-
+                    
                     if (!isLoading && lastUpdated != null) {
                         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
                         Text(

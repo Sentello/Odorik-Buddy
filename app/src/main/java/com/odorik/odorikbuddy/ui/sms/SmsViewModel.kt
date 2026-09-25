@@ -48,10 +48,8 @@ class SmsViewModel @Inject constructor(
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending
 
-
     private val _sendersError = MutableStateFlow<String?>(null)
     val sendersError: StateFlow<String?> = _sendersError
-
 
     private val _sendError = MutableStateFlow<String?>(null)
     val sendError: StateFlow<String?> = _sendError
@@ -67,7 +65,6 @@ class SmsViewModel @Inject constructor(
 
     private val retryBackoff = BackoffPolicy()
 
-
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
 
@@ -76,7 +73,6 @@ class SmsViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
-
         viewModelScope.launch {
             sendersError.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -123,7 +119,6 @@ class SmsViewModel @Inject constructor(
     }
 
     private suspend fun fetchAllowedSendersInternal() {
-
         _sendersError.value = null
         val result = smsRepository.getAllowedSenders()
         result.onSuccess {
@@ -163,7 +158,6 @@ class SmsViewModel @Inject constructor(
         }
     }
 
-
     suspend fun getPhoneNumbersFromContact(
         contentResolver: ContentResolver,
         contactUri: Uri
@@ -184,12 +178,10 @@ class SmsViewModel @Inject constructor(
             return
         }
 
-
         try {
             val minutes = delayed.toInt()
             _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
         } catch (e: NumberFormatException) {
-
             try {
                 val scheduled = Instant.parse(delayed)
                 val now = Instant.now()

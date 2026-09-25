@@ -35,7 +35,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyBlocking
 
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class CallViewModelWidgetDispatchTest {
 
@@ -62,7 +61,6 @@ class CallViewModelWidgetDispatchTest {
     fun tearDown() {
         Dispatchers.resetMain()
     }
-
 
     private fun preferences(values: Map<String, String?>): AppPreferences = mock {
         on { getString(any(), anyOrNull()) } doAnswer { invocation ->
@@ -186,7 +184,6 @@ class CallViewModelWidgetDispatchTest {
             onBlocking { execute(any(), any(), any()) } doReturn Result.success("ok")
         }
         val vm = viewModel(tiles, calls, preferences(emptyMap()))
-
 
         vm.dispatchWidgetTileAction(1)
         vm.dispatchWidgetTileAction(1)

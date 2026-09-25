@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class ContactNameResolver @Inject constructor(
     private val loadContactsUseCase: LoadContactsUseCase
@@ -22,7 +21,6 @@ class ContactNameResolver @Inject constructor(
 
     @Volatile
     private var lastLoadTimestampMs: Long = 0L
-
 
     private val reloadThrottleMs = 60_000L
 
@@ -42,7 +40,6 @@ class ContactNameResolver @Inject constructor(
             lastLoadTimestampMs = System.currentTimeMillis()
         }
     }
-
 
     fun getContactName(number: String): String {
         if (number.isBlank()) return number
@@ -64,7 +61,6 @@ class ContactNameResolver @Inject constructor(
 
         val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
-
         val exactName = contacts[parsedInput.normalizedNumber]
         if (exactName != null) {
             return if (parsedInput.specialPrefix.isNotEmpty()) {
@@ -73,7 +69,6 @@ class ContactNameResolver @Inject constructor(
                 exactName
             }
         }
-
 
         val n1 = parsedInput.normalizedNumber.replace("+", "")
         if (n1.length <= 8) return number

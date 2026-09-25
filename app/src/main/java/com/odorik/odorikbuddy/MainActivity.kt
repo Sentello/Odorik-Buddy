@@ -32,11 +32,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
 
-
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(), 
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation()
@@ -46,8 +45,6 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-
-
         val lang = LanguagePreferences.getPreferredLanguage(newBase)
         val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(lang)
         val config = Configuration(newBase.resources.configuration)

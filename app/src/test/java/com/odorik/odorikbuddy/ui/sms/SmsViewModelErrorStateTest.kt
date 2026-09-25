@@ -31,7 +31,6 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verifyBlocking
 import java.io.IOException
 
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class SmsViewModelErrorStateTest {
 
@@ -78,8 +77,6 @@ class SmsViewModelErrorStateTest {
         }
         val vm = viewModel(repository)
 
-
-
         vm.fetchAllowedSenders()
         runCurrent()
         assertNotNull("the first senders fetch should have failed", vm.sendersError.value)
@@ -89,8 +86,6 @@ class SmsViewModelErrorStateTest {
 
         val sendError = vm.sendError.value
         assertNotNull("the send failure must be reported", sendError)
-
-
 
         advanceUntilIdle()
 

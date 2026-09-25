@@ -8,7 +8,6 @@ import androidx.glance.appwidget.state.updateAppWidgetState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-
 object WidgetConfigurationUtils {
 
     fun updateWidgetStateAndRefresh(
@@ -24,7 +23,6 @@ object WidgetConfigurationUtils {
             glanceAppWidget.update(context, glanceId)
         }
     }
-
 
     inline fun updatePreferences(
         prefs: MutablePreferences,

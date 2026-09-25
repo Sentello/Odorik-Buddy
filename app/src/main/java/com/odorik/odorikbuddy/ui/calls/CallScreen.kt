@@ -24,7 +24,6 @@ import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.PhoneCallLauncher
 
-
 fun mapApiArgumentToStringId(apiArgument: String): Int {
     return when (apiArgument) {
         "caller" -> R.string.argument_caller
@@ -44,11 +43,9 @@ fun CallScreen(
     val context = LocalContext.current
     val directCallsEnabled = viewModel.directCallsEnabled
 
-
     LaunchedEffect(Unit) {
         viewModel.dialerLaunchRequest.collect { phoneNumber ->
             try {
-
                 kotlinx.coroutines.delay(1200L)
 
                 PhoneCallLauncher.launch(
@@ -64,7 +61,7 @@ fun CallScreen(
         }
     }
 
-
+    
     val tabItems = remember(tabOrder) {
         tabOrder.map { title ->
             when (title) {
@@ -91,7 +88,7 @@ fun CallScreen(
             }
         }
     }
-
+    
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
@@ -100,10 +97,8 @@ fun CallScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
             GradientHeader(title = stringResource(R.string.calls), iconVector = Icons.Default.Call, accent = ScreenAccents.Calls)
-
-
+            
             DraggableTabs(
                 tabItems = tabItems,
                 selectedTabTitle = selectedTab,

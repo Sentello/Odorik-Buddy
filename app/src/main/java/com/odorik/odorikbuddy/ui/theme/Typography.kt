@@ -14,7 +14,6 @@ val FigtreeFamily = FontFamily(
     Font(R.font.figtree_bold, FontWeight.Bold)
 )
 
-
 val TabularNumbers = TextStyle(fontFeatureSettings = "tnum")
 
 val Typography = Typography(

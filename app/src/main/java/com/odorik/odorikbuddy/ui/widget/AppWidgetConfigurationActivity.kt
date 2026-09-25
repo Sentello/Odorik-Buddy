@@ -95,7 +95,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-
         val intent = intent
         val extras = intent.extras
         if (extras != null) {
@@ -105,19 +104,17 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             )
         }
 
-
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
         }
-
-
+        
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_CANCELED, resultValue)
 
         setContent {
             val context = LocalContext.current
-
+            
             val readContactsPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
                 onResult = { isGranted ->
@@ -196,8 +193,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
-
+                
                 item {
                     Column(
                         modifier = Modifier
@@ -215,7 +211,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-
                             StyleOption(
                                 label = stringResource(R.string.style_square),
                                 isSelected = selectedStyle == "SQUARE",
@@ -223,8 +218,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             )
-
-
+                            
                             StyleOption(
                                 label = stringResource(R.string.style_circle),
                                 isSelected = selectedStyle == "CIRCLE",
@@ -235,7 +229,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         }
                     }
                 }
-
 
                 if (selectedTile != null) {
                     item {
@@ -264,7 +257,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
-
                 if (selectedTileId != null) {
                     item {
                         Column(
@@ -279,7 +271,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
-
 
                             Row(
                                 modifier = Modifier
@@ -306,7 +297,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                                 )
-
 
                                 Text(stringResource(R.string.color), style = MaterialTheme.typography.labelSmall)
                                 LazyRow(
@@ -335,7 +325,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
-
 
                                 Text(stringResource(R.string.text_color), style = MaterialTheme.typography.labelSmall)
                                 LazyRow(
@@ -367,8 +356,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 items(tiles, key = { it.id }) { tile ->
                     val contactName = viewModel.getContactName(tile.recipient)
                     val isSelected = selectedTileId == tile.id
-
-
+                    
                     val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
                     val tileBg = TileColorHelper.resolveColor(tile.color, isSystemDark)
                         ?: MaterialTheme.colorScheme.surface
@@ -386,7 +374,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             .padding(horizontal = LocalAppDimens.current.cardPadding, vertical = LocalAppDimens.current.spacing / 2)
                             .clickable {
                                 selectedTileId = tile.id
-
                                 if (!useTileColors) {
                                     customColor = tile.color
                                     customTextColor = tile.textColor
@@ -426,7 +413,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     )
                                 }
                             }
-
+                            
                             Text(
                                 text = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
                                 style = MaterialTheme.typography.labelMedium,
@@ -434,7 +421,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
-
+                            
                             if (isSelected) {
                                 Text(
                                     text = "✓ Selected",
@@ -446,7 +433,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         }
                     }
                 }
-
 
                 item {
                     val canSave = selectedTileId != null
@@ -488,14 +474,13 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         val primaryColor = ScreenAccents.Settings.main()
         val outlineColor = MaterialTheme.colorScheme.outlineVariant
         val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-
+        
         Column(
             modifier = modifier
                 .clickable(onClick = onClick)
                 .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -508,21 +493,19 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
-
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .background(
-                            if (isSelected) primaryColor.copy(alpha = 0.3f)
-                            else outlineColor.copy(alpha = 0.3f),
+                            if (isSelected) primaryColor.copy(alpha = 0.3f) 
+                            else outlineColor.copy(alpha = 0.3f), 
                             shape
                         )
                 )
             }
-
+            
             Spacer(modifier = Modifier.height(8.dp))
-
-
+            
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
@@ -569,7 +552,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
     fun QuickDialWidgetPreview(
         tile: com.odorik.odorikbuddy.data.local.entity.TileEntity,
@@ -580,7 +562,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         customTextColor: Long?
     ) {
         val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
-
 
         val bgColor = when {
             !useTileColors && customColor != null -> Color(customColor)
@@ -609,7 +590,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             contentAlignment = Alignment.Center
         ) {
             if (style == "CIRCLE") {
-
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -632,7 +612,6 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     )
                 }
             } else {
-
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,

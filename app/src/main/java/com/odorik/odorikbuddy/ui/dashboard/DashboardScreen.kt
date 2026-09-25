@@ -123,9 +123,8 @@ fun DashboardScreen(
     val error by viewModel.error.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isInitialLoading by viewModel.isInitialLoading.collectAsState()
-
+    
     val isCriticalError = !isInitialLoading && creditState is DashboardViewModel.UiState.Error
-
 
     val context = LocalContext.current
     val currentLanguage = remember {
@@ -140,9 +139,7 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         viewModel.loadData(true)
     }
-
-
-
+    
 
 
     val navStartDate = navController.currentBackStackEntry?.savedStateHandle?.get<Long>("startDate")
@@ -153,11 +150,9 @@ fun DashboardScreen(
             val newStartDate = java.time.LocalDate.ofEpochDay(navStartDate)
             val newEndDate = java.time.LocalDate.ofEpochDay(navEndDate)
 
-
             if (newStartDate != startDate || newEndDate != endDate) {
                 viewModel.updateDateRange(newStartDate, newEndDate)
             }
-
 
             navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("startDate")
             navController.currentBackStackEntry?.savedStateHandle?.remove<Long>("endDate")
@@ -165,7 +160,6 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(error) {
-
         if (!isCriticalError && error != null) {
             snackbarHostState.showSnackbar(
                 message = error!!,
@@ -212,9 +206,6 @@ fun DashboardScreen(
                         .fillMaxSize()
                         .padding(LocalAppDimens.current.screenPadding)
                 ) {
-
-
-
                     val chartOverhead = 430.dp
                     val dynamicChartHeight = (maxHeight - chartOverhead).coerceAtLeast(180.dp)
 
@@ -283,7 +274,7 @@ fun DashboardScreen(
                     }
                 }
             }
-
+            
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
@@ -490,14 +481,12 @@ fun SpendingChart(
                         AndroidView(
                             factory = { ctx ->
                                 CombinedChart(ctx).apply {
-
                                     xAxis.position = XAxis.XAxisPosition.BOTTOM
                                     xAxis.granularity = 1f
                                     xAxis.isGranularityEnabled = true
                                     xAxis.setDrawAxisLine(false)
                                     xAxis.setDrawGridLines(false)
                                     xAxis.yOffset = 8f
-
 
                                     axisLeft.setDrawAxisLine(false)
                                     axisLeft.setDrawGridLines(true)
@@ -507,13 +496,11 @@ fun SpendingChart(
                                     axisLeft.setLabelCount(5, false)
                                     axisRight.isEnabled = false
 
-
                                     description.isEnabled = false
                                     legend.isEnabled = true
                                     legend.textColor = secondaryColor
                                     legend.yOffset = 8f
                                     setExtraOffsets(4f, 8f, 4f, 20f)
-
 
                                     setTouchEnabled(true)
                                     isDragEnabled = true
@@ -572,7 +559,6 @@ fun SpendingChart(
                                 combinedData.setData(barData)
                                 combinedData.setData(lineData)
                                 chart.data = combinedData
-
 
                                 val combinedRenderer = chart.renderer as? CombinedChartRenderer
                                 combinedRenderer?.let { cr ->

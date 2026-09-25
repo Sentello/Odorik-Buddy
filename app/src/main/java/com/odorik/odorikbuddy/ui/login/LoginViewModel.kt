@@ -41,7 +41,6 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-
                 userRepository.setSessionCredentials(userId, password)
 
                 val result = getCreditUseCase.execute()
@@ -50,12 +49,10 @@ class LoginViewModel @Inject constructor(
                     if (remember) {
                         userRepository.persistCredentials(userId, password)
                     } else {
-
                         userRepository.clearPersistedCredentials()
                     }
                     _loginUiState.value = LoginUiState.Success
                 }.onFailure { e ->
-
                     userRepository.clearCredentials()
                     _loginUiState.value = when (e) {
                         is AuthenticationException ->

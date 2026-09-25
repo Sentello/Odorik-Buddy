@@ -62,7 +62,6 @@ private val Context.dataStore by preferencesDataStore(
     }
 )
 
-
 @Singleton
 class AppPreferences @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -80,8 +79,6 @@ class AppPreferences @Inject constructor(
     @Volatile private var stringValues: Map<String, String> = emptyMap()
 
     init {
-
-
         scope.launch {
             ensureLoadedSuspend()
             dataStore.data.collect { prefs ->
@@ -98,7 +95,6 @@ class AppPreferences @Inject constructor(
             .mapNotNull { (key, value) -> (value as? String)?.let { key.name to it } }
             .toMap()
     }
-
 
     private fun ensureLoaded() {
         if (loaded) return
@@ -146,14 +142,12 @@ class AppPreferences @Inject constructor(
             }
         }
 
-
     fun getString(key: String, defaultValue: String? = null): String? {
         ensureLoaded()
         return stringValues[key] ?: defaultValue
     }
 
     fun saveString(key: String, value: String) {
-
         stringValues = stringValues + (key to value)
         scope.launch {
             dataStore.edit { it[stringPreferencesKey(key)] = value }
@@ -166,7 +160,6 @@ class AppPreferences @Inject constructor(
             dataStore.edit { it.remove(stringPreferencesKey(key)) }
         }
     }
-
 
     suspend fun getHistoryPeriodDaysSuspend(): Int {
         ensureLoadedSuspend()
@@ -183,7 +176,6 @@ class AppPreferences @Inject constructor(
         }
     }
 
-
     private suspend fun migrateFromSecurePreferencesIfNeeded() {
         val migratedFlag = booleanPreferencesKey(KEY_SECURE_PREFS_MIGRATED)
         if (dataStore.data.first()[migratedFlag] == true) return
@@ -193,7 +185,6 @@ class AppPreferences @Inject constructor(
         }
         dataStore.edit { prefs ->
             values.forEach { (key, value) ->
-
                 if (prefs[stringPreferencesKey(key)] == null) {
                     prefs[stringPreferencesKey(key)] = value
                 }
@@ -208,7 +199,6 @@ class AppPreferences @Inject constructor(
         const val KEY_HISTORY_PERIOD_DAYS = "history_period_days"
         const val KEY_AUTO_UPDATE_ENABLED = "auto_update_enabled"
         const val KEY_SECURE_PREFS_MIGRATED = "secure_prefs_migrated"
-
 
         val MIGRATED_KEYS = listOf(
             "phone_number", "caller_id", "recipient", "oneshot_recipient",

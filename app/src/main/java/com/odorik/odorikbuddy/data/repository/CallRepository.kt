@@ -6,13 +6,11 @@ import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class CallRepository @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
-
 
     suspend fun callback(callerId: String, recipient: String, line: String): Result<String> {
         return try {

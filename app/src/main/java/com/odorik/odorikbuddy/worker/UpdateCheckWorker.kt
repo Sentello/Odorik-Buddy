@@ -24,7 +24,6 @@ class UpdateCheckWorker @AssistedInject constructor(
             result.onSuccess { updateInfo ->
                 updateNotifier.notifyIfNeeded(updateInfo)
             }
-
             if (result.isSuccess) Result.success() else Result.retry()
         } catch (e: Exception) {
             Result.retry()

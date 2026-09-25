@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.odorik.odorikbuddy.R
 
-
 @Composable
 fun CallApiMessage(response: String, visible: Boolean) {
     val isError = response.startsWith("error")
@@ -57,9 +56,9 @@ fun CallApiMessage(response: String, visible: Boolean) {
         response == "error invalid_line" -> stringResource(R.string.call_error_invalid_line)
         else -> if (response.isNotEmpty()) stringResource(R.string.call_unknown_error) else ""
     }
-
+    
     if (message.isEmpty()) return
-
+    
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
@@ -95,9 +94,9 @@ fun CallApiMessage(response: String, visible: Boolean) {
                 Icon(
                     imageVector = if (isError) Icons.Default.Error else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isError)
-                        MaterialTheme.colorScheme.onErrorContainer
-                    else
+                    tint = if (isError) 
+                        MaterialTheme.colorScheme.onErrorContainer 
+                    else 
                         MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )

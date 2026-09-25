@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
 abstract class BaseNumbersViewModel<T : Any>(
     val publicNumbersDelegate: PublicNumbersDelegate,
     private val getRoutesForNumberUseCase: GetRoutesForNumberUseCase,
@@ -36,12 +35,9 @@ abstract class BaseNumbersViewModel<T : Any>(
         data class Error(val message: String) : UiState<Nothing>()
     }
 
-
     protected abstract suspend fun fetchNumbers(): Result<List<T>>
 
-
     protected abstract fun publicNumberOf(item: T): String
-
 
     protected open fun dialogReplaceBySourceValue(): Boolean = false
 
@@ -188,7 +184,6 @@ abstract class BaseNumbersViewModel<T : Any>(
             publicNumbersDelegate.loadContacts(contentResolver)
         }
     }
-
 
     suspend fun getPhoneNumbersFromContact(
         contentResolver: ContentResolver,

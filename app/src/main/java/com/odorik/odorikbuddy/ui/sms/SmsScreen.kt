@@ -157,7 +157,7 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
         }
         else -> stringResource(R.string.sms_unknown_error)
     }
-
+    
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(
@@ -193,9 +193,9 @@ private fun ApiMessage(response: String, isError: Boolean, visible: Boolean) {
                 Icon(
                     imageVector = if (isError) Icons.Default.Error else Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isError)
-                        MaterialTheme.colorScheme.onErrorContainer
-                    else
+                    tint = if (isError) 
+                        MaterialTheme.colorScheme.onErrorContainer 
+                    else 
                         MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
@@ -372,7 +372,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
             message = ""
         }
     }
-
+    
     Scaffold(
         floatingActionButton = {
             AppFab(
@@ -404,7 +404,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                 actionContentDescription = stringResource(R.string.sms_delay_options_title),
                 actionTint = ScreenAccents.Sms.main()
             )
-
+            
             AnimatedVisibility(
                 visible = contentVisible,
                 enter = fadeIn(animationSpec = tween(400)) + slideInVertically(initialOffsetY = { it / 4 }, animationSpec = tween(400))
@@ -425,7 +425,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     viewModel.updateRecipient(it)
                                     viewModel.saveDraft(it, message, selectedSender)
                                 },
-                                label = {
+                                label = { 
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.padding(start = 4.dp))
@@ -464,11 +464,11 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                     value = selectedSender ?: stringResource(R.string.select_sender),
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = {
+                                    label = { 
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.padding(start = 4.dp))
-                                            Text(text = stringResource(R.string.sender), style = MaterialTheme.typography.bodyLarge)
+                                            Text(text = stringResource(R.string.sender), style = MaterialTheme.typography.bodyLarge) 
                                         }
                                     },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -512,11 +512,11 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                         viewModel.saveDraft(recipient, it, selectedSender)
                                     }
                                 },
-                                label = {
+                                label = { 
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.Sms, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.padding(start = 4.dp))
-                                        Text(text = stringResource(R.string.message), style = MaterialTheme.typography.bodyLarge)
+                                        Text(text = stringResource(R.string.message), style = MaterialTheme.typography.bodyLarge) 
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -548,7 +548,6 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-
                     val activeError = sendError ?: sendersError
                     if (activeError != null) ApiMessage(response = activeError, isError = true, visible = true)
                     if (sendResult != null) ApiMessage(response = sendResult!!, isError = false, visible = true)
@@ -719,7 +718,7 @@ private fun DelayOptionsContent(
                     textStyle = MaterialTheme.typography.bodyMedium
                 )
             }
-
+            
             Button(
                 onClick = { onDelayModeChange(delayMode); onDismiss() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),

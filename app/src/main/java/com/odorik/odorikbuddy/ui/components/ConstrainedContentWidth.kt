@@ -9,7 +9,6 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.unit.Dp
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 
-
 fun Modifier.constrainedContentWidth(): Modifier = composed {
     val max = LocalAppDimens.current.contentMaxWidth
     if (max == Dp.Infinity) {

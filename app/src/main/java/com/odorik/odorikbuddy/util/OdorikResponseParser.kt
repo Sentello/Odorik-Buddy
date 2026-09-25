@@ -1,8 +1,6 @@
 package com.odorik.odorikbuddy.util
 
-
 object OdorikResponseParser {
-
 
     fun parsePlainTextBody(body: String?): Result<String> {
         val text = body ?: ""

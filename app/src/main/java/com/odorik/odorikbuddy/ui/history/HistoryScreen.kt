@@ -61,9 +61,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 
-
-
-
 internal fun getFormatters(): Pair<SimpleDateFormat, SimpleDateFormat> {
     val currentLocale = Locale.getDefault()
     val timeFormat = SimpleDateFormat("HH:mm:ss", currentLocale)
@@ -77,9 +74,9 @@ internal fun parseApiDate(isoDate: String): java.util.Date? {
 
 internal fun formatRelativeTime(isoDate: String, context: android.content.Context): String {
     val date = parseApiDate(isoDate) ?: return isoDate
-
+    
     val (timeFormat, fullFormat) = getFormatters()
-
+    
     val calendar = java.util.Calendar.getInstance()
     val todayStart = calendar.apply {
         set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -87,10 +84,10 @@ internal fun formatRelativeTime(isoDate: String, context: android.content.Contex
         set(java.util.Calendar.SECOND, 0)
         set(java.util.Calendar.MILLISECOND, 0)
     }.timeInMillis
-
+    
     calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
     val yesterdayStart = calendar.timeInMillis
-
+    
     return when {
         date.time >= todayStart -> context.getString(R.string.today) + " " + timeFormat.format(date)
         date.time >= yesterdayStart -> context.getString(R.string.yesterday) + " " + timeFormat.format(date)
@@ -120,9 +117,6 @@ internal fun getNetworkColor(destinationName: String?): androidx.compose.ui.grap
 }
 
 
-
-
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HistoryScreen(
@@ -138,17 +132,16 @@ fun HistoryScreen(
     val eventDirectionFilter by viewModel.eventDirectionFilter.collectAsState()
     val listState = rememberLazyListState()
     val pullRefreshState = rememberPullRefreshState(isRefreshing, { viewModel.fetchHistory(isRefresh = true) })
-
+    
     val context = LocalContext.current
     val currentLanguage = remember {
         context.resources.configuration.locales[0].language
     }
     val currencyFormatter = remember { CurrencyFormatter(context) }
-
+    
     var showFilterSheet by remember { mutableStateOf(false) }
     var filtersApplied by remember { mutableStateOf(false) }
     var wasRefreshing by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(isRefreshing) {
         if (wasRefreshing && !isRefreshing && historyItems.isNotEmpty()) {
@@ -156,8 +149,7 @@ fun HistoryScreen(
         }
         wasRefreshing = isRefreshing
     }
-
-
+    
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -186,7 +178,6 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
             GradientHeader(
                 title = stringResource(R.string.history_title),
                 iconVector = Icons.Default.History,
@@ -196,8 +187,8 @@ fun HistoryScreen(
                 actionContentDescription = stringResource(R.string.filter_history),
                 actionTint = ScreenAccents.History.main()
             )
-
-
+            
+            
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -215,7 +206,6 @@ fun HistoryScreen(
                     }
                 }
 
-
                 HistoryContent(
                     historyItems = historyItems,
                     isRefreshing = isRefreshing,
@@ -225,7 +215,7 @@ fun HistoryScreen(
                     currencyFormatter = currencyFormatter,
                     listState = listState
                 )
-
+                
                 PullRefreshIndicator(
                     refreshing = isRefreshing,
                     state = pullRefreshState,
@@ -233,8 +223,7 @@ fun HistoryScreen(
                 )
             }
         }
-
-
+        
         if (showFilterSheet) {
             FilterBottomSheet(
                 lines = lines,
@@ -248,9 +237,6 @@ fun HistoryScreen(
         }
     }
 }
-
-
-
 
 
 @Composable
@@ -276,7 +262,6 @@ private fun HistoryContent(
             }
         }
         hasError -> {
-
             ErrorState(
                 error = error!!,
                 onRetry = { viewModel.fetchHistory(isRefresh = true) },
@@ -284,14 +269,11 @@ private fun HistoryContent(
             )
         }
         historyItems.isEmpty() -> {
-
             EmptyState(onRetry = { viewModel.fetchHistory(isRefresh = true) })
         }
         else -> {
-
             val horizontalPadding = LocalAppDimens.current.cardPadding
             val bottomPadding = LocalAppDimens.current.spacing
-
             val dayGroups = remember(historyItems) {
                 val groups = linkedMapOf<String, MutableList<HistoryDisplayItem>>()
                 for (displayItem in historyItems) {
@@ -367,9 +349,6 @@ private fun HistoryContent(
 }
 
 
-
-
-
 @Composable
 private fun ErrorState(
     error: String,
@@ -438,9 +417,6 @@ private fun ErrorState(
 }
 
 
-
-
-
 @Composable
 private fun EmptyState(onRetry: () -> Unit) {
     Column(
@@ -478,8 +454,5 @@ private fun EmptyState(onRetry: () -> Unit) {
         }
     }
 }
-
-
-
 
 

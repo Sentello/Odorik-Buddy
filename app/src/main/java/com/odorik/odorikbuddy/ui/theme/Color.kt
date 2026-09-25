@@ -3,9 +3,6 @@ package com.odorik.odorikbuddy.ui.theme
 import androidx.compose.ui.graphics.Color
 
 
-
-
-
 val StandardPrimaryLight = Color(0xFF43586E)
 val StandardOnPrimaryLight = Color.White
 val StandardPrimaryContainerLight = Color(0xFFD7E3F8)
@@ -37,9 +34,6 @@ val StandardSurfaceContainerHighDark = Color(0xFF282A2E)
 val StandardSurfaceContainerHighestDark = Color(0xFF333539)
 val StandardOutlineDark = Color(0xFF8C9199)
 val StandardOutlineVariantDark = Color(0xFF42474E)
-
-
-
 
 
 val OdorikPrimaryLight = Color(0xFFC00012)
@@ -75,14 +69,12 @@ val OdorikAccentSecondaryLight = Color(0xFFE53935)
 val OdorikAccentMainDark = Color(0xFFFF5449)
 val OdorikAccentSecondaryDark = Color(0xFFFF8A80)
 
-
 val CounterGreenLight = Color(0xFF15803D)
 val CounterGreenDark = Color(0xFF34C759)
 val CounterOrangeLight = Color(0xFFB45309)
 val CounterOrangeDark = Color(0xFFFF9500)
 val CounterRedLight = Color(0xFFDC2626)
 val CounterRedDark = Color(0xFFFF3B30)
-
 
 val CallIncomingLight = Color(0xFF16A34A)
 val CallIncomingLightSecondary = Color(0xFF4ADE80)

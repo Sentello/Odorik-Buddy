@@ -80,7 +80,6 @@ import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OneShotCallTab(
@@ -102,7 +101,7 @@ fun OneShotCallTab(
     var currentContactField by remember { mutableStateOf<ContactField?>(null) }
     var launcherToTrigger by remember { mutableStateOf<(() -> Unit)?>(null) }
     var contentVisible by remember { mutableStateOf(false) }
-
+    
     val useCallerIdPrefix by callViewModel.useCallerIdPrefix.collectAsState()
 
     val contactScope = rememberCoroutineScope()
@@ -148,7 +147,7 @@ fun OneShotCallTab(
             requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
-
+    
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             callViewModel.loadContacts(context.contentResolver)
@@ -156,8 +155,7 @@ fun OneShotCallTab(
         contentVisible = true
     }
 
-
-
+    
     val buttonInteractionSource = remember { MutableInteractionSource() }
     val isPressed by buttonInteractionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
@@ -178,14 +176,13 @@ fun OneShotCallTab(
     ) {
         AnimatedVisibility(
             visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(400)) +
+            enter = fadeIn(animationSpec = tween(400)) + 
                     slideInVertically(
                         initialOffsetY = { it / 4 },
                         animationSpec = tween(400)
                     )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -200,11 +197,10 @@ fun OneShotCallTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing)
                     ) {
-
                         OutlinedTextField(
                             value = recipient,
                             onValueChange = { callViewModel.updateOneShotRecipient(it) },
-                            label = {
+                            label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
@@ -227,15 +223,14 @@ fun OneShotCallTab(
                             trailingIcon = {
                                 IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
                                     Icon(
-                                        Icons.Default.Contacts,
+                                        Icons.Default.Contacts, 
                                         contentDescription = stringResource(R.string.pick_recipient),
                                         tint = ScreenAccents.Calls.main()
                                     )
                                 }
                             }
                         )
-
-
+                        
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
@@ -282,8 +277,7 @@ fun OneShotCallTab(
                                 }
                             }
                         }
-
-
+                        
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -304,10 +298,9 @@ fun OneShotCallTab(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-
+                        
                         Spacer(modifier = Modifier.height(4.dp))
-
-
+                        
                         Button(
                             onClick = {
                                 callViewModel.makeOneShotCall(recipient, useCallerIdPrefix)
@@ -349,8 +342,7 @@ fun OneShotCallTab(
                         }
                     }
                 }
-
-
+                
                 if (oneShotCallResult.isNotEmpty() && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(12.dp))
                     AnimatedVisibility(
@@ -395,14 +387,13 @@ fun OneShotCallTab(
                         }
                     }
                 }
-
-
+                
                 val activeError = if (!oneShotCallError.isNullOrEmpty()) {
                     oneShotCallError
                 } else {
                     linesError
                 }
-
+                
                 if (!activeError.isNullOrEmpty() && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(8.dp))
                     ErrorMessage(errorText = activeError, visible = true)
@@ -410,7 +401,6 @@ fun OneShotCallTab(
             }
         }
     }
-
 
     if (showPhoneNumberDialog) {
         AlertDialog(

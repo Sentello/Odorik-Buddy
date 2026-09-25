@@ -19,7 +19,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class UpdateNotifier @Inject constructor(
     @ApplicationContext private val context: Context
@@ -33,7 +32,6 @@ class UpdateNotifier @Inject constructor(
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-
     fun notifyIfNeeded(updateInfo: AppUpdateInfo) {
         if (!VersionUtils.isNewUpdateAvailable(updateInfo.version)) return
         if (prefs.getString(KEY_LAST_NOTIFICATION_VERSION, null) == updateInfo.version) return
@@ -41,7 +39,6 @@ class UpdateNotifier @Inject constructor(
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
-
             return
         }
 
@@ -71,7 +68,6 @@ class UpdateNotifier @Inject constructor(
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
             prefs.edit().putString(KEY_LAST_NOTIFICATION_VERSION, updateInfo.version).apply()
         } catch (e: SecurityException) {
-
         }
     }
 

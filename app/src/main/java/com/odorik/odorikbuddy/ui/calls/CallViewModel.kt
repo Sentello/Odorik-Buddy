@@ -54,10 +54,8 @@ class CallViewModel @Inject constructor(
     private val _lines = MutableStateFlow<List<Line>>(emptyList())
     val lines: StateFlow<List<Line>> = _lines
 
-
     private val _linesError = MutableStateFlow<String?>(null)
     val linesError: StateFlow<String?> = _linesError
-
 
     private val _callbackError = MutableStateFlow<String?>(null)
     val callbackError: StateFlow<String?> = _callbackError
@@ -82,7 +80,6 @@ class CallViewModel @Inject constructor(
     val directCallsEnabled: Boolean
         get() = appPreferences.directCallsEnabled
 
-
     val callerContactName: StateFlow<String?> = combine(_callerId, contactNameResolver.contactsMap) { number, _ ->
         if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -100,7 +97,6 @@ class CallViewModel @Inject constructor(
 
     private val _oneShotCallResult = MutableStateFlow<String>("")
     val oneShotCallResult: StateFlow<String> = _oneShotCallResult
-
 
     private val _dialerLaunchRequest = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val dialerLaunchRequest = _dialerLaunchRequest.asSharedFlow()
@@ -126,14 +122,11 @@ class CallViewModel @Inject constructor(
         val defaultTitle = "callback_title"
         val tabOrder = getTabOrder()
         return if (savedString?.toIntOrNull() != null) {
-
             val oldIndex = savedString.toInt()
             val migratedTitle = if (oldIndex in tabOrder.indices) tabOrder[oldIndex] else defaultTitle
-
             appPreferences.saveString("calls_selected_tab", migratedTitle)
             migratedTitle
         } else {
-
             savedString?.takeIf { it in tabOrder } ?: defaultTitle
         }
     }
@@ -144,15 +137,14 @@ class CallViewModel @Inject constructor(
     private fun getTabOrder(): List<String> {
         val savedOrder = appPreferences.getString("calls_tab_order", null)
         val defaultOrder = listOf("callback_title", "oneshot_call", "tiles_title")
-
+        
         if (savedOrder == null) return defaultOrder
-
+        
         val currentList = savedOrder.split(",").filter { it.isNotBlank() }.toMutableList()
-
         if (!currentList.contains("tiles_title")) {
             currentList.add("tiles_title")
         }
-
+        
         return currentList
     }
 
@@ -184,7 +176,6 @@ class CallViewModel @Inject constructor(
     }
 
     init {
-
         viewModelScope.launch {
             linesError.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -201,8 +192,6 @@ class CallViewModel @Inject constructor(
         _selectedLine.value = appPreferences.getString("selected_line", null)?.toIntOrNull()
         _useCallerIdPrefix.value = getUseCallerIdPrefix()
         _tabOrder.value = getTabOrder()
-
-
 
         getLines()
     }
@@ -270,10 +259,45 @@ class CallViewModel @Inject constructor(
         val result = getLinesUseCase.execute()
         result.onSuccess {
             _lines.value = it
+            _linesError.value = null
+            if (_selectedLine.value == null && it.isNotEmpty()) {
+                _selectedLine.value = it.first().id
+            }
+        }.onFailure {
+            val localizedContext = localeManager.createLocaleContext(context)
+            _linesError.value = ErrorMessageUtil.standardizeError(it, localizedContext)
+        }
+    }
 
-     * @param selectedLineId Optional specific line ID (used by widgets that have per-tile line configuration).
-     *                       If null, falls back to the globally selected line.
-     */
+    fun makeCall(callerId: String, recipient: String, line: String) {
+        if (_isCallbackLoading.value) return
+        _isCallbackLoading.value = true
+        viewModelScope.launch { makeCallInternal(callerId, recipient, line) }
+    }
+
+    private suspend fun makeCallInternal(callerId: String, recipient: String, line: String) {
+        try {
+            _callbackError.value = null
+            _callResult.value = ""
+            val result = callUseCase.execute(callerId, recipient, line)
+            result.onSuccess {
+                _callResult.value = it
+            }.onFailure {
+                val localizedContext = localeManager.createLocaleContext(context)
+                _callbackError.value = ErrorMessageUtil.standardizeError(it, localizedContext)
+            }
+        } finally {
+            _isCallbackLoading.value = false
+        }
+    }
+
+    suspend fun getPhoneNumbersFromContact(
+        contentResolver: ContentResolver,
+        contactUri: Uri
+    ): List<String> = withContext(Dispatchers.IO) {
+        getPhoneNumbersForContactUseCase(contentResolver, contactUri)
+    }
+
     fun makeOneShotCall(
         targetRecipient: String,
         useLineAsCallerId: Boolean,
@@ -286,7 +310,6 @@ class CallViewModel @Inject constructor(
             _isOneShotCallLoading.value = true
 
             try {
-
                 val lineIdToUse = selectedLineId ?: _selectedLine.value
 
                 val result = oneShotCallCoordinatorUseCase.execute(
@@ -315,15 +338,12 @@ class CallViewModel @Inject constructor(
             }
         }
     }
-
-
+    
 
     private var widgetDispatchClaimed = false
 
     private val _widgetCallbackSucceeded = MutableSharedFlow<String>(extraBufferCapacity = 1)
-
     val widgetCallbackSucceeded = _widgetCallbackSucceeded.asSharedFlow()
-
 
     fun dispatchWidgetTileAction(tileId: Int) {
         if (widgetDispatchClaimed) return
@@ -367,7 +387,7 @@ class CallViewModel @Inject constructor(
     fun resetCallResult() {
         _callResult.value = ""
     }
-
+    
     fun resetOneShotCallResult() {
         _oneShotCallResult.value = ""
     }

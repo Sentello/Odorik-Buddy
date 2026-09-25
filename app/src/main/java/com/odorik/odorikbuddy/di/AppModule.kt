@@ -32,7 +32,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-
     private val PASSWORD_PARAM_REGEX = Regex("password=[^&\\s\"]+")
 
     @Provides

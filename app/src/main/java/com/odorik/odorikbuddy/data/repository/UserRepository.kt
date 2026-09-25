@@ -4,7 +4,6 @@ import android.app.Application
 import com.odorik.odorikbuddy.data.local.SecurePreferences
 import javax.inject.Inject
 
-
 class UserRepository @Inject constructor(
     private val application: Application,
     private val securePreferences: SecurePreferences
@@ -16,18 +15,15 @@ class UserRepository @Inject constructor(
     @Volatile
     private var sessionPassword: String? = null
 
-
     fun setSessionCredentials(userId: String, password: String) {
         sessionUserId = userId
         sessionPassword = password
     }
 
-
     fun persistCredentials(userId: String, password: String) {
         securePreferences.saveUser(userId)
         securePreferences.savePassword(password)
     }
-
 
     fun clearPersistedCredentials() {
         securePreferences.clearUser()
@@ -39,12 +35,10 @@ class UserRepository @Inject constructor(
         sessionPassword = null
     }
 
-
     fun clearCredentials() {
         clearSessionCredentials()
         clearPersistedCredentials()
     }
-
 
     fun saveCredentials(userId: String, password: String, remember: Boolean) {
         setSessionCredentials(userId, password)

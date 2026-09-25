@@ -1,6 +1,5 @@
 package com.odorik.odorikbuddy.ui.calls
 
-
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -81,27 +80,24 @@ fun TilesScreen(
     val tiles by viewModel.tiles.collectAsState()
     val lines by callViewModel.lines.collectAsState()
     val contactsMap by viewModel.contactsMap.collectAsState()
-
-
+    
     val callResult by callViewModel.callResult.collectAsState()
     val callbackError by callViewModel.callbackError.collectAsState()
     val linesError by callViewModel.linesError.collectAsState()
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
-
+    
     var showAddDialog by remember { mutableStateOf(false) }
     var tileToEdit by remember { mutableStateOf<TileEntity?>(null) }
     var tileToDelete by remember { mutableStateOf<TileEntity?>(null) }
     var isEditMode by remember { mutableStateOf(false) }
-
-
+    
     val currentCallResult = callResult
     val currentCallbackError = callbackError
     val currentLinesError = linesError
     val currentOneShotCallResult = oneShotCallResult
     val currentOneShotCallError = oneShotCallError
-
 
     var contentVisible by remember { mutableStateOf(false) }
 
@@ -113,9 +109,9 @@ fun TilesScreen(
             }
         }
     )
-
-
-
+    
+    
+    
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             viewModel.loadContacts(context.contentResolver)
@@ -125,11 +121,11 @@ fun TilesScreen(
         callViewModel.getLines()
         contentVisible = true
     }
-
+    
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(400)) +
+            enter = fadeIn(animationSpec = tween(400)) + 
                     slideInVertically(
                         initialOffsetY = { it / 4 },
                         animationSpec = tween(400)
@@ -153,14 +149,12 @@ fun TilesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 Column {
                                     if (currentCallResult.isNotEmpty()) {
                                         CallApiMessage(response = currentCallResult, visible = true)
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
-
 
                                     if (currentOneShotCallResult.isNotEmpty()) {
                                          AnimatedVisibility(
@@ -207,8 +201,6 @@ fun TilesScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
 
-
-
                                     val activeError = when {
                                         !currentOneShotCallError.isNullOrEmpty() -> currentOneShotCallError
                                         !currentCallbackError.isNullOrEmpty() -> currentCallbackError
@@ -228,7 +220,6 @@ fun TilesScreen(
                                     contactName = viewModel.getContactName(tile.recipient),
                                     isEditMode = isEditMode,
                                     onClick = {
-
                                         if (tile.callType == "CALLBACK") {
                                             callViewModel.makeCall(
                                                 callerId = tile.callerId ?: "",
@@ -251,15 +242,14 @@ fun TilesScreen(
                                     onMoveDown = { viewModel.moveTileDown(tile) }
                                 )
                             }
-
-
+                            
                             item {
                                 Spacer(modifier = Modifier.height(FabListBottomSpacing))
                             }
                         }
                     }
                 }
-
+                
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -285,8 +275,7 @@ fun TilesScreen(
                 }
             }
         }
-
-
+        
         LaunchedEffect(currentCallResult) {
             if (currentCallResult.isNotEmpty() && !currentCallResult.startsWith("error")) {
                 kotlinx.coroutines.delay(5000L)
@@ -294,7 +283,7 @@ fun TilesScreen(
             }
         }
     }
-
+    
     if (tileToDelete != null) {
         AlertDialog(
             onDismissRequest = { tileToDelete = null },
@@ -321,13 +310,13 @@ fun TilesScreen(
             }
         )
     }
-
+    
     if (showAddDialog || tileToEdit != null) {
         AddEditTileDialog(
             tile = tileToEdit,
             lines = lines,
             callViewModel = callViewModel,
-            onDismiss = {
+            onDismiss = { 
                 showAddDialog = false
                 tileToEdit = null
             },

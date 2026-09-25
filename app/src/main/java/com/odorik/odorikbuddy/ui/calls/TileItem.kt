@@ -1,6 +1,5 @@
 package com.odorik.odorikbuddy.ui.calls
 
-
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -58,10 +57,8 @@ fun TileItem(
 ) {
     val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
     val containerColor = TileColorHelper.resolveColor(tile.color, isSystemDark) ?: MaterialTheme.colorScheme.surfaceContainerLow
-
+    
     val isCustomColor = tile.color != null
-
-
     val titleColor = if (tile.textColor != null) {
         Color(tile.textColor)
     } else if (isCustomColor) {
@@ -69,7 +66,7 @@ fun TileItem(
     } else {
         MaterialTheme.colorScheme.onSurface
     }
-
+    
     val bodyColor = if (tile.textColor != null) {
         Color(tile.textColor).copy(alpha = 0.7f)
     } else if (isCustomColor) {
@@ -93,7 +90,7 @@ fun TileItem(
     } else {
         MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
     }
-
+    
     val iconTint = if (tile.textColor != null) {
         Color(tile.textColor)
     } else if (isCustomColor) {
@@ -103,9 +100,6 @@ fun TileItem(
     }
 
     val monogram = remember(contactName, tile.label) {
-
-
-
         val source = contactName.ifBlank { tile.label }
         val initials = source.trim().split(Regex("\\s+"))
             .mapNotNull { word -> word.firstOrNull { it.isLetter() }?.uppercaseChar() }
@@ -137,7 +131,6 @@ fun TileItem(
                 .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -148,8 +141,6 @@ fun TileItem(
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(iconBgColor)
-
-
                         .clearAndSetSemantics {},
                     contentAlignment = Alignment.Center
                 ) {
@@ -169,7 +160,7 @@ fun TileItem(
                         )
                     }
                 }
-
+                
                 if (isEditMode) {
                     Row {
                         IconButton(onClick = onEdit) {
@@ -190,13 +181,12 @@ fun TileItem(
                 }
             }
 
-
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 val callTypeText = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot)
-
+                
                 if (tile.label.isNotEmpty()) {
                     Text(
                         text = tile.label,

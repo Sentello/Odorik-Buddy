@@ -11,7 +11,6 @@ data class ScreenAccent(
     val lightSecondary: Color,
     val dark: Color,
     val darkSecondary: Color,
-
     val collapsesInOdorik: Boolean = true
 ) {
     @Composable
