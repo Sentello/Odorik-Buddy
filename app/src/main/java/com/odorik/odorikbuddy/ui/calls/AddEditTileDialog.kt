@@ -21,8 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,8 +29,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -58,7 +54,9 @@ import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.data.model.Line
+import com.odorik.odorikbuddy.ui.components.PhoneFieldTrailingIcons
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -196,18 +194,18 @@ fun AddEditTileDialog(
                 val recipientField = @Composable {
                     OutlinedTextField(
                         value = recipient,
-                        onValueChange = { recipient = it },
-                        label = { Text(stringResource(R.string.called_number)) }, 
+                        onValueChange = { recipient = PhoneNumberUtils.sanitizeDialInput(it) },
+                        label = { Text(stringResource(R.string.called_number)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
-                            IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Contacts,
-                                    contentDescription = stringResource(R.string.pick_contact),
-                                    tint = ScreenAccents.Calls.main()
-                                )
-                            }
+                            PhoneFieldTrailingIcons(
+                                value = recipient,
+                                onClear = { recipient = "" },
+                                onPickContact = { pickContact(ContactField.RECIPIENT) },
+                                pickContactDescription = stringResource(R.string.pick_contact),
+                                contactTint = ScreenAccents.Calls.main()
+                            )
                         }
                     )
                 }
@@ -242,18 +240,18 @@ fun AddEditTileDialog(
                 if (callType == "CALLBACK") {
                     OutlinedTextField(
                         value = callerId,
-                        onValueChange = { callerId = it },
+                        onValueChange = { callerId = PhoneNumberUtils.sanitizeDialInput(it) },
                         label = { Text(stringResource(R.string.caller_id)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
-                            IconButton(onClick = { pickContact(ContactField.CALLER_ID) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Contacts,
-                                    contentDescription = stringResource(R.string.pick_contact),
-                                    tint = ScreenAccents.Calls.main()
-                                )
-                            }
+                            PhoneFieldTrailingIcons(
+                                value = callerId,
+                                onClear = { callerId = "" },
+                                onPickContact = { pickContact(ContactField.CALLER_ID) },
+                                pickContactDescription = stringResource(R.string.pick_contact),
+                                contactTint = ScreenAccents.Calls.main()
+                            )
                         }
                     )
                     recipientField()

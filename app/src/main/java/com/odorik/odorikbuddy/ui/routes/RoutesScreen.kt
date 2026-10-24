@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -65,6 +66,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -72,6 +74,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.components.GradientHeader
+import com.odorik.odorikbuddy.ui.components.PhoneFieldTrailingIcons
 import com.odorik.odorikbuddy.ui.components.TransparentListItem
 import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
@@ -286,10 +289,14 @@ fun RoutesScreen(
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
-                            IconButton(onClick = { pickContactFor("source") }) {
-                                Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact))
-                            }
+                            PhoneFieldTrailingIcons(
+                                value = dialogSourceNumber,
+                                onClear = { viewModel.onSourceNumberChange("") },
+                                onPickContact = { pickContactFor("source") },
+                                pickContactDescription = stringResource(R.string.pick_contact)
+                            )
                         }
                     )
                     OutlinedTextField(
@@ -303,9 +310,12 @@ fun RoutesScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
-                            IconButton(onClick = { pickContactFor("ringing") }) {
-                                Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact))
-                            }
+                            PhoneFieldTrailingIcons(
+                                value = dialogRingingNumber,
+                                onClear = { viewModel.onRingingNumberChange("") },
+                                onPickContact = { pickContactFor("ringing") },
+                                pickContactDescription = stringResource(R.string.pick_contact)
+                            )
                         }
                     )
                     Row(

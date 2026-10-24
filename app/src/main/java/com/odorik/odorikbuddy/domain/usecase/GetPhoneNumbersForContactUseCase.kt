@@ -2,7 +2,14 @@ package com.odorik.odorikbuddy.domain.usecase
 
 import android.content.ContentResolver
 import android.provider.ContactsContract
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import javax.inject.Inject
+
+internal fun distinctPhoneNumbers(numbers: List<String>): List<String> =
+    numbers.distinctBy { number ->
+        val parsed = PhoneNumberUtils.parsePhoneNumber(number)
+        parsed.specialPrefix + parsed.normalizedNumber
+    }
 
 class GetPhoneNumbersForContactUseCase @Inject constructor() {
 
@@ -44,7 +51,7 @@ class GetPhoneNumbersForContactUseCase @Inject constructor() {
             }
         }
 
-        return if (numbers.isEmpty()) null else ContactPhoneNumbers(displayName, numbers.distinct())
+        return if (numbers.isEmpty()) null else ContactPhoneNumbers(displayName, distinctPhoneNumbers(numbers))
     }
 
     operator fun invoke(contentResolver: ContentResolver, contactUri: android.net.Uri): List<String> {

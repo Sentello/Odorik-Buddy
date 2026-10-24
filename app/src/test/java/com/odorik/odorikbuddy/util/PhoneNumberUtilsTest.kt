@@ -8,6 +8,13 @@ import org.junit.Test
 class PhoneNumberUtilsTest {
 
     @Test
+    fun `dial input sanitizer drops letters and keeps dial characters`() {
+        assertEquals("+420 777123", PhoneNumberUtils.sanitizeDialInput("abc+420 777x123"))
+        assertEquals("*087#123", PhoneNumberUtils.sanitizeDialInput("*087#123"))
+        assertEquals("", PhoneNumberUtils.sanitizeDialInput("abc-()"))
+    }
+
+    @Test
     fun `czech national number normalizes to E164`() {
         assertEquals("+420777123456", PhoneNumberUtils.normalizeForStorage("777 123 456"))
     }

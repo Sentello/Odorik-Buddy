@@ -28,11 +28,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.AlertDialog
@@ -45,7 +45,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -66,12 +65,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.components.PhoneFieldTrailingIcons
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -202,7 +204,7 @@ fun CallbackTab(
                     ) {
                         OutlinedTextField(
                             value = callerId,
-                            onValueChange = { viewModel.updateCallerId(it) },
+                            onValueChange = { viewModel.updateCallerId(PhoneNumberUtils.sanitizeDialInput(it)) },
                             label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -223,20 +225,21 @@ fun CallbackTab(
                                 focusedBorderColor = ScreenAccents.Calls.main(),
                                 focusedLabelColor = ScreenAccents.Calls.main()
                             ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             trailingIcon = {
-                                IconButton(onClick = { pickContact(ContactField.CALLER_ID) }) {
-                                    Icon(
-                                        Icons.Default.Contacts, 
-                                        contentDescription = stringResource(R.string.pick_caller_id),
-                                        tint = ScreenAccents.Calls.main()
-                                    )
-                                }
+                                PhoneFieldTrailingIcons(
+                                    value = callerId,
+                                    onClear = { viewModel.updateCallerId("") },
+                                    onPickContact = { pickContact(ContactField.CALLER_ID) },
+                                    pickContactDescription = stringResource(R.string.pick_caller_id),
+                                    contactTint = ScreenAccents.Calls.main()
+                                )
                             }
                         )
                         
                         OutlinedTextField(
                             value = recipient,
-                            onValueChange = { viewModel.updateCallbackRecipient(it) },
+                            onValueChange = { viewModel.updateCallbackRecipient(PhoneNumberUtils.sanitizeDialInput(it)) },
                             label = { 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -257,14 +260,15 @@ fun CallbackTab(
                                 focusedBorderColor = ScreenAccents.Calls.main(),
                                 focusedLabelColor = ScreenAccents.Calls.main()
                             ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             trailingIcon = {
-                                IconButton(onClick = { pickContact(ContactField.RECIPIENT) }) {
-                                    Icon(
-                                        Icons.Default.Contacts, 
-                                        contentDescription = stringResource(R.string.pick_recipient),
-                                        tint = ScreenAccents.Calls.main()
-                                    )
-                                }
+                                PhoneFieldTrailingIcons(
+                                    value = recipient,
+                                    onClear = { viewModel.updateCallbackRecipient("") },
+                                    onPickContact = { pickContact(ContactField.RECIPIENT) },
+                                    pickContactDescription = stringResource(R.string.pick_recipient),
+                                    contactTint = ScreenAccents.Calls.main()
+                                )
                             }
                         )
                         

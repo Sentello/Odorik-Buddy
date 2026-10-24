@@ -40,6 +40,7 @@
     <string name="lang_english">English</string>
     <string name="lang_czech">Čeština</string>
     <string name="pick_contact">Pick Contact</string>
+    <string name="clear_number">Clear number</string>
     <string name="line_info_title">Line Info</string>
     <string name="line_name_label">Line name:</string>
     <string name="caller_id_label_settings">Caller ID:</string>

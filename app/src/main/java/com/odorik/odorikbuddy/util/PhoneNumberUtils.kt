@@ -130,6 +130,9 @@ object PhoneNumberUtils {
         return normalized.replace(Regex("[^0-9+]"), "")
     }
 
+    fun sanitizeDialInput(input: String): String =
+        input.filter { it in '0'..'9' || it == '+' || it == '*' || it == '#' || it == ' ' }
+
     fun isValidNumber(number: String): Boolean {
         return parsePhoneNumber(number).isValid
     }

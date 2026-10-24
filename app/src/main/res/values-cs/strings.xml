@@ -40,6 +40,7 @@
     <string name="lang_english">English</string>
     <string name="lang_czech">Čeština</string>
     <string name="pick_contact">Vybrat kontakt</string>
+    <string name="clear_number">Vymazat číslo</string>
     <string name="line_info_title">Informace o lince</string>
     <string name="line_name_label">Název linky:</string>
     <string name="caller_id_label_settings">ID volajícího:</string>

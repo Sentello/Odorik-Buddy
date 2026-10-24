@@ -42,7 +42,6 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
@@ -107,11 +106,13 @@ import androidx.window.core.layout.WindowHeightSizeClass
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.components.AppFab
 import com.odorik.odorikbuddy.ui.components.GradientHeader
+import com.odorik.odorikbuddy.ui.components.PhoneFieldTrailingIcons
 import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.AppConstants.MILLISECONDS_PER_DAY
 import com.odorik.odorikbuddy.util.AppConstants.SMS_MAX_LENGTH
+import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -421,9 +422,10 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                             OutlinedTextField(
                                 value = recipient,
                                 onValueChange = {
-                                    recipient = it
-                                    viewModel.updateRecipient(it)
-                                    viewModel.saveDraft(it, message, selectedSender)
+                                    val clean = PhoneNumberUtils.sanitizeDialInput(it)
+                                    recipient = clean
+                                    viewModel.updateRecipient(clean)
+                                    viewModel.saveDraft(clean, message, selectedSender)
                                 },
                                 label = { 
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -438,18 +440,25 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = ScreenAccents.Sms.main(), focusedLabelColor = ScreenAccents.Sms.main()),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 trailingIcon = {
-                                    IconButton(
-                                        onClick = {
+                                    PhoneFieldTrailingIcons(
+                                        value = recipient,
+                                        onClear = {
+                                            recipient = ""
+                                            viewModel.updateRecipient("")
+                                            viewModel.saveDraft("", message, selectedSender)
+                                        },
+                                        onPickContact = {
                                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
                                                 launcher.launch(null)
                                             } else {
                                                 requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                                             }
-                                        }
-                                    ) {
-                                        Icon(Icons.Default.Contacts, contentDescription = stringResource(R.string.pick_contact), tint = ScreenAccents.Sms.main())
-                                    }
+                                        },
+                                        pickContactDescription = stringResource(R.string.pick_contact),
+                                        contactTint = ScreenAccents.Sms.main()
+                                    )
                                 }
                             )
 
