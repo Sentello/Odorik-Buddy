@@ -106,6 +106,7 @@
     <string name="a11y_language">App language</string>
     <string name="a11y_line_card">Line: %s</string>
     <string name="a11y_odorik_logo">Odorik logo</string>
+    <string name="a11y_widget_open_app">Open Odorik Buddy</string>
     <string name="a11y_navigate_to_tab">Navigate to %1$s tab</string>
     <string name="a11y_has_rules">Has rules</string>
     <string name="a11y_back">Back</string>
@@ -133,6 +134,29 @@
     <string name="network_sms">SMS</string>
     <string name="network_toll_free">Toll-free</string>
     <string name="history_period_label">History Period</string>
+    <!-- Settings backup -->
+    <string name="backup_export">Export settings</string>
+    <string name="backup_export_description">Save tiles and settings to a file (without password)</string>
+    <string name="backup_import">Import settings</string>
+    <string name="backup_import_description">Restore tiles and settings from a backup file</string>
+    <string name="backup_file_name">odorikbuddy-backup-%1$s.json</string>
+    <string name="backup_exported">Backup saved (%1$d tiles)</string>
+    <string name="backup_share">Share</string>
+    <string name="backup_export_failed">The backup could not be saved.</string>
+    <string name="backup_import_title">Import backup?</string>
+    <string name="backup_import_summary">Backup from %1$s, %2$d tiles</string>
+    <string name="backup_import_other_account">This backup belongs to account %1$s. Lines and caller IDs in the tiles may not work with this account.</string>
+    <string name="backup_import_tiles">Tiles</string>
+    <string name="backup_import_settings">App settings</string>
+    <string name="backup_import_replace_warning">The tiles on this phone will be replaced.</string>
+    <string name="backup_import_confirm">Import</string>
+    <string name="backup_imported">Imported (%1$d tiles)</string>
+    <string name="backup_imported_settings_only">Settings imported</string>
+    <string name="backup_direct_calls_skipped">Turn on direct calls again in Settings, it needs the phone permission.</string>
+    <string name="backup_auto_update_skipped">Turn on update checking again in Settings, it needs the notification permission.</string>
+    <string name="backup_error_not_a_backup">This file is not an OdorikBuddy backup.</string>
+    <string name="backup_error_newer_version">This backup was made by a newer version. Update the app first.</string>
+    <string name="backup_error_read_failed">The file could not be read.</string>
     <string name="history_period_7">7 days</string>
     <string name="history_period_30">30 days</string>
     <string name="history_period_90">90 days</string>
@@ -285,6 +309,7 @@
     <string name="tiles_title">Favourites</string>
     <string name="add_tile">Add Tile</string>
     <string name="edit_tile">Edit Tile</string>
+    <string name="delete_tile_title">Delete tile</string>
     <string name="delete_tile_confirmation">Are you sure you want to delete this tile?</string>
     <string name="call_type">Call Type</string>
     <string name="call_type_callback">Callback</string>
@@ -297,7 +322,7 @@
     <string name="text_color">Text Color</string>
     <string name="save">Save</string>
     <string name="default_selection">Default</string>
-    <string name="error_fill_required_fields">Please fill all required fields.</string>
+    <string name="error_field_required">Required</string>
     <string name="no_tiles_yet">No tiles yet</string>
     <string name="add_tiles_description">Add tiles for quick dialing contacts</string>
     <string name="widget_style">Widget Style</string>
@@ -311,6 +336,7 @@
     <string name="widget_call_connecting">Connecting...</string>
     <string name="widget_config_title">Select Tile</string>
     <string name="widget_config_instruction">Choose a tile to display on this widget.</string>
+    <string name="widget_config_hint">The number and name are set in the tile inside the app. Changes to the tile show up on the widget automatically.</string>
 
     <!-- Balance Widget -->
     <string name="balance_widget_name">Balance Widget</string>
@@ -341,6 +367,11 @@
     <string name="delete">Delete</string>
     <string name="move_up">Move Up</string>
     <string name="move_down">Move Down</string>
+    <string name="tile_size">Tile size</string>
+    <string name="tile_size_description">Size of the tiles on the Calls screen</string>
+    <string name="lines_not_loaded">The lines could not be loaded.</string>
+    <string name="move_tile_earlier">Move towards the start</string>
+    <string name="move_tile_later">Move towards the end</string>
     <string name="change_contact">Change Contact</string>
     <string name="selected_contact_prefix">Selected: %s</string>
     <string name="error_fetching_lines">Failed to fetch lines</string>
@@ -352,6 +383,7 @@
     <string name="widget_custom_colors">Customize colors for this widget</string>
     <string name="save_widget">Add to Home Screen</string>
     <string name="select_tile_first">Select a tile above</string>
+    <string name="widget_tile_selected">✓ Selected</string>
     <string name="widget_live_preview">Live Preview</string>
 
     <!-- Sprint G theme -->
@@ -370,6 +402,6 @@
     <string name="done">Done</string>
     <string name="odorik_website">Odorik website</string>
     <string name="widget_style_odorik">Odorik red</string>
-    <string name="widget_tap_to_open">Tap to open</string>
+    <string name="widget_tap_to_retry">Tap to retry</string>
 
 </resources>

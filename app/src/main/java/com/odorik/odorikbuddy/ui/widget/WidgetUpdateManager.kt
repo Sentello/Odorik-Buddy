@@ -1,7 +1,6 @@
 package com.odorik.odorikbuddy.ui.widget
 
 import android.content.Context
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
@@ -30,7 +29,7 @@ class WidgetUpdateManager @Inject constructor(
                         definition = PreferencesGlanceStateDefinition,
                         glanceId = glanceId
                     )
-                    val widgetTileId = prefs[intPreferencesKey("tile_id")] ?: -1
+                    val widgetTileId = prefs[OdorikTileWidget.tileIdKey] ?: OdorikTileWidget.NO_TILE
                     if (widgetTileId == tileId) {
                         OdorikTileWidget().update(context, glanceId)
                     }

@@ -44,6 +44,10 @@ fun CallScreen(
     val directCallsEnabled = viewModel.directCallsEnabled
 
     LaunchedEffect(Unit) {
+        viewModel.reloadSavedFields()
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.dialerLaunchRequest.collect { phoneNumber ->
             try {
                 kotlinx.coroutines.delay(1200L)

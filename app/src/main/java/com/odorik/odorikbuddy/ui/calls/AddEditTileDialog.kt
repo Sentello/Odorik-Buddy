@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,11 +37,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.entity.TileCallType
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.ui.components.PhoneFieldTrailingIcons
@@ -69,39 +74,50 @@ fun AddEditTileDialog(
     callViewModel: CallViewModel
 ) {
     val context = LocalContext.current
-    var label by remember { mutableStateOf(tile?.label ?: "") }
-    var recipient by remember { mutableStateOf(tile?.recipient ?: "") }
+    var label by rememberSaveable { mutableStateOf(tile?.label ?: "") }
+    var recipient by rememberSaveable { mutableStateOf(tile?.recipient ?: "") }
     
     val tabOrder by callViewModel.tabOrder.collectAsState()
+    val linesError by callViewModel.linesError.collectAsState()
     
     val callTypeOptions = remember(tabOrder) {
         val callbackIndex = tabOrder.indexOf("callback_title").takeIf { it >= 0 } ?: Int.MAX_VALUE
         val oneshotIndex = tabOrder.indexOf("oneshot_call").takeIf { it >= 0 } ?: Int.MAX_VALUE
         
         if (oneshotIndex < callbackIndex) {
-            listOf("ONESHOT" to R.string.call_type_oneshot, "CALLBACK" to R.string.call_type_callback)
+            listOf(TileCallType.ONESHOT to R.string.call_type_oneshot, TileCallType.CALLBACK to R.string.call_type_callback)
         } else {
-            listOf("CALLBACK" to R.string.call_type_callback, "ONESHOT" to R.string.call_type_oneshot)
+            listOf(TileCallType.CALLBACK to R.string.call_type_callback, TileCallType.ONESHOT to R.string.call_type_oneshot)
         }
     }
 
-    var callType by remember { mutableStateOf(tile?.callType ?: callTypeOptions.first().first) }
-    var selectedLineId by remember { mutableStateOf(tile?.lineId) }
-    var callerId by remember { mutableStateOf(tile?.callerId ?: "") } 
-    var useLineAsCallerId by remember { mutableStateOf(tile?.useLineAsCallerId ?: false) }
-    var selectedColor by remember { mutableStateOf(tile?.color) }
-    var selectedTextColor by remember { mutableStateOf(tile?.textColor) }
+    var callType by rememberSaveable { mutableStateOf(tile?.callType ?: callTypeOptions.first().first) }
+    var selectedLineId by rememberSaveable { mutableStateOf(tile?.lineId) }
+    var callerId by rememberSaveable { mutableStateOf(tile?.callerId ?: "") } 
+    var useLineAsCallerId by rememberSaveable { mutableStateOf(tile?.useLineAsCallerId ?: false) }
+    var selectedColor by rememberSaveable { mutableStateOf(tile?.color) }
+    var selectedTextColor by rememberSaveable { mutableStateOf(tile?.textColor) }
 
-    var contactFieldToUpdate by remember { mutableStateOf<ContactField?>(null) }
+    var contactFieldToUpdate by rememberSaveable { mutableStateOf<ContactField?>(null) }
     
     var lineDropdownExpanded by remember { mutableStateOf(false) }
     var typeDropdownExpanded by remember { mutableStateOf(false) }
     
-    var validationError by remember { mutableStateOf<String?>(null) }
+    var showErrors by rememberSaveable { mutableStateOf(false) }
+    val recipientMissing = recipient.isBlank()
+    val lineMissing = selectedLineId == null
+    val callerIdMissing = callType == TileCallType.CALLBACK && callerId.isBlank()
+    val requiredError: @Composable () -> Unit = { Text(stringResource(R.string.error_field_required)) }
     
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
     
+    LaunchedEffect(lines) {
+        if (selectedLineId == null && lines.size == 1) {
+            selectedLineId = lines.first().id.toString()
+        }
+    }
+
     val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
@@ -156,6 +172,7 @@ fun AddEditTileDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -164,7 +181,7 @@ fun AddEditTileDialog(
                     onExpandedChange = { typeDropdownExpanded = !typeDropdownExpanded }
                 ) {
                     OutlinedTextField(
-                        value = if (callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
+                        value = if (callType == TileCallType.CALLBACK) stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.call_type)) },
@@ -196,6 +213,8 @@ fun AddEditTileDialog(
                         value = recipient,
                         onValueChange = { recipient = PhoneNumberUtils.sanitizeDialInput(it) },
                         label = { Text(stringResource(R.string.called_number)) },
+                        isError = showErrors && recipientMissing,
+                        supportingText = if (showErrors && recipientMissing) requiredError else null,
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
@@ -220,6 +239,8 @@ fun AddEditTileDialog(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text(stringResource(R.string.line)) },
+                            isError = showErrors && lineMissing,
+                            supportingText = if (showErrors && lineMissing) requiredError else null,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = lineDropdownExpanded) },
                             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
                         )
@@ -237,11 +258,35 @@ fun AddEditTileDialog(
                     }
                 }
 
-                if (callType == "CALLBACK") {
+                val linesNotLoaded = @Composable {
+                    if (lines.isEmpty() && linesError != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.lines_not_loaded),
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = { callViewModel.getLines() },
+                                colors = ButtonDefaults.textButtonColors(contentColor = ScreenAccents.Calls.main())
+                            ) {
+                                Text(stringResource(R.string.retry))
+                            }
+                        }
+                    }
+                }
+
+                if (callType == TileCallType.CALLBACK) {
                     OutlinedTextField(
                         value = callerId,
                         onValueChange = { callerId = PhoneNumberUtils.sanitizeDialInput(it) },
                         label = { Text(stringResource(R.string.caller_id)) },
+                        isError = showErrors && callerIdMissing,
+                        supportingText = if (showErrors && callerIdMissing) requiredError else null,
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         trailingIcon = {
@@ -256,9 +301,11 @@ fun AddEditTileDialog(
                     )
                     recipientField()
                     lineField()
+                    linesNotLoaded()
                 } else {
                     recipientField()
                     lineField()
+                    linesNotLoaded()
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -336,26 +383,16 @@ fun AddEditTileDialog(
                         )
                     }
                 }
-                
-                if (validationError != null) {
-                    Text(
-                        text = validationError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
+
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    val isLineSelected = selectedLineId != null
-                    val isRecipientValid = recipient.isNotBlank()
-                    val isCallerIdValid = if (callType == "CALLBACK") callerId.isNotBlank() else true
-                    
-                    if (isLineSelected && isRecipientValid && isCallerIdValid) {
-                         onSave(
+                    if (recipientMissing || lineMissing || callerIdMissing) {
+                        showErrors = true
+                    } else {
+                        onSave(
                             TileData(
                                 label = label,
                                 recipient = recipient,
@@ -367,9 +404,6 @@ fun AddEditTileDialog(
                                 textColor = selectedTextColor
                             )
                         )
-                        validationError = null
-                    } else {
-                        validationError = context.getString(R.string.error_fill_required_fields)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = ScreenAccents.Calls.main())

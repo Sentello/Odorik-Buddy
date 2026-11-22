@@ -1,6 +1,7 @@
 package com.odorik.odorikbuddy.ui.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,7 @@ import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -63,6 +65,9 @@ class BalanceWidget : GlanceAppWidget() {
         val backgroundKey = stringPreferencesKey("bg_style")
         val textColorKey = stringPreferencesKey("text_color")
         val textSizeKey = stringPreferencesKey("text_size")
+
+        private val LIGHT_RED = Color(0xFFFFB4AB)
+        private val DARK_RED = Color(0xFFB3261E)
     }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -99,6 +104,13 @@ class BalanceWidget : GlanceAppWidget() {
             }
         }
     }
+
+    private fun openAppIntent(context: Context): Intent =
+        (context.packageManager.getLaunchIntentForPackage(context.packageName)
+            ?: Intent(context, com.odorik.odorikbuddy.MainActivity::class.java)
+                .setAction(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LAUNCHER))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
 
     @Composable
     private fun WidgetContent(
@@ -147,6 +159,17 @@ class BalanceWidget : GlanceAppWidget() {
              else -> GlanceTheme.colors.onSurfaceVariant
         }
 
+        val errorTextColor = when {
+            bgStyle == "ODORIK" -> mainTextColor
+            textColorStyle == "WHITE" -> ColorProvider(LIGHT_RED)
+            textColorStyle == "BLACK" -> ColorProvider(DARK_RED)
+            bgStyle == "DARK" -> ColorProvider(LIGHT_RED)
+            bgStyle == "LIGHT" || bgStyle == "TRANSLUCENT" -> ColorProvider(DARK_RED)
+            else -> GlanceTheme.colors.error
+        }
+
+        val isStale = !isLoading && error != null && balance != null
+
         val balanceFontSize = when (textSizeStyle) {
             "NORMAL" -> 22.sp
             "LARGE" -> 28.sp
@@ -170,8 +193,10 @@ class BalanceWidget : GlanceAppWidget() {
             ) {
                 Image(
                     provider = ImageProvider(R.drawable.ic_odorik_logo),
-                    contentDescription = context.getString(R.string.a11y_odorik_logo),
-                    modifier = GlanceModifier.size(48.dp)
+                    contentDescription = context.getString(R.string.a11y_widget_open_app),
+                    modifier = GlanceModifier
+                        .size(48.dp)
+                        .clickable(actionStartActivity(openAppIntent(context)))
                 )
 
                 Spacer(modifier = GlanceModifier.width(16.dp))
@@ -193,11 +218,11 @@ class BalanceWidget : GlanceAppWidget() {
                                 fontWeight = FontWeight.Bold
                             )
                         )
-                    } else if (error != null) {
-                         Text(
-                            text = context.getString(R.string.widget_tap_to_open),
+                    } else if (error != null && balance == null) {
+                        Text(
+                            text = context.getString(R.string.widget_tap_to_retry),
                             style = TextStyle(
-                                color = GlanceTheme.colors.error,
+                                color = errorTextColor,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -224,11 +249,13 @@ class BalanceWidget : GlanceAppWidget() {
                     
                     if (!isLoading && lastUpdated != null) {
                         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+                        val time = sdf.format(Date(lastUpdated))
                         Text(
-                            text = sdf.format(Date(lastUpdated)),
+                            text = if (isStale) "⚠ $time" else time,
                             style = TextStyle(
-                                color = secondaryTextColor,
-                                fontSize = 11.sp
+                                color = if (isStale) errorTextColor else secondaryTextColor,
+                                fontSize = 11.sp,
+                                fontWeight = if (isStale) FontWeight.Bold else FontWeight.Normal
                             )
                         )
                     }

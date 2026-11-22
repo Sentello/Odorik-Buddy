@@ -21,6 +21,9 @@ class TilesViewModel @Inject constructor(
     val directCallsEnabled: Boolean
         get() = appPreferences.directCallsEnabled
 
+    val tileSize: TileSize
+        get() = TileSize.fromKey(appPreferences.getString(AppPreferences.KEY_TILE_SIZE))
+
     fun loadContacts(contentResolver: ContentResolver) {
         tileManagementDelegate.loadContacts(viewModelScope, contentResolver)
     }
@@ -29,35 +32,12 @@ class TilesViewModel @Inject constructor(
         return tileManagementDelegate.getContactName(number)
     }
 
-    fun addTile(
-        label: String,
-        recipient: String,
-        callType: String,
-        lineId: String?,
-        callerId: String?,
-        useLineAsCallerId: Boolean,
-        color: Long?,
-        textColor: Long?
-    ) {
-        tileManagementDelegate.addTile(
-            viewModelScope, tiles.value, label, recipient, callType, lineId, callerId, useLineAsCallerId, color, textColor
-        )
+    fun addTile(data: TileData) {
+        tileManagementDelegate.addTile(viewModelScope, tiles.value, data)
     }
 
-    fun updateTile(
-        tileId: Int,
-        label: String,
-        recipient: String,
-        callType: String,
-        lineId: String?,
-        callerId: String?,
-        useLineAsCallerId: Boolean,
-        color: Long?,
-        textColor: Long?
-    ) {
-        tileManagementDelegate.updateTile(
-            viewModelScope, tiles.value, tileId, label, recipient, callType, lineId, callerId, useLineAsCallerId, color, textColor
-        )
+    fun updateTile(tileId: Int, data: TileData) {
+        tileManagementDelegate.updateTile(viewModelScope, tiles.value, tileId, data)
     }
 
     fun deleteTile(tile: TileEntity) {

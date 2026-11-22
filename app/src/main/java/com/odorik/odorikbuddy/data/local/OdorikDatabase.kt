@@ -2,8 +2,10 @@ package com.odorik.odorikbuddy.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.odorik.odorikbuddy.data.local.entity.TileCallTypeConverter
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.model.HistoryItem
 
@@ -12,6 +14,7 @@ import com.odorik.odorikbuddy.model.HistoryItem
     version = 8,
     exportSchema = true
 )
+@TypeConverters(TileCallTypeConverter::class)
 abstract class OdorikDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
     abstract fun tileDao(): TileDao

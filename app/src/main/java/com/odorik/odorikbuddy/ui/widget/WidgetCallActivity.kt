@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.widget
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.ui.calls.CallViewModel
@@ -33,6 +35,10 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class WidgetCallActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
+    }
 
     @Inject
     lateinit var themeManager: ThemeManager

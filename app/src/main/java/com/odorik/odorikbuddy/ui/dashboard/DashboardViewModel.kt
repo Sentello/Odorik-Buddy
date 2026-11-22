@@ -8,6 +8,7 @@ import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.ui.widget.BalanceWidgetRefresher
 import com.odorik.odorikbuddy.util.ApiDates
 import com.odorik.odorikbuddy.util.BackoffPolicy
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
@@ -33,6 +34,7 @@ class DashboardViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val appPreferences: AppPreferences,
     private val localeManager: LocaleManager,
+    private val balanceWidgetRefresher: BalanceWidgetRefresher,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -222,6 +224,7 @@ class DashboardViewModel @Inject constructor(
         val result = getCreditUseCase.execute()
         result.onSuccess {
             _credit.value = UiState.Success(it)
+            viewModelScope.launch { balanceWidgetRefresher.pushBalance(it) }
         }.onFailure {
             val localizedContext = localeManager.createLocaleContext(context)
             val errorMessage = ErrorMessageUtil.standardizeError(it, localizedContext)

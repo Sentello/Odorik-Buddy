@@ -10,7 +10,7 @@ data class TileEntity(
     val position: Int,
     val label: String,
     val recipient: String,
-    val callType: String,
+    val callType: TileCallType,
     val lineId: String?,
     val callerId: String?,
     val useLineAsCallerId: Boolean = false,

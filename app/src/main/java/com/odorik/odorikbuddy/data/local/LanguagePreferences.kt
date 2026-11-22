@@ -17,4 +17,13 @@ object LanguagePreferences {
     fun setPreferredLanguage(context: Context, lang: String) {
         prefs(context).edit().putString(KEY_LANGUAGE, lang).apply()
     }
+
+    fun wrapContext(base: Context): Context {
+        val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(getPreferredLanguage(base))
+        val config = android.content.res.Configuration(base.resources.configuration)
+        val platformLocales = localeList.unwrap() as? android.os.LocaleList
+            ?: android.os.LocaleList.getEmptyLocaleList()
+        config.setLocales(platformLocales)
+        return base.createConfigurationContext(config)
+    }
 }

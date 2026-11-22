@@ -136,7 +136,7 @@ class CallViewModel @Inject constructor(
 
     private fun getTabOrder(): List<String> {
         val savedOrder = appPreferences.getString("calls_tab_order", null)
-        val defaultOrder = listOf("callback_title", "oneshot_call", "tiles_title")
+        val defaultOrder = DEFAULT_TAB_ORDER
         
         if (savedOrder == null) return defaultOrder
         
@@ -186,14 +186,18 @@ class CallViewModel @Inject constructor(
             }
         }
 
+        reloadSavedFields()
+
+        getLines()
+    }
+
+    fun reloadSavedFields() {
         _callerId.value = appPreferences.getString("caller_id", "") ?: ""
         _callbackRecipient.value = appPreferences.getString("recipient", "") ?: ""
         _oneShotRecipient.value = appPreferences.getString("oneshot_recipient", "") ?: ""
         _selectedLine.value = appPreferences.getString("selected_line", null)?.toIntOrNull()
         _useCallerIdPrefix.value = getUseCallerIdPrefix()
         _tabOrder.value = getTabOrder()
-
-        getLines()
     }
 
     fun loadContacts(contentResolver: ContentResolver) {
@@ -360,7 +364,7 @@ class CallViewModel @Inject constructor(
             val globalLine = appPreferences.getString("selected_line", null)
             val lineId = tile.lineId?.takeIf { it.isNotBlank() } ?: globalLine
 
-            if (tile.callType == "CALLBACK") {
+            if (tile.callType == com.odorik.odorikbuddy.data.local.entity.TileCallType.CALLBACK) {
                 val globalCallerId = appPreferences.getString("caller_id", "") ?: ""
                 val callerId = tile.callerId?.takeIf { it.isNotBlank() } ?: globalCallerId
                 if (callerId.isBlank()) {
@@ -398,5 +402,9 @@ class CallViewModel @Inject constructor(
 
     fun resetCallbackError() {
         _callbackError.value = null
+    }
+
+    companion object {
+        val DEFAULT_TAB_ORDER = listOf("callback_title", "oneshot_call", "tiles_title")
     }
 }

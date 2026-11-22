@@ -198,6 +198,7 @@ class AppPreferences @Inject constructor(
         const val KEY_DIRECT_CALLS_ENABLED = "direct_calls_enabled"
         const val KEY_HISTORY_PERIOD_DAYS = "history_period_days"
         const val KEY_AUTO_UPDATE_ENABLED = "auto_update_enabled"
+        const val KEY_TILE_SIZE = "tile_size"
         const val KEY_SECURE_PREFS_MIGRATED = "secure_prefs_migrated"
 
         val MIGRATED_KEYS = listOf(

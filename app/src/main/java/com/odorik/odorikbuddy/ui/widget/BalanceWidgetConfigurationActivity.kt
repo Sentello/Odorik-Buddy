@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.widget
 
+import android.content.Context
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
@@ -8,6 +9,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,8 +26,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -46,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,10 +56,9 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
-import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
-import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -64,11 +66,15 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class BalanceWidgetConfigurationActivity : ComponentActivity() {
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
+    }
+
     @Inject
     lateinit var themeManager: ThemeManager
 
     @Inject
-    lateinit var getCreditUseCase: GetCreditUseCase
+    lateinit var balanceWidgetRefresher: BalanceWidgetRefresher
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -166,15 +172,11 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                             Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(ScreenAccents.Settings.main()),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("O", color = Color.White, fontWeight = FontWeight.Bold)
-                            }
+                            Image(
+                                painter = painterResource(R.drawable.ic_odorik_logo),
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp)
+                            )
                             Spacer(modifier = Modifier.size(16.dp))
                             Column {
                                 Text(
@@ -307,17 +309,14 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
         }
     }
     
+    @OptIn(ExperimentalLayoutApi::class)
     @Composable
     fun FlowRowCompat(content: @Composable () -> Unit) {
-        LazyRow(
+        FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    content()
-                }
-            }
+            content()
         }
     }
 
@@ -329,26 +328,10 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                 prefs[BalanceWidget.backgroundKey] = background
                 prefs[BalanceWidget.textColorKey] = textColor
                 prefs[BalanceWidget.textSizeKey] = textSize
-                prefs[BalanceWidget.isLoadingKey] = true
-                prefs.remove(BalanceWidget.errorKey)
             }
-            BalanceWidget().update(applicationContext, glanceId)
-            
-            val result = getCreditUseCase.execute()
-            
-            updateAppWidgetState(applicationContext, glanceId) { prefs ->
-                prefs[BalanceWidget.isLoadingKey] = false
-                prefs[BalanceWidget.lastUpdatedKey] = System.currentTimeMillis()
-                
-                result.onSuccess { balance ->
-                    prefs[BalanceWidget.balanceKey] = balance
-                    prefs.remove(BalanceWidget.errorKey)
-                }.onFailure { error ->
-                    prefs[BalanceWidget.errorKey] = error.message ?: applicationContext.getString(R.string.error_unknown_generic)
-                }
-            }
-            BalanceWidget().update(applicationContext, glanceId)
-            
+
+            balanceWidgetRefresher.refresh(glanceId, showProgress = true)
+
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
             finish()

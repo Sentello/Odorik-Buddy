@@ -78,7 +78,7 @@ class CallViewModelWidgetDispatchTest {
         position = 0,
         label = "Test",
         recipient = recipient,
-        callType = "CALLBACK",
+        callType = com.odorik.odorikbuddy.data.local.entity.TileCallType.CALLBACK,
         lineId = lineId,
         callerId = callerId
     )

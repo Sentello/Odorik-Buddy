@@ -48,3 +48,9 @@
     public void setPhaseY(float);
     public float getPhaseY();
 }
+
+# Settings backup (data/backup): Gson builds these through their no-arg constructors.
+# Field names are kept by the @SerializedName rule above.
+-keepclassmembers class com.odorik.odorikbuddy.data.backup.** {
+    <init>();
+}

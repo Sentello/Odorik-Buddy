@@ -2,7 +2,6 @@ package com.odorik.odorikbuddy
 
 import android.app.Application
 import android.content.Context
-import android.content.res.Configuration
 import androidx.hilt.work.HiltWorkerFactory
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.worker.UpdateWorkManager
@@ -24,12 +23,7 @@ class OdorikBuddyApplication : Application(), androidx.work.Configuration.Provid
             .build()
 
     override fun attachBaseContext(base: Context) {
-        val lang = LanguagePreferences.getPreferredLanguage(base)
-        val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(lang)
-        val config = Configuration(base.resources.configuration)
-        val platformLocales = localeList.unwrap() as? android.os.LocaleList ?: android.os.LocaleList.getEmptyLocaleList()
-        config.setLocales(platformLocales)
-        super.attachBaseContext(base.createConfigurationContext(config))
+        super.attachBaseContext(LanguagePreferences.wrapContext(base))
     }
 
     override fun onCreate() {

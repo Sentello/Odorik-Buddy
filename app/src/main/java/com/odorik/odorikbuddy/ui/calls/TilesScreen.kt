@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
@@ -48,6 +47,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.entity.TileCallType
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import com.odorik.odorikbuddy.ui.components.AppFab
 import com.odorik.odorikbuddy.ui.components.FabEdgePadding
@@ -87,11 +88,15 @@ fun TilesScreen(
     val oneShotCallResult by callViewModel.oneShotCallResult.collectAsState()
     val oneShotCallError by callViewModel.oneShotCallError.collectAsState()
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
+    val isCallbackLoading by callViewModel.isCallbackLoading.collectAsState()
     
-    var showAddDialog by remember { mutableStateOf(false) }
-    var tileToEdit by remember { mutableStateOf<TileEntity?>(null) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    var tileToEditId by rememberSaveable { mutableStateOf<Int?>(null) }
+    val tileToEdit = tiles.find { it.id == tileToEditId }
     var tileToDelete by remember { mutableStateOf<TileEntity?>(null) }
-    var isEditMode by remember { mutableStateOf(false) }
+    var isEditMode by rememberSaveable { mutableStateOf(false) }
+
+    var callingTileId by remember { mutableStateOf<Int?>(null) }
     
     val currentCallResult = callResult
     val currentCallbackError = callbackError
@@ -135,22 +140,35 @@ fun TilesScreen(
                 if (tiles.isEmpty()) {
                     EmptyTilesState(onAddClick = { showAddDialog = true })
                 } else {
-                    androidx.compose.runtime.key(contactsMap) {
+                    run {
                         val dimens = LocalAppDimens.current
-                        val tileColumns = when (dimens) {
-                            ExpandedDimens -> GridCells.Fixed(4)
-                            MediumDimens -> GridCells.Fixed(3)
-                            else -> GridCells.Fixed(2)
+                        val tileSize = viewModel.tileSize
+                        val columnCount = TileGridLayout.columns(
+                            standardColumns = when (dimens) {
+                                ExpandedDimens -> 4
+                                MediumDimens -> 3
+                                else -> 2
+                            },
+                            size = tileSize
+                        )
+                        val activeError = when {
+                            !currentOneShotCallError.isNullOrEmpty() -> currentOneShotCallError
+                            !currentCallbackError.isNullOrEmpty() -> currentCallbackError
+                            else -> currentLinesError
                         }
-                        LazyVerticalGrid(
-                            columns = tileColumns,
-                            contentPadding = dimens.screenPadding,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                Column {
+                        val hasMessage = currentCallResult.isNotEmpty() ||
+                            currentOneShotCallResult.isNotEmpty() ||
+                            !activeError.isNullOrEmpty()
+
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            if (hasMessage) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        start = dimens.screenPaddingHorizontal,
+                                        end = dimens.screenPaddingHorizontal,
+                                        top = dimens.screenPaddingVertical
+                                    )
+                                ) {
                                     if (currentCallResult.isNotEmpty()) {
                                         CallApiMessage(response = currentCallResult, visible = true)
                                         Spacer(modifier = Modifier.height(8.dp))
@@ -201,12 +219,6 @@ fun TilesScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
 
-                                    val activeError = when {
-                                        !currentOneShotCallError.isNullOrEmpty() -> currentOneShotCallError
-                                        !currentCallbackError.isNullOrEmpty() -> currentCallbackError
-                                        else -> currentLinesError
-                                    }
-
                                     if (!activeError.isNullOrEmpty()) {
                                          ErrorMessage(errorText = activeError, visible = true)
                                          Spacer(modifier = Modifier.height(8.dp))
@@ -214,37 +226,55 @@ fun TilesScreen(
                                 }
                             }
 
-                            items(tiles, key = { it.id }) { tile ->
-                                TileItem(
-                                    tile = tile,
-                                    contactName = viewModel.getContactName(tile.recipient),
-                                    isEditMode = isEditMode,
-                                    onClick = {
-                                        if (tile.callType == "CALLBACK") {
-                                            callViewModel.makeCall(
-                                                callerId = tile.callerId ?: "",
-                                                recipient = tile.recipient,
-                                                line = tile.lineId ?: ""
-                                            )
-                                        } else {
-                                            if (!isOneShotCallLoading) {
-                                                callViewModel.makeOneShotCall(
-                                                    targetRecipient = tile.recipient,
-                                                    useLineAsCallerId = tile.useLineAsCallerId,
-                                                    selectedLineId = tile.lineId?.toIntOrNull()
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(columnCount),
+                                contentPadding = dimens.screenPadding,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f).fillMaxWidth()
+                            ) {
+                                items(tiles, key = { it.id }) { tile ->
+                                    TileItem(
+                                        tile = tile,
+                                        contactName = remember(contactsMap, tile.recipient) {
+                                            viewModel.getContactName(tile.recipient)
+                                        },
+                                        isEditMode = isEditMode,
+                                        size = tileSize,
+                                        singleColumn = columnCount == 1,
+                                        isCalling = callingTileId == tile.id &&
+                                            (isCallbackLoading || isOneShotCallLoading),
+                                        onClick = {
+                                            if (isEditMode) {
+                                                tileToEditId = tile.id
+                                            } else if (tile.callType == TileCallType.CALLBACK) {
+                                                callingTileId = tile.id
+                                                callViewModel.makeCall(
+                                                    callerId = tile.callerId ?: "",
+                                                    recipient = tile.recipient,
+                                                    line = tile.lineId ?: ""
                                                 )
+                                            } else {
+                                                if (!isOneShotCallLoading) {
+                                                    callingTileId = tile.id
+                                                    callViewModel.makeOneShotCall(
+                                                        targetRecipient = tile.recipient,
+                                                        useLineAsCallerId = tile.useLineAsCallerId,
+                                                        selectedLineId = tile.lineId?.toIntOrNull()
+                                                    )
+                                                }
                                             }
-                                        }
-                                    },
-                                    onEdit = { tileToEdit = tile },
-                                    onDelete = { tileToDelete = tile },
-                                    onMoveUp = { viewModel.moveTileUp(tile) },
-                                    onMoveDown = { viewModel.moveTileDown(tile) }
-                                )
-                            }
+                                        },
+                                        onEdit = { tileToEditId = tile.id },
+                                        onDelete = { tileToDelete = tile },
+                                        onMoveUp = { viewModel.moveTileUp(tile) },
+                                        onMoveDown = { viewModel.moveTileDown(tile) }
+                                    )
+                                }
                             
-                            item {
-                                Spacer(modifier = Modifier.height(FabListBottomSpacing))
+                                item {
+                                    Spacer(modifier = Modifier.height(FabListBottomSpacing))
+                                }
                             }
                         }
                     }
@@ -287,7 +317,7 @@ fun TilesScreen(
     if (tileToDelete != null) {
         AlertDialog(
             onDismissRequest = { tileToDelete = null },
-            title = { Text(stringResource(R.string.delete_rule)) },
+            title = { Text(stringResource(R.string.delete_tile_title)) },
             text = { Text(stringResource(R.string.delete_tile_confirmation)) },
             confirmButton = {
                 TextButton(
@@ -318,35 +348,17 @@ fun TilesScreen(
             callViewModel = callViewModel,
             onDismiss = { 
                 showAddDialog = false
-                tileToEdit = null
+                tileToEditId = null
             },
             onSave = { tileData ->
-                if (tileToEdit != null) {
-                    viewModel.updateTile(
-                        tileId = tileToEdit!!.id,
-                        label = tileData.label,
-                        recipient = tileData.recipient,
-                        callType = tileData.callType,
-                        lineId = tileData.lineId,
-                        callerId = tileData.callerId,
-                        useLineAsCallerId = tileData.useLineAsCallerId,
-                        color = tileData.color,
-                        textColor = tileData.textColor
-                    )
+                val editId = tileToEditId
+                if (editId != null) {
+                    viewModel.updateTile(editId, tileData)
                 } else {
-                    viewModel.addTile(
-                        label = tileData.label,
-                        recipient = tileData.recipient,
-                        callType = tileData.callType,
-                        lineId = tileData.lineId,
-                        callerId = tileData.callerId,
-                        useLineAsCallerId = tileData.useLineAsCallerId,
-                        color = tileData.color,
-                        textColor = tileData.textColor
-                    )
+                    viewModel.addTile(tileData)
                 }
                 showAddDialog = false
-                tileToEdit = null
+                tileToEditId = null
             }
         )
     }
@@ -399,15 +411,3 @@ fun EmptyTilesState(onAddClick: () -> Unit) {
         }
     }
 }
-
-data class TileData(
-    val label: String,
-    val recipient: String,
-    val callType: String,
-    val lineId: String?,
-    val callerId: String?,
-    val useLineAsCallerId: Boolean,
-    val color: Long?,
-    val textColor: Long?
-)
-

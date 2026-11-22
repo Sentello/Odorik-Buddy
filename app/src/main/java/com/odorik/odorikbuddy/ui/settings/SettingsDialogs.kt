@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Forum
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,9 +42,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.backup.BackupPreview
+import com.odorik.odorikbuddy.data.backup.ImportOptions
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.ui.components.TransparentListItem
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @Composable
 internal fun LineInfoDialog(line: Line, onDismiss: () -> Unit) {
@@ -165,58 +173,6 @@ fun PhoneNumberInputDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        }
-    )
-}
-
-@Composable
-fun LanguageSelectionDialog(
-    currentLanguage: String,
-    onLanguageSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val languages = listOf(
-        stringResource(R.string.lang_czech) to "cs",
-        stringResource(R.string.lang_english) to "en"
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_language_label)) },
-        text = {
-            Column(Modifier.selectableGroup()) {
-                languages.forEach { (display, code) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .selectable(
-                                selected = (code == currentLanguage),
-                                onClick = {
-                                    onLanguageSelected(code)
-                                    onDismiss()
-                                },
-                                role = Role.RadioButton
-                            )
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (code == currentLanguage),
-                            onClick = null
-                        )
-                        Text(
-                            text = display,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = LocalAppDimens.current.spacing/2)
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
@@ -456,4 +412,97 @@ fun AboutDialog(
             }
         }
     )
+}
+
+@Composable
+fun BackupImportDialog(
+    preview: BackupPreview,
+    onConfirm: (ImportOptions) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var importTiles by remember { mutableStateOf(true) }
+    var importSettings by remember { mutableStateOf(true) }
+    val createdAt = remember(preview.createdAt) { formatBackupDate(preview.createdAt) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_import_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.backup_import_summary, createdAt, preview.tileCount),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                if (preview.differentAccount) {
+                    Text(
+                        text = stringResource(
+                            R.string.backup_import_other_account,
+                            preview.backupUsername.orEmpty()
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                BackupCheckboxRow(
+                    label = stringResource(R.string.backup_import_tiles),
+                    checked = importTiles,
+                    onCheckedChange = { importTiles = it }
+                )
+                BackupCheckboxRow(
+                    label = stringResource(R.string.backup_import_settings),
+                    checked = importSettings,
+                    onCheckedChange = { importSettings = it }
+                )
+                if (importTiles) {
+                    Text(
+                        text = stringResource(R.string.backup_import_replace_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(ImportOptions(tiles = importTiles, settings = importSettings)) },
+                enabled = importTiles || importSettings
+            ) {
+                Text(stringResource(R.string.backup_import_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun BackupCheckboxRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .toggleable(value = checked, onValueChange = onCheckedChange, role = Role.Checkbox),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(checked = checked, onCheckedChange = null)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 12.dp)
+        )
+    }
+}
+
+private fun formatBackupDate(iso: String?): String {
+    if (iso.isNullOrBlank()) return "?"
+    return try {
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+            .withZone(ZoneId.systemDefault())
+            .format(Instant.parse(iso))
+    } catch (e: Exception) {
+        iso
+    }
 }

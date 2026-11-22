@@ -1,9 +1,7 @@
 package com.odorik.odorikbuddy.ui.calls
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.glance.GlanceTheme
-import androidx.glance.unit.ColorProvider
+import androidx.compose.ui.graphics.luminance
 
 object TileColorHelper {
     private val colorMap = mapOf(
@@ -43,20 +41,30 @@ object TileColorHelper {
         }
     }
 
-    @Composable
-    fun resolveWidgetBackgroundColor(color: Long?, isDarkModePreferred: Boolean = false): ColorProvider {
-        if (color == null) {
-            return if (isDarkModePreferred) GlanceTheme.colors.surfaceVariant else GlanceTheme.colors.surface
-        }
-        val resolved = if (isDarkModePreferred) {
-            colorMap[color] ?: color
-        } else {
-            color
-        }
-        return ColorProvider(Color(resolved))
+    private const val NEUTRAL_LIGHT = 0xFFECEFF1
+    private const val NEUTRAL_DARK = 0xFF263238
+
+    data class WidgetColors(val background: Color, val text: Color, val shadow: Color)
+
+    fun widgetColors(baseColor: Long?, textColor: Long?, isDark: Boolean): WidgetColors {
+        val background = resolveColor(baseColor, isDark)
+            ?: Color(if (isDark) NEUTRAL_DARK else NEUTRAL_LIGHT)
+        val text = readableTextColor(textColor, background) ?: if (isDark) Color.White else Color.Black
+        val shadow = if (text.luminance() > 0.5f) Color.Black.copy(alpha = 0.6f) else Color.Transparent
+        return WidgetColors(background, text, shadow)
     }
 
-    fun resolveWidgetTextColor(textColor: Long?): ColorProvider? {
-        return textColor?.let { ColorProvider(Color(it)) }
+    private const val MIN_TEXT_CONTRAST = 2f
+
+    fun readableTextColor(textColor: Long?, background: Color): Color? {
+        val text = Color(textColor ?: return null)
+        if (contrast(text, background) >= MIN_TEXT_CONTRAST) return text
+        return if (contrast(Color.White, background) >= contrast(Color.Black, background)) Color.White else Color.Black
+    }
+
+    private fun contrast(a: Color, b: Color): Float {
+        val la = a.luminance()
+        val lb = b.luminance()
+        return (maxOf(la, lb) + 0.05f) / (minOf(la, lb) + 0.05f)
     }
 }

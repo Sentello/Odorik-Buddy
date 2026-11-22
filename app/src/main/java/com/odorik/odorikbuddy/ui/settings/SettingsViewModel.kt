@@ -1,9 +1,16 @@
 package com.odorik.odorikbuddy.ui.settings
 
 
+import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.backup.ImportOptions
+import com.odorik.odorikbuddy.data.backup.ImportReport
+import com.odorik.odorikbuddy.data.backup.ReadResult
+import com.odorik.odorikbuddy.data.backup.SettingsBackupRepository
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.AppTheme
 import com.odorik.odorikbuddy.data.local.LocaleManager
@@ -12,6 +19,7 @@ import com.odorik.odorikbuddy.data.local.ThemeMode
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.data.repository.UserRepository
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
+import com.odorik.odorikbuddy.ui.calls.TileSize
 import com.odorik.odorikbuddy.worker.UpdateWorkManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -29,8 +37,16 @@ class SettingsViewModel @Inject constructor(
     private val themeManager: ThemeManager,
     private val localeManager: LocaleManager,
     private val appPreferences: AppPreferences,
-    private val updateWorkManager: UpdateWorkManager
+    private val updateWorkManager: UpdateWorkManager,
+    private val settingsBackupRepository: SettingsBackupRepository
 ) : ViewModel() {
+
+    sealed interface BackupUiEvent {
+        data class Exported(val uri: Uri, val tileCount: Int) : BackupUiEvent
+        data object ExportFailed : BackupUiEvent
+        data class ImportFailed(@StringRes val messageRes: Int) : BackupUiEvent
+        data class Imported(val report: ImportReport) : BackupUiEvent
+    }
 
     val themeMode: State<ThemeMode> = themeManager.themeMode
     val appTheme: State<AppTheme> = themeManager.appTheme
@@ -58,6 +74,11 @@ class SettingsViewModel @Inject constructor(
 
     private val _directCallsEnabled = MutableStateFlow(appPreferences.directCallsEnabled)
     val directCallsEnabled: StateFlow<Boolean> = _directCallsEnabled.asStateFlow()
+
+    private val _tileSize = MutableStateFlow(
+        TileSize.fromKey(appPreferences.getString(AppPreferences.KEY_TILE_SIZE))
+    )
+    val tileSize: StateFlow<TileSize> = _tileSize.asStateFlow()
 
     init {
         getLines()
@@ -107,6 +128,11 @@ class SettingsViewModel @Inject constructor(
         _directCallsEnabled.value = appPreferences.directCallsEnabled
     }
 
+    fun setTileSize(size: TileSize) {
+        appPreferences.saveString(AppPreferences.KEY_TILE_SIZE, size.name)
+        _tileSize.value = size
+    }
+
     fun performImmediateUpdateCheck() {
         updateWorkManager.performImmediateUpdateCheck()
     }
@@ -126,6 +152,69 @@ class SettingsViewModel @Inject constructor(
 
     fun onDismissLineDialog() {
         _selectedLine.value = null
+    }
+
+
+    private val _backupEvents = Channel<BackupUiEvent>(Channel.BUFFERED)
+    val backupEvents = _backupEvents.receiveAsFlow()
+
+    private val _pendingImport = MutableStateFlow<ReadResult.Ok?>(null)
+    val pendingImport: StateFlow<ReadResult.Ok?> = _pendingImport.asStateFlow()
+
+    private val _backupBusy = MutableStateFlow(false)
+    val backupBusy: StateFlow<Boolean> = _backupBusy.asStateFlow()
+
+    fun exportBackup(uri: Uri) = runBackupJob {
+        settingsBackupRepository.writeBackup(uri)
+            .onSuccess { _backupEvents.send(BackupUiEvent.Exported(uri, it)) }
+            .onFailure { _backupEvents.send(BackupUiEvent.ExportFailed) }
+    }
+
+    fun loadImport(uri: Uri) = runBackupJob {
+        when (val result = settingsBackupRepository.readBackup(uri)) {
+            is ReadResult.Ok -> _pendingImport.value = result
+            ReadResult.NewerVersion ->
+                _backupEvents.send(BackupUiEvent.ImportFailed(R.string.backup_error_newer_version))
+            ReadResult.ReadFailed ->
+                _backupEvents.send(BackupUiEvent.ImportFailed(R.string.backup_error_read_failed))
+            ReadResult.NotABackup, ReadResult.TooLarge ->
+                _backupEvents.send(BackupUiEvent.ImportFailed(R.string.backup_error_not_a_backup))
+        }
+    }
+
+    fun confirmImport(options: ImportOptions) {
+        val pending = _pendingImport.value ?: return
+        _pendingImport.value = null
+        runBackupJob {
+            val report = settingsBackupRepository.applyBackup(pending.backup, options)
+            refreshFromPreferences()
+            _backupEvents.send(BackupUiEvent.Imported(report))
+        }
+    }
+
+    fun cancelImport() {
+        _pendingImport.value = null
+    }
+
+    private fun runBackupJob(block: suspend () -> Unit) {
+        if (_backupBusy.value) return
+        _backupBusy.value = true
+        viewModelScope.launch {
+            try {
+                block()
+            } finally {
+                _backupBusy.value = false
+            }
+        }
+    }
+
+    private fun refreshFromPreferences() {
+        _historyPeriod.value = getHistoryPeriod()
+        _phoneNumber.value = getPhoneNumber()
+        _autoUpdateEnabled.value = appPreferences.autoUpdateEnabled
+        _directCallsEnabled.value = appPreferences.directCallsEnabled
+        _tileSize.value = TileSize.fromKey(appPreferences.getString(AppPreferences.KEY_TILE_SIZE))
+        _language.value = localeManager.getPreferredLanguage()
     }
 
     fun logout() {

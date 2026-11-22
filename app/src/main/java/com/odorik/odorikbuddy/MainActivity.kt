@@ -1,7 +1,6 @@
 package com.odorik.odorikbuddy
 
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -45,12 +44,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-        val lang = LanguagePreferences.getPreferredLanguage(newBase)
-        val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(lang)
-        val config = Configuration(newBase.resources.configuration)
-        val platformLocales = localeList.unwrap() as? android.os.LocaleList ?: android.os.LocaleList.getEmptyLocaleList()
-        config.setLocales(platformLocales)
-        super.attachBaseContext(newBase.createConfigurationContext(config))
+        super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
     }
 
     fun updateLocale(lang: String) {

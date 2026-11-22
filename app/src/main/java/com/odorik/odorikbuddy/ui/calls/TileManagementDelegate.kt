@@ -36,61 +36,37 @@ class TileManagementDelegate @Inject constructor(
         return contactNameResolver.getContactName(number)
     }
 
-    fun addTile(
-        scope: CoroutineScope,
-        tiles: List<TileEntity>,
-        label: String,
-        recipient: String,
-        callType: String,
-        lineId: String?,
-        callerId: String?,
-        useLineAsCallerId: Boolean,
-        color: Long?,
-        textColor: Long?
-    ) {
+    fun addTile(scope: CoroutineScope, tiles: List<TileEntity>, data: TileData) {
         scope.launch {
             val nextPosition = if (tiles.isEmpty()) 0 else tiles.maxOf { it.position } + 1
-            
+
             val newTile = TileEntity(
                 position = nextPosition,
-                label = label,
-                recipient = recipient,
-                callType = callType,
-                lineId = lineId,
-                callerId = callerId,
-                useLineAsCallerId = useLineAsCallerId,
-                color = color,
-                textColor = textColor,
-                widgetStyle = "SQUARE"
+                label = data.label,
+                recipient = data.recipient,
+                callType = data.callType,
+                lineId = data.lineId,
+                callerId = data.callerId,
+                useLineAsCallerId = data.useLineAsCallerId,
+                color = data.color,
+                textColor = data.textColor
             )
             tileRepository.insertTile(newTile)
         }
     }
 
-    fun updateTile(
-        scope: CoroutineScope,
-        tiles: List<TileEntity>,
-        tileId: Int,
-        label: String,
-        recipient: String,
-        callType: String,
-        lineId: String?,
-        callerId: String?,
-        useLineAsCallerId: Boolean,
-        color: Long?,
-        textColor: Long?
-    ) {
+    fun updateTile(scope: CoroutineScope, tiles: List<TileEntity>, tileId: Int, data: TileData) {
         scope.launch {
             val currentTile = tiles.find { it.id == tileId } ?: return@launch
             val updatedTile = currentTile.copy(
-                label = label,
-                recipient = recipient,
-                callType = callType,
-                lineId = lineId,
-                callerId = callerId,
-                useLineAsCallerId = useLineAsCallerId,
-                color = color,
-                textColor = textColor
+                label = data.label,
+                recipient = data.recipient,
+                callType = data.callType,
+                lineId = data.lineId,
+                callerId = data.callerId,
+                useLineAsCallerId = data.useLineAsCallerId,
+                color = data.color,
+                textColor = data.textColor
             )
             tileRepository.updateTile(updatedTile)
 

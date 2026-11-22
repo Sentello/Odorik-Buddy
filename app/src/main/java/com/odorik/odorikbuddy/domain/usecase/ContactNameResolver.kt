@@ -2,6 +2,7 @@ package com.odorik.odorikbuddy.domain.usecase
 
 import android.content.ContentResolver
 import com.odorik.odorikbuddy.util.PhoneNumberUtils
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,8 @@ class ContactNameResolver @Inject constructor(
 
     private val reloadThrottleMs = 60_000L
 
+    internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
     suspend fun loadContacts(contentResolver: ContentResolver, force: Boolean = false) {
         if (!force &&
             _contactsMap.value.isNotEmpty() &&
@@ -31,13 +34,13 @@ class ContactNameResolver @Inject constructor(
         ) {
             return
         }
-        val contacts = withContext(Dispatchers.IO) {
+        val contacts = withContext(ioDispatcher) {
             loadContactsUseCase(contentResolver)
         }
         synchronized(contactNameCache) {
-            _contactsMap.value = contacts
             contactNameCache.clear()
             lastLoadTimestampMs = System.currentTimeMillis()
+            _contactsMap.value = contacts
         }
     }
 
@@ -48,10 +51,12 @@ class ContactNameResolver @Inject constructor(
             contactNameCache[number]?.let { return it }
         }
 
-        val resolved = resolveContactName(number, _contactsMap.value)
+        val contacts = _contactsMap.value
+        val resolved = resolveContactName(number, contacts)
+        if (contacts.isEmpty()) return resolved
 
         synchronized(contactNameCache) {
-            contactNameCache[number] = resolved
+            if (_contactsMap.value === contacts) contactNameCache[number] = resolved
         }
         return resolved
     }

@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 import kotlinx.coroutines.flow.Flow
@@ -31,4 +32,16 @@ interface TileDao {
     
     @Update
     suspend fun updateTiles(tiles: List<TileEntity>)
+
+    @Query("DELETE FROM tiles")
+    suspend fun deleteAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(tiles: List<TileEntity>)
+
+    @Transaction
+    suspend fun replaceAll(tiles: List<TileEntity>) {
+        deleteAll()
+        insertAll(tiles)
+    }
 }

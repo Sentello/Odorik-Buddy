@@ -1,0 +1,55 @@
+{
+  "account": {
+    "username": "1234567"
+  },
+  "app": "OdorikBuddy",
+  "app_settings": {
+    "autoUpdateEnabled": true,
+    "directCallsEnabled": false,
+    "historyPeriodDays": 30
+  },
+  "appVersion": "1.5.5",
+  "calls": {
+    "callbackRecipient": "00420777000111",
+    "callerId": "601000000",
+    "oneShotRecipient": "00420777000222",
+    "personalPhoneNumber": "00420777000333",
+    "selectedLine": "123456",
+    "tabOrder": "tiles_title,callback_title,oneshot_call",
+    "useCallerIdPrefix": true
+  },
+  "createdAt": "2026-11-21T20:06:36.358Z",
+  "display": {
+    "appTheme": "MATERIAL_YOU",
+    "language": "cs",
+    "themeMode": "DARK",
+    "tileSize": "LARGE"
+  },
+  "formatVersion": 1,
+  "tiles": [
+    {
+      "callType": "CALLBACK",
+      "callerId": "+420777000333",
+      "color": 4292933626,
+      "id": 1,
+      "label": "Babička",
+      "lineId": "123456",
+      "position": 0,
+      "recipient": "777000444",
+      "textColor": null,
+      "useLineAsCallerId": false
+    },
+    {
+      "callType": "ONESHOT",
+      "callerId": null,
+      "color": null,
+      "id": 4,
+      "label": "Děda",
+      "lineId": null,
+      "position": 1,
+      "recipient": "+420777000555",
+      "textColor": 4294967295,
+      "useLineAsCallerId": true
+    }
+  ]
+}

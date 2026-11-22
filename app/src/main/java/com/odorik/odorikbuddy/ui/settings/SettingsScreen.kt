@@ -1,5 +1,9 @@
 package com.odorik.odorikbuddy.ui.settings
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
+
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -7,6 +11,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
@@ -36,6 +44,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +56,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,8 +84,10 @@ import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.ui.settings.SettingsViewModel.BackupUiEvent
 import com.odorik.odorikbuddy.data.local.AppTheme
 import com.odorik.odorikbuddy.data.local.ThemeMode
+import com.odorik.odorikbuddy.ui.calls.TileSize
 import com.odorik.odorikbuddy.ui.components.AccentIconChip
 import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.components.TransparentListItem
@@ -80,6 +98,31 @@ import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.findActivity
 import com.odorik.odorikbuddy.util.openAppSettings
+
+@Composable
+private fun <T> ChipChoiceRow(
+    options: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .selectableGroup()
+    ) {
+        options.forEach { (value, label) ->
+            FilterChip(
+                selected = selected == value,
+                onClick = { onSelect(value) },
+                label = { Text(label) },
+                leadingIcon = if (selected == value) {
+                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                } else null
+            )
+        }
+    }
+}
 
 @Composable
 private fun SettingsSection(
@@ -139,8 +182,6 @@ fun SettingsScreen(
     val updateViewModel: UpdateViewModel = hiltViewModel()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    var showAppearanceDialog by remember { mutableStateOf(false) }
     var showColorThemeDialog by remember { mutableStateOf(false) }
     var showHistoryPeriodDialog by remember { mutableStateOf(false) }
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
@@ -150,6 +191,7 @@ fun SettingsScreen(
     val currentPhoneNumber by viewModel.phoneNumber.collectAsState()
     val autoUpdateEnabled by viewModel.autoUpdateEnabled.collectAsState()
     val directCallsEnabled by viewModel.directCallsEnabled.collectAsState()
+    val tileSize by viewModel.tileSize.collectAsState()
 
     val uriHandler = LocalUriHandler.current
 
@@ -186,8 +228,76 @@ fun SettingsScreen(
 
 
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val pendingImport by viewModel.pendingImport.collectAsState()
+    val backupBusy by viewModel.backupBusy.collectAsState()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri -> uri?.let(viewModel::exportBackup) }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let(viewModel::loadImport) }
+
+    LaunchedEffect(Unit) {
+        viewModel.backupEvents.collect { event ->
+            when (event) {
+                is BackupUiEvent.Exported -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.backup_exported, event.tileCount),
+                        actionLabel = context.getString(R.string.backup_share),
+                        duration = SnackbarDuration.Long
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        val send = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/json"
+                            putExtra(Intent.EXTRA_STREAM, event.uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        try {
+                            context.startActivity(
+                                Intent.createChooser(send, context.getString(R.string.backup_share))
+                            )
+                        } catch (e: ActivityNotFoundException) {
+                        }
+                    }
+                }
+                BackupUiEvent.ExportFailed ->
+                    snackbarHostState.showSnackbar(context.getString(R.string.backup_export_failed))
+                is BackupUiEvent.ImportFailed ->
+                    snackbarHostState.showSnackbar(context.getString(event.messageRes))
+                is BackupUiEvent.Imported -> {
+                    val report = event.report
+                    val tilesImported = report.tilesImported
+                    val hasHints = report.directCallsSkipped || report.autoUpdateSkipped
+                    val message = buildList {
+                        add(
+                            if (tilesImported == null) context.getString(R.string.backup_imported_settings_only)
+                            else context.getString(R.string.backup_imported, tilesImported)
+                        )
+                        if (report.directCallsSkipped) add(context.getString(R.string.backup_direct_calls_skipped))
+                        if (report.autoUpdateSkipped) add(context.getString(R.string.backup_auto_update_skipped))
+                    }.joinToString("\n")
+                    val language = report.languageToApply
+                    if (language != null) {
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        viewModel.setLanguage(language)
+                        (context as? MainActivity)?.updateLocale(language)
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            message = message,
+                            duration = if (hasHints) SnackbarDuration.Long else SnackbarDuration.Short
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
-        contentWindowInsets = WindowInsets(0.dp)
+        contentWindowInsets = WindowInsets(0.dp),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -284,14 +394,16 @@ fun SettingsScreen(
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.settings_appearance)) },
                                 supportingContent = {
-                                    val appearanceLabel = when (themeMode) {
-                                        ThemeMode.SYSTEM -> stringResource(R.string.theme_mode_system)
-                                        ThemeMode.LIGHT -> stringResource(R.string.theme_mode_light)
-                                        ThemeMode.DARK -> stringResource(R.string.theme_mode_dark)
-                                    }
-                                    Text(appearanceLabel, color = MaterialTheme.colorScheme.primary)
-                                },
-                                modifier = Modifier.clickable { showAppearanceDialog = true }
+                                    ChipChoiceRow(
+                                        options = listOf(
+                                            ThemeMode.SYSTEM to stringResource(R.string.theme_mode_system),
+                                            ThemeMode.LIGHT to stringResource(R.string.theme_mode_light),
+                                            ThemeMode.DARK to stringResource(R.string.theme_mode_dark)
+                                        ),
+                                        selected = themeMode,
+                                        onSelect = { viewModel.setThemeMode(it) }
+                                    )
+                                }
                             )
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -313,15 +425,45 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
-                            val languages = listOf(
-                                stringResource(R.string.lang_english) to "en",
-                                stringResource(R.string.lang_czech) to "cs"
+                            TransparentListItem(
+                                headlineContent = { Text(stringResource(R.string.tile_size)) },
+                                supportingContent = {
+                                    Column {
+                                        Text(stringResource(R.string.tile_size_description))
+                                        ChipChoiceRow(
+                                            options = listOf(
+                                                TileSize.NORMAL to stringResource(R.string.widget_config_normal),
+                                                TileSize.LARGE to stringResource(R.string.widget_config_large),
+                                                TileSize.EXTRA_LARGE to stringResource(R.string.widget_config_extra_large)
+                                            ),
+                                            selected = tileSize,
+                                            onSelect = { viewModel.setTileSize(it) }
+                                        )
+                                    }
+                                }
                             )
-                            val selectedLang = languages.find { it.second == language }?.first ?: ""
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.settings_language_label)) },
-                                supportingContent = { Text(selectedLang, color = MaterialTheme.colorScheme.primary) },
-                                modifier = Modifier.clickable { showLanguageDialog = true }
+                                supportingContent = {
+                                    ChipChoiceRow(
+                                        options = listOf(
+                                            "en" to stringResource(R.string.lang_english),
+                                            "cs" to stringResource(R.string.lang_czech)
+                                        ),
+                                        selected = language,
+                                        onSelect = {
+                                            if (it != language) {
+                                                viewModel.setLanguage(it)
+                                                (context as? MainActivity)?.updateLocale(it)
+                                            }
+                                        }
+                                    )
+                                }
                             )
                         }
                     }
@@ -340,11 +482,47 @@ fun SettingsScreen(
                             365 to stringResource(R.string.history_period_365)
                         )
                         val selectedPeriod = periods.find { it.first == historyPeriod }?.second ?: ""
-                        TransparentListItem(
-                            headlineContent = { Text(stringResource(R.string.history_period_label)) },
-                            supportingContent = { Text(selectedPeriod, color = MaterialTheme.colorScheme.primary) },
-                            modifier = Modifier.clickable { showHistoryPeriodDialog = true }
-                        )
+                        Column {
+                            TransparentListItem(
+                                headlineContent = { Text(stringResource(R.string.history_period_label)) },
+                                supportingContent = { Text(selectedPeriod, color = MaterialTheme.colorScheme.primary) },
+                                modifier = Modifier.clickable { showHistoryPeriodDialog = true }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            val backupFileName = stringResource(
+                                R.string.backup_file_name,
+                                java.time.LocalDate.now().toString()
+                            )
+                            TransparentListItem(
+                                headlineContent = { Text(stringResource(R.string.backup_export)) },
+                                supportingContent = { Text(stringResource(R.string.backup_export_description)) },
+                                trailingContent = {
+                                    if (backupBusy) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                    } else {
+                                        Icon(Icons.Default.Upload, contentDescription = null)
+                                    }
+                                },
+                                modifier = Modifier.clickable(enabled = !backupBusy) {
+                                    exportLauncher.launch(backupFileName)
+                                }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            TransparentListItem(
+                                headlineContent = { Text(stringResource(R.string.backup_import)) },
+                                supportingContent = { Text(stringResource(R.string.backup_import_description)) },
+                                trailingContent = { Icon(Icons.Default.Download, contentDescription = null) },
+                                modifier = Modifier.clickable(enabled = !backupBusy) {
+                                    importLauncher.launch(arrayOf("*/*"))
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -505,46 +683,6 @@ fun SettingsScreen(
         }
     }
 
-    if (showAppearanceDialog) {
-        val options = listOf(
-            ThemeMode.SYSTEM to stringResource(R.string.theme_mode_system),
-            ThemeMode.LIGHT to stringResource(R.string.theme_mode_light),
-            ThemeMode.DARK to stringResource(R.string.theme_mode_dark)
-        )
-        AlertDialog(
-            onDismissRequest = { showAppearanceDialog = false },
-            title = { Text(stringResource(R.string.settings_appearance)) },
-            text = {
-                Column(Modifier.selectableGroup()) {
-                    options.forEach { (mode, label) ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = themeMode == mode,
-                                    onClick = {
-                                        viewModel.setThemeMode(mode)
-                                        showAppearanceDialog = false
-                                    },
-                                    role = Role.RadioButton
-                                )
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = themeMode == mode, onClick = null)
-                            Text(label, modifier = Modifier.padding(start = 8.dp))
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showAppearanceDialog = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
     if (showColorThemeDialog) {
         val options = buildList {
             add(AppTheme.STANDARD to (stringResource(R.string.app_theme_standard) to null as String?))
@@ -608,6 +746,14 @@ fun SettingsScreen(
     }
 
 
+    pendingImport?.let { pending ->
+        BackupImportDialog(
+            preview = pending.preview,
+            onConfirm = viewModel::confirmImport,
+            onDismiss = viewModel::cancelImport
+        )
+    }
+
     selectedLine?.let {
         LineInfoDialog(line = it, onDismiss = { viewModel.onDismissLineDialog() })
     }
@@ -650,17 +796,6 @@ fun SettingsScreen(
                     Text(stringResource(R.string.cancel))
                 }
             }
-        )
-    }
-
-    if (showLanguageDialog) {
-        LanguageSelectionDialog(
-            currentLanguage = language,
-            onLanguageSelected = {
-                viewModel.setLanguage(it)
-                (context as? MainActivity)?.updateLocale(it)
-            },
-            onDismiss = { showLanguageDialog = false }
         )
     }
 

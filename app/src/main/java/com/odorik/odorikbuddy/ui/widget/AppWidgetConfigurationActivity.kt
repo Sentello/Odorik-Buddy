@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.widget
 
+import android.content.Context
 import android.Manifest
 import android.app.Activity
 import android.appwidget.AppWidgetManager
@@ -15,6 +16,8 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +28,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,13 +36,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,13 +57,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,12 +74,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.repository.TileRepository
 import com.odorik.odorikbuddy.ui.calls.TileColorHelper
@@ -78,8 +92,32 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class TileWidgetConfig(
+    val tileId: Int?,
+    val style: TileWidgetStyle,
+    val useTileColors: Boolean,
+    val customColor: Long?,
+    val customTextColor: Long?,
+    val textSize: TileWidgetTextSize
+) {
+    companion object {
+        val DEFAULT = TileWidgetConfig(
+            tileId = null,
+            style = TileWidgetStyle.SQUARE,
+            useTileColors = true,
+            customColor = null,
+            customTextColor = null,
+            textSize = TileWidgetTextSize.NORMAL
+        )
+    }
+}
+
 @AndroidEntryPoint
 class AppWidgetConfigurationActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
+    }
 
     @Inject
     lateinit var tileRepository: TileRepository
@@ -90,6 +128,10 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
     private val viewModel: AppWidgetConfigurationViewModel by viewModels()
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+
+    private var initialConfig by mutableStateOf<TileWidgetConfig?>(null)
+
+    private var isSaving by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,6 +153,24 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_CANCELED, resultValue)
+
+        lifecycleScope.launch {
+            initialConfig = try {
+                val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
+                val prefs = getAppWidgetState(applicationContext, PreferencesGlanceStateDefinition, glanceId)
+                TileWidgetConfig(
+                    tileId = prefs[OdorikTileWidget.tileIdKey]?.takeIf { it != OdorikTileWidget.NO_TILE },
+                    style = TileWidgetStyle.fromKey(prefs[OdorikTileWidget.widgetStyleKey]),
+                    useTileColors = prefs[OdorikTileWidget.useTileColorsKey] ?: true,
+                    customColor = prefs[OdorikTileWidget.widgetColorKey],
+                    customTextColor = prefs[OdorikTileWidget.widgetTextColorKey],
+                    textSize = TileWidgetTextSize.fromKey(prefs[OdorikTileWidget.textSizeKey])
+                )
+            } catch (e: Exception) {
+                android.util.Log.w("AppWidgetConfig", "Could not read widget state, using defaults", e)
+                TileWidgetConfig.DEFAULT
+            }
+        }
 
         setContent {
             val context = LocalContext.current
@@ -147,13 +207,24 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         )
                     }
                 ) { padding ->
-                    TileSelectionScreen(
-                        modifier = Modifier.padding(padding),
-                        viewModel = viewModel,
-                        onSaveWidget = { tileId, style, useTileColors, customColor, customTextColor ->
-                            saveWidgetState(tileId, style, useTileColors, customColor, customTextColor)
+                    val initial = initialConfig
+                    if (initial == null) {
+                        Box(
+                            modifier = Modifier.padding(padding).fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
-                    )
+                    } else {
+                        TileSelectionScreen(
+                            modifier = Modifier.padding(padding),
+                            viewModel = viewModel,
+                            initial = initial,
+                            onSaveWidget = { tileId, style, useTileColors, customColor, customTextColor, textSize ->
+                                saveWidgetState(tileId, style, useTileColors, customColor, customTextColor, textSize)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -164,16 +235,18 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
     fun TileSelectionScreen(
         modifier: Modifier = Modifier,
         viewModel: AppWidgetConfigurationViewModel,
-        onSaveWidget: (tileId: Int, style: String, useTileColors: Boolean, customColor: Long?, customTextColor: Long?) -> Unit
+        initial: TileWidgetConfig,
+        onSaveWidget: (tileId: Int, style: TileWidgetStyle, useTileColors: Boolean, customColor: Long?, customTextColor: Long?, textSize: TileWidgetTextSize) -> Unit
     ) {
         val tiles by viewModel.tiles.collectAsState()
         val contactsMap by viewModel.contactsMap.collectAsState()
 
-        var selectedStyle by remember { mutableStateOf("SQUARE") }
-        var selectedTileId by remember { mutableStateOf<Int?>(null) }
-        var useTileColors by remember { mutableStateOf(true) }
-        var customColor by remember { mutableStateOf<Long?>(null) }
-        var customTextColor by remember { mutableStateOf<Long?>(null) }
+        var selectedStyle by rememberSaveable { mutableStateOf(initial.style) }
+        var selectedTileId by rememberSaveable { mutableStateOf(initial.tileId) }
+        var useTileColors by rememberSaveable { mutableStateOf(initial.useTileColors) }
+        var customColor by rememberSaveable { mutableStateOf(initial.customColor) }
+        var customTextColor by rememberSaveable { mutableStateOf(initial.customTextColor) }
+        var selectedTextSize by rememberSaveable { mutableStateOf(initial.textSize) }
 
         val selectedTile = tiles.find { it.id == selectedTileId }
 
@@ -183,15 +256,24 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 contentPadding = PaddingValues(bottom = LocalAppDimens.current.spacing)
             ) {
                 item {
-                    Text(
-                        text = stringResource(R.string.widget_config_instruction),
-                        style = MaterialTheme.typography.bodyMedium,
+                    Column(
                         modifier = Modifier.padding(
                             horizontal = LocalAppDimens.current.cardPadding,
                             vertical = LocalAppDimens.current.spacing
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.widget_config_instruction),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = stringResource(R.string.widget_config_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
                 
                 item {
@@ -213,19 +295,57 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                         ) {
                             StyleOption(
                                 label = stringResource(R.string.style_square),
-                                isSelected = selectedStyle == "SQUARE",
-                                onClick = { selectedStyle = "SQUARE" },
+                                isSelected = selectedStyle == TileWidgetStyle.SQUARE,
+                                onClick = { selectedStyle = TileWidgetStyle.SQUARE },
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             )
                             
                             StyleOption(
                                 label = stringResource(R.string.style_circle),
-                                isSelected = selectedStyle == "CIRCLE",
-                                onClick = { selectedStyle = "CIRCLE" },
+                                isSelected = selectedStyle == TileWidgetStyle.CIRCLE,
+                                onClick = { selectedStyle = TileWidgetStyle.CIRCLE },
                                 shape = CircleShape,
                                 modifier = Modifier.weight(1f)
                             )
+                        }
+                    }
+                }
+
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = LocalAppDimens.current.cardPadding)
+                            .padding(bottom = LocalAppDimens.current.spacing)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.widget_config_text_size),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        val sizes = listOf(
+                            TileWidgetTextSize.NORMAL to stringResource(R.string.widget_config_normal),
+                            TileWidgetTextSize.LARGE to stringResource(R.string.widget_config_large),
+                            TileWidgetTextSize.EXTRA_LARGE to stringResource(R.string.widget_config_extra_large)
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                        ) {
+                            sizes.forEach { (size, label) ->
+                                FilterChip(
+                                    selected = selectedTextSize == size,
+                                    onClick = { selectedTextSize = size },
+                                    label = { Text(label) },
+                                    leadingIcon = if (selectedTextSize == size) {
+                                        { Icon(Icons.Default.Check, null) }
+                                    } else null
+                                )
+                            }
                         }
                     }
                 }
@@ -249,6 +369,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 tile = selectedTile,
                                 contactName = viewModel.getContactName(selectedTile.recipient),
                                 style = selectedStyle,
+                                textSize = selectedTextSize,
                                 useTileColors = useTileColors,
                                 customColor = customColor,
                                 customTextColor = customTextColor
@@ -313,7 +434,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     items(TileColorHelper.allBaseColors) { baseColor ->
                                         val display = TileColorHelper.resolveColor(
                                             baseColor,
-                                            com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
+                                            isSystemInDarkTheme()
                                         )
                                             ?: Color(baseColor)
                                         ColorSwatch(
@@ -360,8 +481,9 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
                     val tileBg = TileColorHelper.resolveColor(tile.color, isSystemDark)
                         ?: MaterialTheme.colorScheme.surface
-                    val tileText = if (tile.textColor != null) {
-                        Color(tile.textColor)
+                    val explicitText = TileColorHelper.readableTextColor(tile.textColor, tileBg)
+                    val tileText = if (explicitText != null) {
+                        explicitText
                     } else if (tile.color != null) {
                         if (isSystemDark) Color.White else Color.Black
                     } else {
@@ -373,8 +495,9 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .padding(horizontal = LocalAppDimens.current.cardPadding, vertical = LocalAppDimens.current.spacing / 2)
                             .clickable {
+                                val tileChanged = selectedTileId != tile.id
                                 selectedTileId = tile.id
-                                if (!useTileColors) {
+                                if (tileChanged && !useTileColors) {
                                     customColor = tile.color
                                     customTextColor = tile.textColor
                                 }
@@ -415,7 +538,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             }
                             
                             Text(
-                                text = if (tile.callType == "CALLBACK") stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
+                                text = if (tile.callType == com.odorik.odorikbuddy.data.local.entity.TileCallType.CALLBACK) stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = if (tile.color != null) tileText.copy(alpha = 0.85f) else ScreenAccents.Settings.main(),
                                 fontWeight = FontWeight.Medium,
@@ -424,7 +547,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             
                             if (isSelected) {
                                 Text(
-                                    text = "✓ Selected",
+                                    text = stringResource(R.string.widget_tile_selected),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = tileText.copy(alpha = 0.6f),
                                     modifier = Modifier.padding(top = 6.dp)
@@ -435,7 +558,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 }
 
                 item {
-                    val canSave = selectedTileId != null
+                    val canSave = selectedTile != null && !isSaving
                     Button(
                         onClick = {
                             selectedTileId?.let { tid ->
@@ -444,7 +567,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     selectedStyle,
                                     useTileColors,
                                     if (!useTileColors) customColor else null,
-                                    if (!useTileColors) customTextColor else null
+                                    if (!useTileColors) customTextColor else null,
+                                    selectedTextSize
                                 )
                             }
                         },
@@ -455,7 +579,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             .navigationBarsPadding()
                     ) {
                         Text(
-                            text = if (canSave) stringResource(R.string.save_widget) else stringResource(R.string.select_tile_first)
+                            text = if (selectedTile != null) stringResource(R.string.save_widget) else stringResource(R.string.select_tile_first)
                         )
                     }
                 }
@@ -556,58 +680,51 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
     fun QuickDialWidgetPreview(
         tile: com.odorik.odorikbuddy.data.local.entity.TileEntity,
         contactName: String,
-        style: String,
+        style: TileWidgetStyle,
+        textSize: TileWidgetTextSize,
         useTileColors: Boolean,
         customColor: Long?,
         customTextColor: Long?
     ) {
-        val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
+        val isPhoneDark = isSystemInDarkTheme()
 
-        val bgColor = when {
-            !useTileColors && customColor != null -> Color(customColor)
-            tile.color != null -> TileColorHelper.resolveColor(tile.color, isSystemDark)
-                ?: Color(tile.color)
-            else -> MaterialTheme.colorScheme.surfaceVariant
+        val baseColor = if (!useTileColors && customColor != null) customColor else tile.color
+        val textColor = if (!useTileColors && customTextColor != null) customTextColor else tile.textColor
+        val colors = TileColorHelper.widgetColors(baseColor, textColor, isPhoneDark)
+        val bgColor = colors.background
+        val textCol = colors.text
+
+        val shadow = if (colors.shadow == Color.Transparent) null else with(LocalDensity.current) {
+            Shadow(color = colors.shadow, offset = Offset(1.dp.toPx(), 1.dp.toPx()))
         }
+        val textStyle = LocalTextStyle.current.copy(shadow = shadow)
 
-        val textCol = when {
-            !useTileColors && customTextColor != null -> Color(customTextColor)
-            tile.textColor != null -> Color(tile.textColor)
-            tile.color != null -> if (isSystemDark) Color.White else Color.Black
-            else -> MaterialTheme.colorScheme.onSurface
-        }
-
-        val titleText = if (tile.label.isNotEmpty()) tile.label else contactName
-        val subtitleText = if (tile.label.isNotEmpty()) contactName else if (contactName != tile.recipient) tile.recipient else ""
+        val titleText = TileWidgetTexts.title(tile.label, contactName)
+        val subtitleText = TileWidgetTexts.subtitle(tile.label, contactName, tile.recipient)
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(92.dp)
+                .heightIn(min = 92.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(bgColor)
+                .background(if (style == TileWidgetStyle.CIRCLE) MaterialTheme.colorScheme.surfaceContainer else bgColor)
                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
             contentAlignment = Alignment.Center
         ) {
-            if (style == "CIRCLE") {
+            if (style == TileWidgetStyle.CIRCLE) {
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .background(textCol.copy(alpha = 0.12f), CircleShape),
+                        .size(64.dp)
+                        .background(bgColor, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    val initials = (tile.label.ifEmpty { contactName })
-                        .trim()
-                        .split(Regex("\\s+"))
-                        .let { parts ->
-                            if (parts.size >= 2) (parts[0].take(1) + parts[1].take(1)).uppercase()
-                            else parts.firstOrNull()?.take(1)?.uppercase() ?: "?"
-                        }
+                    val initials = TileWidgetTexts.initials(titleText)
 
                     Text(
                         text = initials,
+                        style = textStyle,
                         color = textCol,
-                        fontSize = 20.sp,
+                        fontSize = textSize.initialsSp.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -619,17 +736,20 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 ) {
                     Text(
                         text = titleText,
+                        style = textStyle,
                         color = textCol,
-                        fontSize = 13.sp,
+                        fontSize = textSize.titleSp.sp,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                        maxLines = textSize.titleMaxLines,
                         overflow = TextOverflow.Ellipsis
                     )
                     if (subtitleText.isNotEmpty()) {
                         Text(
                             text = subtitleText,
-                            color = textCol.copy(alpha = 0.75f),
-                            fontSize = 11.sp,
+                            style = textStyle,
+                            color = textCol.copy(alpha = TileWidgetTexts.SUBTITLE_ALPHA),
+                            fontSize = textSize.subtitleSp.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = 2.dp)
@@ -642,31 +762,45 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
 
     private fun saveWidgetState(
         tileId: Int,
-        style: String,
+        style: TileWidgetStyle,
         useTileColors: Boolean,
         customColor: Long?,
-        customTextColor: Long?
+        customTextColor: Long?,
+        textSize: TileWidgetTextSize
     ) {
+        if (isSaving) return
+        isSaving = true
+
         lifecycleScope.launch {
-            val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
+            try {
+                val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
 
-            updateAppWidgetState(applicationContext, glanceId) { prefs ->
-                prefs[intPreferencesKey("tile_id")] = tileId
-                prefs[stringPreferencesKey("widget_style")] = style
-                prefs[OdorikTileWidget.useTileColorsKey] = useTileColors
-                if (!useTileColors) {
-                    if (customColor != null) prefs[OdorikTileWidget.widgetColorKey] = customColor
-                    if (customTextColor != null) prefs[OdorikTileWidget.widgetTextColorKey] = customTextColor
-                } else {
-                    prefs.remove(OdorikTileWidget.widgetColorKey)
-                    prefs.remove(OdorikTileWidget.widgetTextColorKey)
+                updateAppWidgetState(applicationContext, glanceId) { prefs ->
+                    prefs[OdorikTileWidget.tileIdKey] = tileId
+                    prefs[OdorikTileWidget.widgetStyleKey] = style.name
+                    prefs[OdorikTileWidget.useTileColorsKey] = useTileColors
+                    prefs[OdorikTileWidget.textSizeKey] = textSize.name
+                    if (!useTileColors && customColor != null) {
+                        prefs[OdorikTileWidget.widgetColorKey] = customColor
+                    } else {
+                        prefs.remove(OdorikTileWidget.widgetColorKey)
+                    }
+                    if (!useTileColors && customTextColor != null) {
+                        prefs[OdorikTileWidget.widgetTextColorKey] = customTextColor
+                    } else {
+                        prefs.remove(OdorikTileWidget.widgetTextColorKey)
+                    }
                 }
+
+                OdorikTileWidget().update(applicationContext, glanceId)
+
+                val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                setResult(Activity.RESULT_OK, resultValue)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w("AppWidgetConfig", "Could not save widget state", e)
             }
-
-            OdorikTileWidget().update(applicationContext, glanceId)
-
-            val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            setResult(Activity.RESULT_OK, resultValue)
             finish()
         }
     }
