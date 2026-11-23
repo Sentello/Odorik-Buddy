@@ -53,12 +53,18 @@ import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.AppConstants.SWIPE_THRESHOLD
 import kotlin.math.roundToInt
 
+/**
+ * Data class representing a tab with its title and content
+ */
 data class TabItem(
     val titleResId: Int,
     val title: String,
     val content: @Composable () -> Unit
 )
 
+/**
+ * Composable that renders draggable tabs with persistent order
+ */
 @Composable
 fun DraggableTabs(
     tabItems: List<TabItem>,
@@ -85,6 +91,7 @@ fun DraggableTabs(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
     ) {
+        // Enhanced Tab Row
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -164,6 +171,7 @@ fun DraggableTabs(
             }
         }
         
+        // Content area with Swipe Support and Animation
         val selectedIndex = currentTabOrder.indexOf(selectedTabTitle)
         var swipeOffset by remember { mutableStateOf(0f) }
 
@@ -175,12 +183,14 @@ fun DraggableTabs(
                     detectHorizontalDragGestures(
                         onDragStart = { swipeOffset = 0f },
                         onDragEnd = {
-                            val threshold = SWIPE_THRESHOLD
+                            val threshold = SWIPE_THRESHOLD // Threshold in pixels
                             if (swipeOffset > threshold) {
+                                // Swipe Right -> Previous
                                 if (selectedIndex > 0) {
                                     onTabSelected(currentTabOrder[selectedIndex - 1])
                                 }
                             } else if (swipeOffset < -threshold) {
+                                // Swipe Left -> Next
                                 if (selectedIndex >= 0 && selectedIndex < currentTabOrder.size - 1) {
                                     onTabSelected(currentTabOrder[selectedIndex + 1])
                                 }
@@ -215,6 +225,9 @@ fun DraggableTabs(
     }
 }
 
+/**
+ * Individual draggable tab with enhanced styling
+ */
 @Composable
 fun DraggableTab(
     titleResId: Int,

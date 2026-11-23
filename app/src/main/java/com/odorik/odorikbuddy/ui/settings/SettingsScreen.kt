@@ -2,9 +2,8 @@ package com.odorik.odorikbuddy.ui.settings
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.widget.Toast
-
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
@@ -36,12 +35,17 @@ import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -50,19 +54,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,27 +80,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
-import com.odorik.odorikbuddy.ui.settings.SettingsViewModel.BackupUiEvent
 import com.odorik.odorikbuddy.data.local.AppTheme
+import com.odorik.odorikbuddy.data.local.NavIconStyle
 import com.odorik.odorikbuddy.data.local.ThemeMode
 import com.odorik.odorikbuddy.ui.calls.TileSize
 import com.odorik.odorikbuddy.ui.components.AccentIconChip
 import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.components.TransparentListItem
 import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
+import com.odorik.odorikbuddy.ui.main.BottomNavItem
 import com.odorik.odorikbuddy.ui.navigation.NavigationRoutes
 import com.odorik.odorikbuddy.ui.navigation.SettingsRoutes
+import com.odorik.odorikbuddy.ui.settings.SettingsViewModel.BackupUiEvent
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.findActivity
 import com.odorik.odorikbuddy.util.openAppSettings
+import com.odorik.odorikbuddy.util.openNotificationSettings
 
+/**
+ * A row of chips for a short either/or choice, shown directly in a settings row.
+ * The row scrolls sideways if the labels don't fit (long words, large font).
+ */
 @Composable
 private fun <T> ChipChoiceRow(
     options: List<Pair<T, String>>,
@@ -177,12 +189,14 @@ fun SettingsScreen(
     val selectedLine by viewModel.selectedLine.collectAsState()
     val themeMode by viewModel.themeMode
     val appTheme by viewModel.appTheme
+    val navIconStyle by viewModel.navIconStyle
     val language by viewModel.language.collectAsState()
     val historyPeriod by viewModel.historyPeriod.collectAsState()
     val updateViewModel: UpdateViewModel = hiltViewModel()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showColorThemeDialog by remember { mutableStateOf(false) }
+    var showNavIconStyleDialog by remember { mutableStateOf(false) }
     var showHistoryPeriodDialog by remember { mutableStateOf(false) }
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
@@ -192,27 +206,57 @@ fun SettingsScreen(
     val autoUpdateEnabled by viewModel.autoUpdateEnabled.collectAsState()
     val directCallsEnabled by viewModel.directCallsEnabled.collectAsState()
     val tileSize by viewModel.tileSize.collectAsState()
+    val simNumbers by viewModel.simNumbers.collectAsState()
 
     val uriHandler = LocalUriHandler.current
 
+    // Update information
     val updateInfo by updateViewModel.updateInfo.collectAsState()
     val isUpdateLoading by updateViewModel.isLoading.collectAsState()
     val updateError by updateViewModel.error.collectAsState()
 
+    // Covers both the Android 13 permission and notifications blocked for the app.
+    // Re-read on every resume: the user may change it in the system settings.
+    var notificationsAllowed by remember {
+        mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
+    }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notificationsAllowed = NotificationManagerCompat.from(context).areNotificationsEnabled()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Permission launcher for notifications. The check is already on by the time this runs:
+    // without the permission a new version still shows on the Dashboard.
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            viewModel.setAutoUpdateEnabled(true)
-            viewModel.performImmediateUpdateCheck()
-        } else if (context.findActivity()?.let {
+        viewModel.performImmediateUpdateCheck()
+        notificationsAllowed = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        if (!isGranted && context.findActivity()?.let {
                 !ActivityCompat.shouldShowRequestPermissionRationale(it, android.Manifest.permission.POST_NOTIFICATIONS)
             } == true
         ) {
+            // Denied with no system dialog shown = permanently denied
             deniedPermissionMessageRes = R.string.notification_permission_denied_message
         }
     }
 
+    val enableAutoUpdate = {
+        viewModel.setAutoUpdateEnabled(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationsAllowed) {
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            viewModel.performImmediateUpdateCheck()
+        }
+    }
+
+    // Permission launcher for direct calls
     val callPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -228,6 +272,7 @@ fun SettingsScreen(
 
 
 
+    // --- Settings backup (export / import) ---
     val snackbarHostState = remember { SnackbarHostState() }
     val pendingImport by viewModel.pendingImport.collectAsState()
     val backupBusy by viewModel.backupBusy.collectAsState()
@@ -236,6 +281,7 @@ fun SettingsScreen(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri -> uri?.let(viewModel::exportBackup) }
 
+    // "*/*": files received over Bluetooth often carry a wrong MIME type; the content is validated.
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri -> uri?.let(viewModel::loadImport) }
@@ -260,6 +306,7 @@ fun SettingsScreen(
                                 Intent.createChooser(send, context.getString(R.string.backup_share))
                             )
                         } catch (e: ActivityNotFoundException) {
+                            // Nothing can receive the file; the saved copy is still there.
                         }
                     }
                 }
@@ -270,17 +317,19 @@ fun SettingsScreen(
                 is BackupUiEvent.Imported -> {
                     val report = event.report
                     val tilesImported = report.tilesImported
-                    val hasHints = report.directCallsSkipped || report.autoUpdateSkipped
+                    // What was imported, then what the user must turn on again by hand.
+                    val hasHints = report.directCallsSkipped
                     val message = buildList {
                         add(
                             if (tilesImported == null) context.getString(R.string.backup_imported_settings_only)
                             else context.getString(R.string.backup_imported, tilesImported)
                         )
                         if (report.directCallsSkipped) add(context.getString(R.string.backup_direct_calls_skipped))
-                        if (report.autoUpdateSkipped) add(context.getString(R.string.backup_auto_update_skipped))
                     }.joinToString("\n")
                     val language = report.languageToApply
                     if (language != null) {
+                        // Switching the language recreates the activity and would drop a
+                        // snackbar, so confirm with a toast and switch last.
                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                         viewModel.setLanguage(language)
                         (context as? MainActivity)?.updateLocale(language)
@@ -328,6 +377,7 @@ fun SettingsScreen(
                     bottom = LocalAppDimens.current.spacing
                 )
             ) {
+                // Account Section (Lines)
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_account),
@@ -351,6 +401,7 @@ fun SettingsScreen(
                     }
                 }
 
+                // Personal Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_personal),
@@ -385,12 +436,61 @@ fun SettingsScreen(
                     }
                 }
 
+                // Calling Section (speed dials)
+                item {
+                    SettingsSection(
+                        title = stringResource(R.string.section_calling),
+                        icon = Icons.Default.Dialpad
+                    ) {
+                        TransparentListItem(
+                            headlineContent = { Text(stringResource(R.string.speed_dials_title)) },
+                            supportingContent = { Text(stringResource(R.string.speed_dials_description)) },
+                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                            modifier = Modifier.clickable {
+                                internalNavController.navigate(SettingsRoutes.SPEED_DIALS_SCREEN)
+                            }
+                        )
+                    }
+                }
+
+                // SIM card section — only for accounts that have an Odorik SIM
+                if (simNumbers.isNotEmpty()) {
+                    item {
+                        SettingsSection(
+                            title = stringResource(R.string.sim_section_title),
+                            icon = Icons.Default.SimCard
+                        ) {
+                            Column {
+                                simNumbers.forEachIndexed { index, number ->
+                                    TransparentListItem(
+                                        headlineContent = { Text(com.odorik.odorikbuddy.util.PhoneNumberUtils.formatForDisplay(number)) },
+                                        supportingContent = { Text(stringResource(R.string.sim_item_description)) },
+                                        trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                                        modifier = Modifier.clickable {
+                                            internalNavController.navigate(SettingsRoutes.simScreen(number))
+                                        }
+                                    )
+                                    if (index < simNumbers.lastIndex) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Display Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_display),
                         icon = Icons.Default.Brightness6
                     ) {
                         Column {
+                            // Short choices are chips right in the row: one tap, and the current
+                            // value is visible without opening a dialog.
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.settings_appearance)) },
                                 supportingContent = {
@@ -426,6 +526,21 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
                             TransparentListItem(
+                                headlineContent = { Text(stringResource(R.string.settings_nav_icon_style)) },
+                                supportingContent = {
+                                    Text(
+                                        stringResource(navIconStyleLabel(navIconStyle)),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                modifier = Modifier.clickable { showNavIconStyleDialog = true }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            // Tile size on the Calls screen (same three steps as the widget text size)
+                            TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.tile_size)) },
                                 supportingContent = {
                                     Column {
@@ -452,8 +567,9 @@ fun SettingsScreen(
                                 supportingContent = {
                                     ChipChoiceRow(
                                         options = listOf(
-                                            "en" to stringResource(R.string.lang_english),
-                                            "cs" to stringResource(R.string.lang_czech)
+                                            // Czech first: Odorik is mainly used in Czechia.
+                                            "cs" to stringResource(R.string.lang_czech),
+                                            "en" to stringResource(R.string.lang_english)
                                         ),
                                         selected = language,
                                         onSelect = {
@@ -469,6 +585,7 @@ fun SettingsScreen(
                     }
                 }
 
+                // Data Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_data),
@@ -526,25 +643,37 @@ fun SettingsScreen(
                     }
                 }
 
+                // App Section
                 item {
                     SettingsSection(
                         title = stringResource(R.string.section_app),
                         icon = Icons.Default.Apps
                     ) {
                         Column {
+                            // Auto-update
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.auto_update_checking)) },
-                                supportingContent = { Text(stringResource(R.string.auto_update_checking_description)) },
+                                supportingContent = {
+                                    Column {
+                                        Text(stringResource(R.string.auto_update_checking_description))
+                                        if (autoUpdateEnabled && !notificationsAllowed) {
+                                            Text(
+                                                stringResource(R.string.update_notifications_off_hint),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier
+                                                    .padding(top = 4.dp)
+                                                    .clickable { context.openNotificationSettings() }
+                                            )
+                                        }
+                                    }
+                                },
                                 trailingContent = {
                                     Switch(
                                         checked = autoUpdateEnabled,
                                         onCheckedChange = { enabled ->
                                             if (enabled) {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                    notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                                                } else {
-                                                    viewModel.setAutoUpdateEnabled(true)
-                                                }
+                                                enableAutoUpdate()
                                             } else {
                                                 viewModel.setAutoUpdateEnabled(false)
                                             }
@@ -557,11 +686,7 @@ fun SettingsScreen(
                                 },
                                 modifier = Modifier.clickable {
                                     if (!autoUpdateEnabled) {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                                        } else {
-                                            viewModel.setAutoUpdateEnabled(true)
-                                        }
+                                        enableAutoUpdate()
                                     } else {
                                         viewModel.setAutoUpdateEnabled(false)
                                     }
@@ -572,6 +697,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
                             
+                            // Direct calls
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.direct_calls)) },
                                 supportingContent = { Text(stringResource(R.string.direct_calls_description)) },
@@ -604,6 +730,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
 
+                            // About
                             TransparentListItem(
                                 headlineContent = { Text(stringResource(R.string.about_app)) },
                                 supportingContent = {
@@ -620,6 +747,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
 
+                            // Version / Update
                             val isUpdateAvailable = updateViewModel.isUpdateAvailable()
                             TransparentListItem(
                                 headlineContent = {
@@ -653,6 +781,7 @@ fun SettingsScreen(
                     }
                 }
 
+                // Logout Button
                 item {
                     androidx.compose.material3.OutlinedButton(
                         onClick = { showLogoutDialog = true },
@@ -745,6 +874,62 @@ fun SettingsScreen(
         )
     }
 
+    if (showNavIconStyleDialog) {
+        AlertDialog(
+            onDismissRequest = { showNavIconStyleDialog = false },
+            title = { Text(stringResource(R.string.settings_nav_icon_style)) },
+            text = {
+                Column(Modifier.selectableGroup()) {
+                    NavIconStyle.entries.forEach { style ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .selectable(
+                                    selected = navIconStyle == style,
+                                    onClick = {
+                                        viewModel.setNavIconStyle(style)
+                                        showNavIconStyleDialog = false
+                                    },
+                                    role = Role.RadioButton
+                                )
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = navIconStyle == style, onClick = null)
+                            Column(Modifier.padding(start = 8.dp)) {
+                                Text(stringResource(navIconStyleLabel(style)))
+                                // Preview of the bar: the first tab as selected, the rest as not.
+                                Row(
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    BottomNavItem.all.forEachIndexed { i, item ->
+                                        Icon(
+                                            item.icons.icon(selected = i == 0, style = style),
+                                            contentDescription = null,
+                                            tint = if (i == 0) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            },
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showNavIconStyleDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    // --- DIALOGS --- //
 
     pendingImport?.let { pending ->
         BackupImportDialog(
@@ -818,6 +1003,7 @@ fun SettingsScreen(
         )
     }
     
+    // Update Dialog
     if (showUpdateDialog) {
         val isUpdateAvailable = updateViewModel.isUpdateAvailable()
         UpdateInfoDialog(
@@ -829,6 +1015,7 @@ fun SettingsScreen(
         )
     }
     
+    // About Dialog
     if (showAboutDialog) {
         AboutDialog(
             onDismiss = { showAboutDialog = false },
@@ -839,3 +1026,8 @@ fun SettingsScreen(
     }
 }
 
+private fun navIconStyleLabel(style: NavIconStyle): Int = when (style) {
+    NavIconStyle.CLASSIC -> R.string.nav_icon_style_classic
+    NavIconStyle.ROUNDED -> R.string.nav_icon_style_rounded
+    NavIconStyle.TWO_TONE -> R.string.nav_icon_style_two_tone
+}

@@ -39,6 +39,7 @@ interface TileDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(tiles: List<TileEntity>)
 
+    /** Settings import: swap all tiles at once, so a failure leaves the old ones in place. */
     @Transaction
     suspend fun replaceAll(tiles: List<TileEntity>) {
         deleteAll()

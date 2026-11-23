@@ -44,6 +44,7 @@ import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.backup.BackupPreview
 import com.odorik.odorikbuddy.data.backup.ImportOptions
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.model.Line
 import com.odorik.odorikbuddy.ui.components.TransparentListItem
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
@@ -247,7 +248,10 @@ fun UpdateInfoDialog(
     val context = LocalContext.current
     
     val cannotOpenUrlString = stringResource(R.string.cannot_open_url)
-    
+    val language = remember { LanguagePreferences.getPreferredLanguage(context) }
+    // Without an https link there is nothing to download: show the plain OK / Close buttons.
+    val downloadUrl = if (isUpdateAvailable) updateInfo?.safeDownloadUrl() else null
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.app_update)) },
@@ -277,7 +281,7 @@ fun UpdateInfoDialog(
                                 modifier = Modifier.padding(top = LocalAppDimens.current.spacing/2)
                             )
                             Text(
-                                updateInfo.message,
+                                updateInfo.localizedMessage(language),
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.padding(top = LocalAppDimens.current.spacing/2)
                             )
@@ -297,11 +301,11 @@ fun UpdateInfoDialog(
             }
         },
         confirmButton = {
-            if (updateInfo != null && isUpdateAvailable) {
+            if (downloadUrl != null) {
                 TextButton(
-                    onClick = { 
+                    onClick = {
                         try {
-                            uriHandler.openUri(updateInfo.downloadUrl)
+                            uriHandler.openUri(downloadUrl)
                         } catch (e: Exception) {
                             android.widget.Toast.makeText(
                                 context, 
@@ -319,7 +323,7 @@ fun UpdateInfoDialog(
                 }
             }
         },
-        dismissButton = if (updateInfo != null && isUpdateAvailable) {
+        dismissButton = if (downloadUrl != null) {
             null
         } else {
             {
@@ -343,6 +347,7 @@ fun AboutDialog(
         title = { Text(stringResource(R.string.about_app)) },
         text = {
             Column {
+                // Compact brand header
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -350,8 +355,9 @@ fun AboutDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_odorik_logo),
-                        contentDescription = stringResource(R.string.a11y_odorik_logo),
+                        // Symbol only: the app name is the Text right below it.
+                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_buddy_symbol),
+                        contentDescription = null,
                         modifier = Modifier
                             .height(48.dp)
                             .padding(bottom = 8.dp)
@@ -368,6 +374,7 @@ fun AboutDialog(
                     )
                 }
 
+                // Purpose first, then a single affiliation line (no duplicated "unofficial" blurb)
                 Text(
                     text = stringResource(R.string.about_app_description),
                     style = MaterialTheme.typography.bodyLarge,
@@ -414,6 +421,7 @@ fun AboutDialog(
     )
 }
 
+/** Confirms a settings import: what the file holds, what will be replaced, what to import. */
 @Composable
 fun BackupImportDialog(
     preview: BackupPreview,
@@ -496,6 +504,7 @@ private fun BackupCheckboxRow(label: String, checked: Boolean, onCheckedChange: 
     }
 }
 
+/** ISO-8601 instant from the backup file, shown in the phone's locale and time zone. */
 private fun formatBackupDate(iso: String?): String {
     if (iso.isNullOrBlank()) return "?"
     return try {

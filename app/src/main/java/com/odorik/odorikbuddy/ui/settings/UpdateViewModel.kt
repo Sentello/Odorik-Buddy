@@ -33,6 +33,7 @@ class UpdateViewModel @Inject constructor(
     val error: StateFlow<String?> = _error
 
     init {
+        // Load cached update info on initialization
         loadCachedUpdateInfo()
     }
 
@@ -43,6 +44,7 @@ class UpdateViewModel @Inject constructor(
     }
 
     fun checkForUpdates() {
+        // Avoid parallel requests
         if (_isLoading.value) return
 
         viewModelScope.launch {
@@ -55,6 +57,8 @@ class UpdateViewModel @Inject constructor(
                     _isLoading.value = false
                 }
                 .onFailure { exception ->
+                    // Optionally keep previous _updateInfo to avoid losing last known good state
+                    // Map to a safe, user-visible message
                     _error.value = ErrorMessageUtil.standardizeError(
                         exception,
                         context,

@@ -8,9 +8,11 @@ import com.odorik.odorikbuddy.model.SharedPublicNumber
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.Field
+import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -19,7 +21,7 @@ interface OdorikApi {
     suspend fun getAllowedSenders(
         @Query("user") user: String,
         @Query("password") password: String
-    ): Response<String>
+    ): Response<String>  // Comma-separated string
 
     @FormUrlEncoded
     @POST("sms")
@@ -30,7 +32,7 @@ interface OdorikApi {
         @Field("message") message: String,
         @Field("sender") sender: String? = null,
         @Field("delayed") delayed: String? = null
-    ): Response<String>
+    ): Response<String>  // Plain text response
 
     @FormUrlEncoded
     @POST("callback")
@@ -54,22 +56,116 @@ interface OdorikApi {
         @Query("password") password: String
     ): Response<List<Line>>
 
+    // --- 1.6.0 endpoints: raw String bodies, parsed by OdorikJsonParser (HTTP 200 errors) ---
 
+    @GET("active_calls.json")
+    suspend fun getActiveCalls(
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
+
+    @DELETE("active_calls/{id}.json")
+    suspend fun hangUpActiveCall(
+        @Path("id") id: Long,
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
+
+    @GET("speed_dials.json")
+    suspend fun getSpeedDials(
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
+
+    /** Speed dials as one line sees them: account ones + the line's own (read-only in the API). */
+    @GET("lines/{line}/speed_dials.json")
+    suspend fun getLineSpeedDials(
+        @Path("line") line: Int,
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
+
+    @FormUrlEncoded
+    @POST("speed_dials.json")
+    suspend fun createSpeedDial(
+        @Field("user") user: String,
+        @Field("password") password: String,
+        @Field("number") number: String,
+        @Field("name") name: String,
+        @Field("shortcut") shortcut: Int?
+    ): Response<String>
+
+    @FormUrlEncoded
+    @PUT("speed_dials/{shortcut}.json")
+    suspend fun updateSpeedDial(
+        @Path("shortcut") shortcut: Int,
+        @Field("user") user: String,
+        @Field("password") password: String,
+        @Field("shortcut") newShortcut: Int?,
+        @Field("number") number: String?,
+        @Field("name") name: String?
+    ): Response<String>
+
+    @GET("sim_cards.json")
+    suspend fun getSimCards(
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
+
+    @GET("sim_cards/{number}.json")
+    suspend fun getSimCard(
+        @Path("number") number: String,
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
+
+    @GET("sim_cards/{number}/mobile_data.json")
+    suspend fun getSimMobileData(
+        @Path("number") number: String,
+        @Query("user") user: String,
+        @Query("password") password: String,
+        @Query("from") from: String,
+        @Query("to") to: String
+    ): Response<String>
+
+    @FormUrlEncoded
+    @PUT("sim_cards/{number}.json")
+    suspend fun updateSimCard(
+        @Path("number") number: String,
+        @Field("user") user: String,
+        @Field("password") password: String,
+        @FieldMap fields: Map<String, String>
+    ): Response<String>
+
+    @FormUrlEncoded
+    @POST("sim_cards/{number}/data_restart")
+    suspend fun restartSimData(
+        @Path("number") number: String,
+        @Field("user") user: String,
+        @Field("password") password: String
+    ): Response<String>
+
+    @DELETE("speed_dials/{shortcut}.json")
+    suspend fun deleteSpeedDial(
+        @Path("shortcut") shortcut: Int,
+        @Query("user") user: String,
+        @Query("password") password: String
+    ): Response<String>
 
     @GET("calls.json")
     suspend fun getCallHistory(
         @Query("user") user: String,
         @Query("password") password: String,
-        @Query("from") from: String,
-        @Query("to") to: String
+        @Query("from") from: String, // ISO 8601 format
+        @Query("to") to: String      // ISO 8601 format
     ): Response<List<HistoryItem>>
 
     @GET("sms.json")
     suspend fun getSmsHistory(
         @Query("user") user: String,
         @Query("password") password: String,
-        @Query("from") from: String,
-        @Query("to") to: String
+        @Query("from") from: String, // ISO 8601 format
+        @Query("to") to: String      // ISO 8601 format
     ): Response<List<HistoryItem>>
 
     @GET("public_numbers.json")

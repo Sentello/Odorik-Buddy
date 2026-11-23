@@ -36,6 +36,13 @@ class ErrorMessageUtilTest {
     }
 
     @Test
+    fun `odorik api codes map to their resources`() {
+        assertEquals(R.string.error_speed_dial_shortcut_used, ErrorMessageUtil.errorResFor(OdorikApiException("shortcut_already_used")))
+        assertEquals(R.string.error_odorik_unauthorized, ErrorMessageUtil.errorResFor(OdorikApiException("unauthorized")))
+        assertNull(ErrorMessageUtil.errorResFor(OdorikApiException("something_new")))
+    }
+
+    @Test
     fun `unknown exceptions fall back to null`() {
         assertNull(ErrorMessageUtil.errorResFor(IllegalStateException("boom")))
         assertNull(ErrorMessageUtil.errorResFor(null))

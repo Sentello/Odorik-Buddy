@@ -1,9 +1,9 @@
 package com.odorik.odorikbuddy.ui.widget
 
-import android.content.Context
 import android.Manifest
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -92,6 +92,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Saved settings of one tile widget, used to prefill the screen when reconfiguring. */
 data class TileWidgetConfig(
     val tileId: Int?,
     val style: TileWidgetStyle,
@@ -115,6 +116,7 @@ data class TileWidgetConfig(
 @AndroidEntryPoint
 class AppWidgetConfigurationActivity : ComponentActivity() {
 
+    // Follow the app's language, not the phone's (same as MainActivity).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
     }
@@ -129,14 +131,17 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
+    // Loaded from the widget's saved state; null until loaded. A new widget gets the defaults.
     private var initialConfig by mutableStateOf<TileWidgetConfig?>(null)
 
+    // True while a save is running, so a double tap on Save can't save twice.
     private var isSaving by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // 1. Get the App Widget ID from the Intent
         val intent = intent
         val extras = intent.extras
         if (extras != null) {
@@ -146,14 +151,17 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             )
         }
 
+        // If this activity was started with an intent without an app widget ID, finish with an error.
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
         }
         
+        // Return cancelled by default
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_CANCELED, resultValue)
 
+        // Prefill from saved state so reconfiguring an existing widget keeps its settings.
         lifecycleScope.launch {
             initialConfig = try {
                 val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
@@ -241,6 +249,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         val tiles by viewModel.tiles.collectAsState()
         val contactsMap by viewModel.contactsMap.collectAsState()
 
+        // rememberSaveable: the choices survive a rotation or a light/dark switch
         var selectedStyle by rememberSaveable { mutableStateOf(initial.style) }
         var selectedTileId by rememberSaveable { mutableStateOf(initial.tileId) }
         var useTileColors by rememberSaveable { mutableStateOf(initial.useTileColors) }
@@ -276,6 +285,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
                 
+                // Style Selector
                 item {
                     Column(
                         modifier = Modifier
@@ -293,6 +303,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            // Square Option
                             StyleOption(
                                 label = stringResource(R.string.style_square),
                                 isSelected = selectedStyle == TileWidgetStyle.SQUARE,
@@ -301,6 +312,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 modifier = Modifier.weight(1f)
                             )
                             
+                            // Circle Option
                             StyleOption(
                                 label = stringResource(R.string.style_circle),
                                 isSelected = selectedStyle == TileWidgetStyle.CIRCLE,
@@ -312,6 +324,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Text Size Selector
                 item {
                     Column(
                         modifier = Modifier
@@ -350,6 +363,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Live Preview (greatly improved in this version)
                 if (selectedTile != null) {
                     item {
                         Column(
@@ -378,6 +392,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Hybrid coloring section - only shown after user selects a tile
                 if (selectedTileId != null) {
                     item {
                         Column(
@@ -393,6 +408,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
+                            // Toggle
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -419,6 +435,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                                 )
 
+                                // Background color swatches (reuse palette)
                                 Text(stringResource(R.string.color), style = MaterialTheme.typography.labelSmall)
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -434,7 +451,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                                     items(TileColorHelper.allBaseColors) { baseColor ->
                                         val display = TileColorHelper.resolveColor(
                                             baseColor,
-                                            isSystemInDarkTheme()
+                                            isSystemInDarkTheme() // match the widget and its preview
                                         )
                                             ?: Color(baseColor)
                                         ColorSwatch(
@@ -447,6 +464,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
+                                // Text color swatches
                                 Text(stringResource(R.string.text_color), style = MaterialTheme.typography.labelSmall)
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -478,6 +496,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     val contactName = viewModel.getContactName(tile.recipient)
                     val isSelected = selectedTileId == tile.id
                     
+                    // Show actual tile colors (big improvement)
                     val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
                     val tileBg = TileColorHelper.resolveColor(tile.color, isSystemDark)
                         ?: MaterialTheme.colorScheme.surface
@@ -495,6 +514,9 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .padding(horizontal = LocalAppDimens.current.cardPadding, vertical = LocalAppDimens.current.spacing / 2)
                             .clickable {
+                                // Start custom colours from the new tile's colours - but only when
+                                // the tile really changes, so tapping the tile that is already
+                                // selected doesn't wipe the colours picked for this widget.
                                 val tileChanged = selectedTileId != tile.id
                                 selectedTileId = tile.id
                                 if (tileChanged && !useTileColors) {
@@ -557,7 +579,10 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Save button - always at bottom, respects navigation insets
                 item {
+                    // selectedTile (not just the id) so a tile deleted since the widget was
+                    // set up can't be saved again when reconfiguring.
                     val canSave = selectedTile != null && !isSaving
                     Button(
                         onClick = {
@@ -605,6 +630,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Shape Preview
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -617,6 +643,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
+                // Inner dummy content
                 Box(
                     modifier = Modifier
                         .size(32.dp)
@@ -630,6 +657,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             
             Spacer(modifier = Modifier.height(8.dp))
             
+            // Label
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
@@ -676,6 +704,10 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * High quality preview that closely mimics the real Glance widget.
+     * This is a big improvement over the previous minimal style selector.
+     */
     @Composable
     fun QuickDialWidgetPreview(
         tile: com.odorik.odorikbuddy.data.local.entity.TileEntity,
@@ -686,14 +718,18 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
         customColor: Long?,
         customTextColor: Long?
     ) {
+        // The widget follows the phone's light/dark mode (not the app's theme setting),
+        // so the preview does too.
         val isPhoneDark = isSystemInDarkTheme()
 
+        // Exactly the same colour logic as the real widget (OdorikTileWidget)
         val baseColor = if (!useTileColors && customColor != null) customColor else tile.color
         val textColor = if (!useTileColors && customTextColor != null) customTextColor else tile.textColor
         val colors = TileColorHelper.widgetColors(baseColor, textColor, isPhoneDark)
         val bgColor = colors.background
         val textCol = colors.text
 
+        // Same dark shadow behind light text as the widget draws
         val shadow = if (colors.shadow == Color.Transparent) null else with(LocalDensity.current) {
             Shadow(color = colors.shadow, offset = Offset(1.dp.toPx(), 1.dp.toPx()))
         }
@@ -707,11 +743,14 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                 .fillMaxWidth()
                 .heightIn(min = 92.dp)
                 .clip(RoundedCornerShape(16.dp))
+                // CIRCLE widgets are a coloured circle on a transparent background, so the
+                // preview shows the circle on a neutral surface instead of a coloured box.
                 .background(if (style == TileWidgetStyle.CIRCLE) MaterialTheme.colorScheme.surfaceContainer else bgColor)
                 .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
             contentAlignment = Alignment.Center
         ) {
             if (style == TileWidgetStyle.CIRCLE) {
+                // CIRCLE style preview — same 64dp circle as the widget
                 Box(
                     modifier = Modifier
                         .size(64.dp)
@@ -729,6 +768,7 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     )
                 }
             } else {
+                // SQUARE style preview
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
@@ -780,6 +820,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
                     prefs[OdorikTileWidget.widgetStyleKey] = style.name
                     prefs[OdorikTileWidget.useTileColorsKey] = useTileColors
                     prefs[OdorikTileWidget.textSizeKey] = textSize.name
+                    // Remove a colour that is no longer chosen, so reconfiguring a widget
+                    // can clear its earlier custom colour.
                     if (!useTileColors && customColor != null) {
                         prefs[OdorikTileWidget.widgetColorKey] = customColor
                     } else {
@@ -799,6 +841,8 @@ class AppWidgetConfigurationActivity : ComponentActivity() {
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
+                // E.g. the widget was removed from the home screen while this screen was open.
+                // The result stays RESULT_CANCELED.
                 android.util.Log.w("AppWidgetConfig", "Could not save widget state", e)
             }
             finish()

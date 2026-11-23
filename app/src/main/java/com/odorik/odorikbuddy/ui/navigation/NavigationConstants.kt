@@ -9,4 +9,5 @@ object NavigationRoutes {
     const val HISTORY = "history"
     const val SETTINGS = "settings"
     const val DATE_RANGE_PICKER = "date_range_picker"
+    const val ACTIVE_CALLS = "active_calls"
 }

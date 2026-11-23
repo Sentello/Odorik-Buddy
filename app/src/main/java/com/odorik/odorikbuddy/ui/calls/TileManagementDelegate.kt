@@ -70,6 +70,7 @@ class TileManagementDelegate @Inject constructor(
             )
             tileRepository.updateTile(updatedTile)
 
+            // Refresh any home screen widgets using this tile (Medium priority improvement)
             widgetUpdateManager.refreshWidgetsUsingTile(tileId)
         }
     }
@@ -77,6 +78,7 @@ class TileManagementDelegate @Inject constructor(
     fun deleteTile(scope: CoroutineScope, tile: TileEntity) {
         scope.launch {
             tileRepository.deleteTile(tile)
+            // Refresh widgets that were using this tile so they can show "Tile not found" state
             widgetUpdateManager.refreshWidgetsUsingTile(tile.id)
         }
     }

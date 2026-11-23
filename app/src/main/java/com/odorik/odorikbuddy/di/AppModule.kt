@@ -32,6 +32,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    /** Redacts the Odorik account password from debug HTTP logs (query string and form bodies). */
     private val PASSWORD_PARAM_REGEX = Regex("password=[^&\\s\"]+")
 
     @Provides
@@ -56,8 +57,8 @@ object AppModule {
         return Retrofit.Builder()
             .baseUrl("https://www.odorik.cz/api/v1/")
             .client(httpClient)
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create()) // plain-text endpoints
+            .addConverterFactory(GsonConverterFactory.create())    // JSON endpoints
             .build()
             .create(OdorikApi::class.java)
     }

@@ -1,6 +1,10 @@
 package com.odorik.odorikbuddy.ui.main
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -13,6 +17,9 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,15 +29,19 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -52,6 +63,7 @@ import com.odorik.odorikbuddy.ui.routes.RoutesScreen
 import com.odorik.odorikbuddy.ui.settings.RoutingOptionsScreen
 import com.odorik.odorikbuddy.ui.settings.SettingsScreen
 import com.odorik.odorikbuddy.ui.sms.SmsScreen
+import com.odorik.odorikbuddy.ui.theme.LocalNavIconStyle
 import com.odorik.odorikbuddy.ui.theme.Motion
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -61,26 +73,23 @@ fun MainScreen(navController: NavController) {
     val viewModel: MainViewModel = hiltViewModel()
     val bottomNavController = rememberNavController()
 
+    UpdatePrompt(viewModel)
+
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.statusBars),
         bottomBar = {
             NavigationBar {
                 val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
-                val items = listOf(
-                    BottomNavItem.Dashboard,
-                    BottomNavItem.Calls,
-                    BottomNavItem.Sms,
-                    BottomNavItem.History,
-                    BottomNavItem.Settings
-                )
-                items.forEach { screen ->
+                val iconStyle = LocalNavIconStyle.current
+                BottomNavItem.all.forEach { screen ->
                     val label = stringResource(screen.titleRes)
                     val tabDescription = stringResource(R.string.a11y_navigate_to_tab, label)
                     val isSelected = when (screen) {
                         BottomNavItem.Dashboard -> {
                             currentDestination?.hierarchy?.any { it.route == screen.route } == true ||
-                                    currentDestination?.route == com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.DATE_RANGE_PICKER
+                                    currentDestination?.route == com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.DATE_RANGE_PICKER ||
+                                    currentDestination?.route == com.odorik.odorikbuddy.ui.navigation.NavigationRoutes.ACTIVE_CALLS
                         }
                         else -> {
                             currentDestination?.hierarchy?.any { it.route == screen.route } == true
@@ -96,8 +105,8 @@ fun MainScreen(navController: NavController) {
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                                contentDescription = label,
+                                screen.icons.icon(isSelected, iconStyle),
+                                contentDescription = label, // Accessibility: Spoken label for icon
                                 modifier = Modifier.scale(scale)
                             )
                         },
@@ -110,7 +119,7 @@ fun MainScreen(navController: NavController) {
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = screen.screenAccent.main().copy(alpha = 0.2f),
+                            indicatorColor = screen.screenAccent.wash().copy(alpha = 0.2f),
                             selectedIconColor = screen.screenAccent.main(),
                             selectedTextColor = screen.screenAccent.main()
                         ),
@@ -120,7 +129,9 @@ fun MainScreen(navController: NavController) {
                                 val tabDestination = currentDestination?.hierarchy?.firstOrNull { it.route == screen.route }
                                 if (tabDestination is androidx.navigation.NavGraph) {
                                     bottomNavController.popBackStack(tabDestination.startDestinationId, inclusive = false)
-                                } else if (currentDestination?.route == NavigationRoutes.DATE_RANGE_PICKER && screen.route == BottomNavItem.Dashboard.route) {
+                                } else if ((currentDestination?.route == NavigationRoutes.DATE_RANGE_PICKER ||
+                                        currentDestination?.route == NavigationRoutes.ACTIVE_CALLS) &&
+                                    screen.route == BottomNavItem.Dashboard.route) {
                                     bottomNavController.popBackStack(BottomNavItem.Dashboard.route, inclusive = false)
                                 }
                             } else {
@@ -171,6 +182,13 @@ fun MainScreen(navController: NavController) {
                 popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
                 popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
             ) { DateRangePickerScreen(navController = bottomNavController) }
+            composable(
+                NavigationRoutes.ACTIVE_CALLS,
+                enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+            ) { com.odorik.odorikbuddy.ui.livecalls.ActiveCallsScreen(navController = bottomNavController) }
             navigation(startDestination = SettingsRoutes.SETTINGS_HOME, route = BottomNavItem.Settings.route) {
                 composable(SettingsRoutes.SETTINGS_HOME) {
                     SettingsScreen(outerNavController = navController, internalNavController = bottomNavController)
@@ -198,7 +216,70 @@ fun MainScreen(navController: NavController) {
                 ) {
                     RoutingOptionsScreen(internalNavController = bottomNavController)
                 }
+                composable(
+                    SettingsRoutes.SPEED_DIALS_SCREEN,
+                    enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                    exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                    popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                    popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+                ) {
+                    com.odorik.odorikbuddy.ui.speeddials.SpeedDialsScreen(internalNavController = bottomNavController)
+                }
+                composable(
+                    SettingsRoutes.SIM_SCREEN,
+                    arguments = listOf(
+                        androidx.navigation.navArgument(SettingsRoutes.SIM_NUMBER_ARG) {
+                            type = androidx.navigation.NavType.StringType
+                        }
+                    ),
+                    enterTransition = { slideInHorizontally { it / 4 } + fadeIn() },
+                    exitTransition = { slideOutHorizontally { it / 4 } + fadeOut() },
+                    popEnterTransition = { slideInHorizontally { -it / 4 } + fadeIn() },
+                    popExitTransition = { slideOutHorizontally { it / 4 } + fadeOut() }
+                ) {
+                    com.odorik.odorikbuddy.ui.sim.SimScreen(internalNavController = bottomNavController)
+                }
             }
         }
     }
+}
+
+/**
+ * One-time "Tell you about new versions?" dialog. Any answer — yes, no, back or a tap
+ * outside — counts, so it never comes back. A denied notification permission is fine:
+ * the check still runs and the Dashboard banner shows a new version.
+ */
+@Composable
+private fun UpdatePrompt(viewModel: MainViewModel) {
+    val askAboutUpdates by viewModel.askAboutUpdates.collectAsState()
+    if (!askAboutUpdates) return
+
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ -> viewModel.checkForUpdateNow() }
+
+    AlertDialog(
+        onDismissRequest = { viewModel.answerUpdatePrompt(enable = false) },
+        icon = { Icon(Icons.Default.Update, contentDescription = null) },
+        title = { Text(stringResource(R.string.update_prompt_title)) },
+        text = { Text(stringResource(R.string.update_prompt_message)) },
+        confirmButton = {
+            TextButton(onClick = {
+                viewModel.answerUpdatePrompt(enable = true)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    !NotificationManagerCompat.from(context).areNotificationsEnabled()
+                ) {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    viewModel.checkForUpdateNow()
+                }
+            }) { Text(stringResource(R.string.update_prompt_yes)) }
+        },
+        dismissButton = {
+            TextButton(onClick = { viewModel.answerUpdatePrompt(enable = false) }) {
+                Text(stringResource(R.string.update_prompt_no))
+            }
+        }
+    )
 }

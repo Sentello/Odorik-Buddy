@@ -7,4 +7,5 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
     android:configure="com.odorik.odorikbuddy.ui.widget.BalanceWidgetConfigurationActivity"
+    android:widgetFeatures="reconfigurable"
     android:widgetCategory="home_screen" />

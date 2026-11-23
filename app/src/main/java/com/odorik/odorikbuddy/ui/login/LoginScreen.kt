@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
+import com.odorik.odorikbuddy.ui.theme.LocalIsAppDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,11 +104,15 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                // App logo (symbol + name). The dark variant has a white "Odorik".
                 Image(
-                    painter = painterResource(id = R.drawable.ic_odorik_logo),
-                    contentDescription = stringResource(R.string.a11y_odorik_logo),
+                    painter = painterResource(
+                        id = if (LocalIsAppDark.current) R.drawable.ic_buddy_logo_dark else R.drawable.ic_buddy_logo
+                    ),
+                    contentDescription = stringResource(R.string.a11y_app_logo),
                     modifier = Modifier
-                        .height(80.dp)
+                        .fillMaxWidth()
+                        .height(72.dp)
                         .padding(bottom = 16.dp)
                 )
 

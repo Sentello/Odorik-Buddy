@@ -14,6 +14,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
 
+/**
+ * Refreshes the balance widgets in the background. Scheduled while at least one balance
+ * widget is on the home screen (see BalanceWidgetReceiver).
+ */
 @HiltWorker
 class BalanceWidgetWorker @AssistedInject constructor(
     @Assisted context: Context,
@@ -22,6 +26,8 @@ class BalanceWidgetWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        // Always success: a failed fetch (offline, logged out) just waits for the next
+        // period instead of retrying with backoff.
         try {
             balanceWidgetRefresher.refreshAll()
         } catch (e: Exception) {
@@ -33,8 +39,10 @@ class BalanceWidgetWorker @AssistedInject constructor(
     companion object {
         private const val WORK_NAME = "balance_widget_refresh"
 
+        /** The balance only changes when you call or send SMS; hourly is fresh enough. */
         private const val INTERVAL_HOURS = 1L
 
+        /** Idempotent: an already scheduled refresh is kept. */
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<BalanceWidgetWorker>(
                 INTERVAL_HOURS, TimeUnit.HOURS

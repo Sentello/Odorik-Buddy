@@ -18,6 +18,11 @@ object LanguagePreferences {
         prefs(context).edit().putString(KEY_LANGUAGE, lang).apply()
     }
 
+    /**
+     * [base] with the app's chosen language applied. Every Activity (and the Application)
+     * must wrap its base context with this in attachBaseContext; otherwise a screen follows
+     * the phone's language instead of the app's (seen on the widget configuration screens).
+     */
     fun wrapContext(base: Context): Context {
         val localeList = androidx.core.os.LocaleListCompat.forLanguageTags(getPreferredLanguage(base))
         val config = android.content.res.Configuration(base.resources.configuration)

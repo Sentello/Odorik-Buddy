@@ -3,10 +3,13 @@ package com.odorik.odorikbuddy.ui.dashboard
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
 import com.odorik.odorikbuddy.data.repository.HistoryRepository
+import com.odorik.odorikbuddy.data.repository.UpdateRepository
 import com.odorik.odorikbuddy.domain.usecase.GetCreditUseCase
+import com.odorik.odorikbuddy.model.AppUpdateInfo
 import com.odorik.odorikbuddy.model.HistoryItem
 import com.odorik.odorikbuddy.ui.widget.BalanceWidgetRefresher
 import com.odorik.odorikbuddy.util.ApiDates
@@ -17,6 +20,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -35,6 +39,7 @@ class DashboardViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val localeManager: LocaleManager,
     private val balanceWidgetRefresher: BalanceWidgetRefresher,
+    private val updateRepository: UpdateRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -47,8 +52,16 @@ class DashboardViewModel @Inject constructor(
     private val _credit = MutableStateFlow<UiState<Double>>(UiState.Loading)
     val credit: StateFlow<UiState<Double>> = _credit
 
+    /** Newer version from the cached update feed, shown as a banner; null = no banner. */
+    private val _updateBanner = MutableStateFlow<AppUpdateInfo?>(null)
+    val updateBanner: StateFlow<AppUpdateInfo?> = _updateBanner.asStateFlow()
+
     private val _todaysSpending = MutableStateFlow(0.0)
     val todaysSpending: StateFlow<Double> = _todaysSpending
+
+    /** Spending summary/chart have data (fresh or cached); a balance error then stays in its card. */
+    private val _hasSpendingData = MutableStateFlow(false)
+    val hasSpendingData: StateFlow<Boolean> = _hasSpendingData
 
     private val _selectedPeriodSpending = MutableStateFlow(0.0)
     val selectedPeriodSpending: StateFlow<Double> = _selectedPeriodSpending
@@ -84,6 +97,7 @@ class DashboardViewModel @Inject constructor(
     init {
         loadSavedDateRange()
 
+        // Auto-manage error retry
         viewModelScope.launch {
             error.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -130,12 +144,15 @@ class DashboardViewModel @Inject constructor(
         if (isInitialLoad) _isInitialLoading.value = true else _isRefreshing.value = true
 
         _error.value = null
+        // Cheap SharedPreferences read; picks up a feed the update worker cached meanwhile.
+        _updateBanner.value = updateRepository.getBannerUpdate()
 
         if (isInitialLoad) {
             _credit.value = UiState.Loading
         }
 
         try {
+            // If initializing and no custom range is set, ensure we are up to date with the current week
             if (isInitialLoad && appPreferences.getString("dashboard_start_date") == null) {
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
@@ -160,6 +177,11 @@ class DashboardViewModel @Inject constructor(
         loadData(false)
     }
 
+    fun dismissUpdateBanner() {
+        _updateBanner.value?.let { updateRepository.dismissBanner(it.version) }
+        _updateBanner.value = null
+    }
+
     fun clearError() {
         _error.value = null
     }
@@ -174,11 +196,13 @@ class DashboardViewModel @Inject constructor(
                 _startDate.value = java.time.LocalDate.ofEpochDay(startEpoch)
                 _endDate.value = java.time.LocalDate.ofEpochDay(endEpoch)
             } catch (e: Exception) {
+                // If parsing fails, use current week
                 val (start, end) = getCurrentWeekRange()
                 _startDate.value = start
                 _endDate.value = end
             }
         } else {
+            // Explicitly set current week if nothing saved (ensures freshness)
             val (start, end) = getCurrentWeekRange()
             _startDate.value = start
             _endDate.value = end
@@ -193,6 +217,7 @@ class DashboardViewModel @Inject constructor(
     fun updateDateRange(newStartDate: java.time.LocalDate, newEndDate: java.time.LocalDate) {
         val (currentStart, currentEnd) = getCurrentWeekRange()
         
+        // If the selected range matches the current week, do NOT save it (treat as dynamic default)
         if (newStartDate == currentStart && newEndDate == currentEnd) {
             appPreferences.clearString("dashboard_start_date")
             appPreferences.clearString("dashboard_end_date")
@@ -224,6 +249,7 @@ class DashboardViewModel @Inject constructor(
         val result = getCreditUseCase.execute()
         result.onSuccess {
             _credit.value = UiState.Success(it)
+            // Keep the home-screen widget in step with what the app shows.
             viewModelScope.launch { balanceWidgetRefresher.pushBalance(it) }
         }.onFailure {
             val localizedContext = localeManager.createLocaleContext(context)
@@ -240,10 +266,13 @@ class DashboardViewModel @Inject constructor(
         try {
             val history = historyRepository.getCombinedHistory(from, to)
             historyRepository.insertHistory(history)
-            calculateTodaysSpending(history)
+            updateTodaysSpending(history)
             calculateSelectedPeriodSpending(history)
             calculateChartSpending(history)
+            _hasSpendingData.value = true
             _error.value = null
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             val localizedContext = localeManager.createLocaleContext(context)
             val errorMessage = ErrorMessageUtil.standardizeError(e, localizedContext)
@@ -252,27 +281,54 @@ class DashboardViewModel @Inject constructor(
             try {
                 val cachedHistory = historyRepository.getCachedHistory()
                 
+                // 🔥 CRITICAL FIX: Filter cached data to match the selected date range
                 val filteredCache = cachedHistory.filter { item ->
                     try {
                         val itemDate = parseIsoDate(item.date).toInstant()
                             .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                         !itemDate.isBefore(_startDate.value) && !itemDate.isAfter(_endDate.value)
                     } catch (ex: Exception) {
-                        false
+                        false // Skip items with unparseable dates
                     }
                 }
 
                 if (filteredCache.isNotEmpty()) {
-                    calculateTodaysSpending(filteredCache)
+                    updateTodaysSpending(filteredCache)
                     calculateSelectedPeriodSpending(filteredCache)
                     calculateChartSpending(filteredCache)
-                    _error.value = "$errorMessage (using cached data)"
+                    _hasSpendingData.value = true
+                    _error.value = localizedContext.getString(R.string.dashboard_error_using_saved_data, errorMessage)
                 } else {
-                    _error.value = "$errorMessage (no cached data available)"
+                    _error.value = localizedContext.getString(R.string.dashboard_error_no_saved_data, errorMessage)
                 }
             } catch (cacheError: Exception) {
-                _error.value = "$errorMessage (cache also unavailable)"
+                _error.value = localizedContext.getString(R.string.dashboard_error_no_saved_data, errorMessage)
             }
+        }
+    }
+
+    /**
+     * "Today's spending" must always be today, whatever period the chart shows. If the period
+     * contains today, use its history; otherwise fetch just today (midnight → now). A failed
+     * small fetch keeps the last known value (it is not mixed into the chart or the period sum).
+     */
+    private suspend fun updateTodaysSpending(periodHistory: List<HistoryItem>) {
+        val today = LocalDate.now()
+        if (!today.isBefore(_startDate.value) && !today.isAfter(_endDate.value)) {
+            calculateTodaysSpending(periodHistory)
+            return
+        }
+        val zone = java.time.ZoneId.systemDefault()
+        try {
+            val todays = historyRepository.getCombinedHistory(
+                ApiDates.formatUtc(today.atStartOfDay(zone).toInstant()),
+                ApiDates.formatUtc(java.time.Instant.now())
+            )
+            calculateTodaysSpending(todays)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // keep the last known value
         }
     }
 

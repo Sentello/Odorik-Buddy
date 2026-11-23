@@ -50,8 +50,6 @@
     <string name="none">Žádné</string>
     <string name="call_history">Hovor</string>
     <string name="sms_history">SMS</string>
-    <string name="from_history">Od:</string>
-    <string name="to_history">Komu:</string>
     <string name="currency_format">%.2f Kč</string>
     <string name="czech_currency_symbol">Kč</string>
     <string name="english_currency_symbol">Czk</string>
@@ -105,7 +103,7 @@
     <string name="a11y_dark_mode">Tmavý režim</string>
     <string name="a11y_language">Jazyk aplikace</string>
     <string name="a11y_line_card">Linka: %s</string>
-    <string name="a11y_odorik_logo">Logo Odorik</string>
+    <string name="a11y_app_logo">Logo OdorikBuddy</string>
     <string name="a11y_widget_open_app">Otevřít Odorik Buddy</string>
     <string name="a11y_navigate_to_tab">Přejít na kartu %1$s</string>
     <string name="a11y_has_rules">Má pravidla</string>
@@ -154,7 +152,6 @@
     <string name="backup_imported">Importováno (dlaždic: %1$d)</string>
     <string name="backup_imported_settings_only">Nastavení importováno</string>
     <string name="backup_direct_calls_skipped">Přímé volání zapněte znovu v Nastavení, potřebuje oprávnění k telefonu.</string>
-    <string name="backup_auto_update_skipped">Kontrolu aktualizací zapněte znovu v Nastavení, potřebuje oprávnění k oznámením.</string>
     <string name="backup_error_not_a_backup">Tento soubor není záloha OdorikBuddy.</string>
     <string name="backup_error_newer_version">Záloha je z novější verze. Nejdřív aktualizujte aplikaci.</string>
     <string name="backup_error_read_failed">Soubor se nepodařilo přečíst.</string>
@@ -181,7 +178,7 @@
     <string name="section_app">Aplikace</string>
     <string name="version_label">Verze</string>
     <string name="auto_update_checking">Automatická kontrola aktualizací</string>
-    <string name="auto_update_checking_description">Kontrolovat aktualizace aplikace týdně a zobrazovat oznámení</string>
+    <string name="auto_update_checking_description">Jednou týdně zkontrolovat, jestli nevyšla nová verze</string>
     <string name="direct_calls">Přímé volání</string>
     <string name="direct_calls_description">Povolit přímé telefonní hovory bez otevření vytáčeče</string>
     <string name="routing_description">Spravovat pravidla pro sdílená a vlastní čísla</string>
@@ -220,6 +217,8 @@
     <string name="error_loading_dashboard">Chyba při načítání přehledu</string>
     <string name="retry">Zkusit znovu</string>
     <string name="redirected_to">Přesměrováno na:</string>
+    <string name="history_line_out">z linky %1$s</string>
+    <string name="history_line_in">na linku %1$s</string>
     <string name="use_line_number_as_caller_id">Použít číslo linky jako ID volajícího</string>
     <string name="filter_history">Filtrovat historii</string>
     <string name="event_type_filter">Typ události</string>
@@ -257,9 +256,12 @@
     <string name="shared_numbers">Sdílená čísla</string>
     <string name="own_numbers">Vlastní čísla</string>
     <string name="own_numbers_description">Čísla, která jsou ve vašem vlastnictví</string>
-    <string name="weekly_average">Průměr: %.2f Kč</string>
+    <string name="weekly_average">Průměr za den: %1$s</string>
+    <string name="dashboard_error_using_saved_data">%1$s (zobrazena uložená data)</string>
+    <string name="dashboard_error_no_saved_data">%1$s (uložená data nejsou k dispozici)</string>
     <string name="chart_spending">Útrata</string>
     <string name="chart_average">Průměr</string>
+    <string name="chart_average_week">Průměr za týden</string>
     <string name="select_date_range">Vyberte časové období</string>
     <string name="quick_select">Rychlý výběr</string>
     <string name="start_date">Počáteční datum: %s</string>
@@ -286,9 +288,9 @@
     <!-- Settings list supporting line: short, no legal jargon -->
     <string name="about_app_summary">Neoficiální aplikace pro odorik.cz</string>
     <!-- About dialog: what the app does -->
-    <string name="about_app_description">Správa kreditu, hovorů, SMS, historie a přesměrování Odorik na jednom místě.</string>
+    <string name="about_app_description">Kredit, hovory, SMS, historie a přesměrování vašeho účtu Odorik na jednom místě.</string>
     <!-- About dialog: affiliation only (once) -->
-    <string name="about_fan_app">Neoficiální fanouškovský projekt. Není spojený s miniTEL s.r.o. ani s odorik.cz</string>
+    <string name="about_fan_app">Neoficiální fanouškovský projekt. Není spojen se společností miniTEL s.r.o. ani se službou Odorik.</string>
     <string name="github_repository">GitHub Repozitář</string>
     <string name="discussion_forum">Diskuzní fórum</string>
     <string name="app_update">Aktualizace aplikace</string>
@@ -310,6 +312,13 @@
     <string name="new_version_available">Nová verze %s je k dispozici</string>
     <string name="update_notifications">Oznámení o aktualizacích</string>
     <string name="update_notifications_description">Oznámení o aktualizacích aplikace</string>
+    <string name="update_notifications_off_hint">Oznámení jsou vypnutá, nová verze se ukáže jen na Přehledu. Klepnutím je zapnete.</string>
+    <string name="update_prompt_title">Upozorňovat na nové verze?</string>
+    <string name="update_prompt_message">Aplikace není v Google Play, takže se o nové verzi jinak nedozvíte. Jednou týdně se podívá na GitHub, jestli nevyšla novější verze. Nic jiného se neodesílá. Změnit to můžete v Nastavení.</string>
+    <string name="update_prompt_yes">Ano, upozorňovat</string>
+    <string name="update_prompt_no">Ne, díky</string>
+    <string name="update_banner_title">Je k dispozici verze %1$s</string>
+    <string name="update_banner_dismiss">Skrýt upozornění na novou verzi</string>
 
     <string name="tiles_title">Oblíbené</string>
     <string name="add_tile">Přidat dlaždici</string>
@@ -360,11 +369,15 @@
     <string name="widget_config_normal">Normální</string>
     <string name="widget_config_large">Velká</string>
     <string name="widget_config_extra_large">Extra velká</string>
+    <string name="widget_config_logo">Logo</string>
+    <string name="widget_config_logo_show">Zobrazit</string>
+    <string name="widget_config_logo_hide">Skrýt</string>
+    <string name="widget_config_logo_hint">Bez loga klepnutí na widget jen obnoví zůstatek.</string>
     <string name="widget_preview">Náhled</string>
 
     <string name="permission_required_title">Vyžadováno oprávnění</string>
     <string name="call_permission_denied_message">Přímé volání vyžaduje oprávnění k telefonování. Bylo trvale zamítnuto — povolte ho v nastavení systému.</string>
-    <string name="notification_permission_denied_message">Upozornění na aktualizace vyžadují oprávnění k oznámením. Bylo trvale zamítnuto — povolte ho v nastavení systému.</string>
+    <string name="notification_permission_denied_message">Oprávnění k oznámením bylo trvale zamítnuto. Nová verze se ukáže jen na Přehledu. Pokud chcete oznámení, povolte je v nastavení systému.</string>
     <string name="open_settings">Otevřít nastavení</string>
 
     <!-- Další běžné UI řetězce -->
@@ -402,11 +415,115 @@
     <string name="app_theme_material_you_subtitle">Barvy podle tapety</string>
     <string name="app_theme_odorik">Odorik</string>
     <string name="app_theme_odorik_subtitle">Červený motiv podle odorik.cz</string>
+    <string name="settings_nav_icon_style">Styl ikon</string>
+    <string name="nav_icon_style_classic">Klasické</string>
+    <string name="nav_icon_style_rounded">Zaoblené</string>
+    <string name="nav_icon_style_two_tone">Dvoubarevné</string>
     <string name="no_spending_in_period">V tomto období žádná útrata</string>
     <string name="edit_tiles">Upravit dlaždice</string>
     <string name="done">Hotovo</string>
     <string name="odorik_website">Web Odorik</string>
     <string name="widget_style_odorik">Odorik červená</string>
     <string name="widget_tap_to_retry">Klepnutím zkusit znovu</string>
+
+    <!-- Odorik API error codes (1.6.0 endpoints) -->
+    <string name="error_odorik_unauthorized">S tímto přihlášením to není povoleno.</string>
+    <string name="error_odorik_low_balance">Nedostatek kreditu.</string>
+    <string name="error_speed_dial_invalid_number">Odorik toto číslo nepřijal.</string>
+    <string name="error_speed_dial_invalid_shortcut">Neplatná zkratka.</string>
+    <string name="error_speed_dial_name_too_long">Jméno je příliš dlouhé (max. 150 znaků).</string>
+    <string name="error_speed_dial_shortcut_used">Tato zkratka je už obsazená.</string>
+    <string name="error_speed_dial_full">Další rychlou volbu už nelze přidat.</string>
+    <string name="error_sim_change_in_progress">Probíhá změna, zkuste to později.</string>
+    <string name="error_sim_mobile_data_disabled">Mobilní data jsou vypnutá.</string>
+
+    <!-- Live calls -->
+    <plurals name="live_calls_title">
+        <item quantity="one">Právě probíhá %d hovor</item>
+        <item quantity="few">Právě probíhají %d hovory</item>
+        <item quantity="many">Právě probíhá %d hovorů</item>
+        <item quantity="other">Právě probíhá %d hovorů</item>
+    </plurals>
+    <string name="live_calls_show">Zobrazit</string>
+    <string name="live_calls_screen_title">Probíhající hovory</string>
+    <string name="live_calls_auto_refresh">Obnovuje se automaticky každých 5 s</string>
+    <string name="live_calls_empty_title">Žádné probíhající hovory</string>
+    <string name="live_calls_empty_text">Až někdo zavolá nebo objednáte zpětné volání, objeví se tady.</string>
+    <string name="live_call_from">z čísla %1$s</string>
+    <string name="live_call_to">na číslo %1$s</string>
+    <string name="live_call_line">linka %1$s</string>
+    <string name="live_call_ringing">Vyzvání…</string>
+    <string name="live_call_hang_up">Zavěsit</string>
+    <string name="live_call_hang_up_title">Zavěsit hovor?</string>
+    <string name="live_call_hang_up_text">Hovor s „%1$s“ bude okamžitě ukončen pro obě strany.</string>
+    <string name="live_call_ended">Hovor byl ukončen.</string>
+    <string name="live_call_hang_up_failed">Hovor se nepodařilo ukončit.</string>
+
+    <!-- Speed dials -->
+    <string name="section_calling">Telefonování</string>
+    <string name="speed_dials_title">Rychlé volby</string>
+    <string name="speed_dials_description">Zkratky pro vytáčení z telefonu</string>
+    <string name="speed_dials_info">Zkratky platí pro celý účet. Stačí je vytočit z telefonu připojeného k Odoriku – i z pevného nebo IP telefonu.</string>
+    <string name="speed_dials_read_only">Změny vyžadují API heslo účtu. Jste přihlášeni linkou, rychlé volby proto můžete jen prohlížet.</string>
+    <string name="speed_dials_empty_title">Zatím žádné rychlé volby</string>
+    <string name="speed_dials_empty_text">Přidejte zkratku, třeba 1 pro dceru.</string>
+    <string name="speed_dial_add">Přidat</string>
+    <string name="speed_dial_add_title">Nová rychlá volba</string>
+    <string name="speed_dial_edit_title">Upravit rychlou volbu</string>
+    <string name="speed_dial_shortcut">Zkratka</string>
+    <string name="speed_dial_name">Jméno</string>
+    <string name="speed_dial_number">Číslo</string>
+    <string name="speed_dial_pick_contact">Vybrat z kontaktů</string>
+    <string name="speed_dials_all_lines">Platí pro všechny linky: %1$s</string>
+    <string name="speed_dials_line_only">Jen linka %1$s</string>
+    <string name="speed_dials_line_only_note">Tyto zkratky lze změnit jen na webu Odoriku.</string>
+    <string name="speed_dial_overrides">Nahrazuje zkratku účtu</string>
+    <string name="speed_dial_delete_title">Smazat rychlou volbu?</string>
+    <string name="speed_dial_delete_text">Zkratka %1$d (%2$s) přestane fungovat.</string>
+    <string name="speed_dial_saved">Rychlá volba uložena</string>
+    <string name="speed_dial_deleted">Rychlá volba smazána</string>
+
+    <!-- SIM card -->
+    <string name="sim_section_title">SIM karta</string>
+    <string name="sim_item_description">Data, stav a nastavení</string>
+    <string name="sim_screen_title">SIM karta</string>
+    <string name="sim_state_active">Aktivní</string>
+    <string name="sim_state_suspended">Pozastavená</string>
+    <string name="sim_data_title">Data tento měsíc</string>
+    <string name="sim_data_of_limit">z %1$s</string>
+    <string name="sim_data_unknown">Spotřebu dat se teď nepodařilo načíst.</string>
+    <string name="sim_data_daily">Spotřeba po dnech · posledních 10 dní</string>
+    <string name="sim_mobile_data">Mobilní data</string>
+    <string name="sim_lte">LTE (4G)</string>
+    <string name="sim_missed_calls_sms">SMS o zmeškaných hovorech</string>
+    <string name="sim_missed_calls_sms_hint">Když je telefon vypnutý</string>
+    <string name="sim_roaming">Roaming</string>
+    <string name="sim_data_package">Datový balíček</string>
+    <string name="sim_voice_package">Hlasový balíček</string>
+    <string name="sim_next_month">od příštího měsíce: %1$s</string>
+    <string name="sim_change_in_progress">U Odoriku probíhá změna. Nastavení bude znovu dostupné, až se dokončí.</string>
+    <string name="sim_change_saved">Nastavení změněno</string>
+    <string name="sim_fup_reset">Obnovit rychlost dat (FUP) · zpoplatněno</string>
+    <string name="sim_fup_title">Obnovit rychlost dat?</string>
+    <string name="sim_fup_text">Odorik obnoví plnou rychlost dat (reset FUP). Akce je zpoplatněná podle ceníku a částka se strhne z kreditu.</string>
+    <string name="sim_fup_confirm">Obnovit</string>
+    <string name="sim_fup_done">Rychlost dat obnovena</string>
+    <string name="sim_suspend">Pozastavit SIM (např. ztracený telefon)</string>
+    <string name="sim_suspend_title">Pozastavit SIM?</string>
+    <string name="sim_suspend_text">SIM přestane volat i používat data, dokud ji znovu neaktivujete. Hodí se při ztrátě nebo krádeži telefonu.</string>
+    <string name="sim_suspend_confirm">Pozastavit</string>
+    <string name="sim_suspended_done">SIM pozastavena</string>
+    <string name="sim_reactivate">Znovu aktivovat SIM</string>
+    <string name="sim_reactivate_title">Znovu aktivovat SIM?</string>
+    <string name="sim_reactivate_text">SIM bude znovu moci volat a používat data.</string>
+    <string name="sim_reactivated_done">SIM znovu aktivována</string>
+
+    <!-- Callback live status -->
+    <string name="callback_status_title">Zpětné volání probíhá</string>
+    <string name="callback_status_ended">Hovor skončil</string>
+    <string name="callback_step_ordered">Objednáno</string>
+    <string name="callback_step_ringing">Odorik vytáčí</string>
+    <string name="callback_step_connected">Spojeno</string>
+    <string name="callback_hang_up">Ukončit hovor</string>
 
 </resources>

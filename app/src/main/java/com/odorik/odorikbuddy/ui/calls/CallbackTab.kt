@@ -63,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -77,6 +78,7 @@ import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// Shared helper functions
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallbackTab(
@@ -101,6 +103,7 @@ fun CallbackTab(
     var contentVisible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     val contactScope = rememberCoroutineScope()
     val contactPickerLauncher = rememberLauncherForActivityResult(
@@ -161,6 +164,7 @@ fun CallbackTab(
         }
     }
     
+    // Button animation
     val buttonInteractionSource = remember { MutableInteractionSource() }
     val isPressed by buttonInteractionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
@@ -188,6 +192,7 @@ fun CallbackTab(
                     )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                // Main Form Card
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -202,6 +207,7 @@ fun CallbackTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing)
                     ) {
+                        // Caller ID input
                         OutlinedTextField(
                             value = callerId,
                             onValueChange = { viewModel.updateCallerId(PhoneNumberUtils.sanitizeDialInput(it)) },
@@ -237,6 +243,7 @@ fun CallbackTab(
                             }
                         )
                         
+                        // Recipient input
                         OutlinedTextField(
                             value = recipient,
                             onValueChange = { viewModel.updateCallbackRecipient(PhoneNumberUtils.sanitizeDialInput(it)) },
@@ -272,6 +279,7 @@ fun CallbackTab(
                             }
                         )
                         
+                        // Line selection
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
@@ -321,8 +329,11 @@ fun CallbackTab(
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
+                        // Call button
                         Button(
                             onClick = {
+                                // Close the keyboard so the result and the live status below stay visible
+                                focusManager.clearFocus()
                                 selectedLine?.let { lineId ->
                                     viewModel.makeCall(callerId, recipient, lineId.toString())
                                 }
@@ -352,19 +363,39 @@ fun CallbackTab(
                     }
                 }
                 
+                // API response messages
                 if (callResult.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     CallApiMessage(response = callResult, visible = true)
                 }
+                // The callback's own failure wins over a background lines-fetch failure.
                 val activeError = callbackError?.takeIf { it.isNotEmpty() } ?: linesError
                 if (!activeError.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     ErrorMessage(errorText = activeError, visible = true)
                 }
+
+                val callbackStatus by viewModel.callbackStatus.collectAsState()
+                var showCallbackHangUpDialog by remember { mutableStateOf(false) }
+                callbackStatus?.let { status ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    CallbackStatusCard(status = status, onHangUp = { showCallbackHangUpDialog = true })
+                }
+                if (showCallbackHangUpDialog) {
+                    com.odorik.odorikbuddy.ui.livecalls.HangUpConfirmDialog(
+                        name = recipientContactName ?: recipient,
+                        onConfirm = {
+                            viewModel.hangUpCallback()
+                            showCallbackHangUpDialog = false
+                        },
+                        onDismiss = { showCallbackHangUpDialog = false }
+                    )
+                }
             }
         }
     }
 
+    // Phone number selection dialog
     if (showPhoneNumberDialog) {
         AlertDialog(
             onDismissRequest = { showPhoneNumberDialog = false },

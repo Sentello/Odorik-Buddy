@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.calls
 
+// Imports for Contact Picker and other functionalities
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,12 +75,14 @@ fun AddEditTileDialog(
     callViewModel: CallViewModel
 ) {
     val context = LocalContext.current
+    // rememberSaveable: what was typed survives a rotation or a trip to the contact picker
     var label by rememberSaveable { mutableStateOf(tile?.label ?: "") }
     var recipient by rememberSaveable { mutableStateOf(tile?.recipient ?: "") }
     
     val tabOrder by callViewModel.tabOrder.collectAsState()
     val linesError by callViewModel.linesError.collectAsState()
     
+    // Determine sort order for Call Type dropdown based on Tab Order
     val callTypeOptions = remember(tabOrder) {
         val callbackIndex = tabOrder.indexOf("callback_title").takeIf { it >= 0 } ?: Int.MAX_VALUE
         val oneshotIndex = tabOrder.indexOf("oneshot_call").takeIf { it >= 0 } ?: Int.MAX_VALUE
@@ -103,6 +106,7 @@ fun AddEditTileDialog(
     var lineDropdownExpanded by remember { mutableStateOf(false) }
     var typeDropdownExpanded by remember { mutableStateOf(false) }
     
+    // Set by the first Save attempt; from then on each empty required field is marked.
     var showErrors by rememberSaveable { mutableStateOf(false) }
     val recipientMissing = recipient.isBlank()
     val lineMissing = selectedLineId == null
@@ -112,6 +116,7 @@ fun AddEditTileDialog(
     var showPhoneNumberDialog by remember { mutableStateOf(false) }
     var phoneNumbers by remember { mutableStateOf(emptyList<String>()) }
     
+    // With a single line there is nothing to choose, so fill it in.
     LaunchedEffect(lines) {
         if (selectedLineId == null && lines.size == 1) {
             selectedLineId = lines.first().id.toString()
@@ -172,10 +177,13 @@ fun AddEditTileDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // Scrolls, so nothing is cut off on a small screen, with a large font
+                    // or while the keyboard is open.
                     .verticalScroll(rememberScrollState())
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Call Type
                 ExposedDropdownMenuBox(
                     expanded = typeDropdownExpanded,
                     onExpandedChange = { typeDropdownExpanded = !typeDropdownExpanded }
@@ -201,6 +209,7 @@ fun AddEditTileDialog(
                     }
                 }
 
+                // Label
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
@@ -258,6 +267,7 @@ fun AddEditTileDialog(
                     }
                 }
 
+                // Without lines the tile can't be saved, so say why and offer a retry
                 val linesNotLoaded = @Composable {
                     if (lines.isEmpty() && linesError != null) {
                         Row(
@@ -322,6 +332,7 @@ fun AddEditTileDialog(
                     }
                 }
                 
+                // Background Color Selection
                 Text(stringResource(R.string.color), style = MaterialTheme.typography.bodySmall)
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -329,6 +340,7 @@ fun AddEditTileDialog(
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
                     item {
+                         // Default / Transparent Option
                          Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -355,6 +367,7 @@ fun AddEditTileDialog(
                     }
                 }
 
+                // Text Color Selection
                 Text(stringResource(R.string.text_color), style = MaterialTheme.typography.bodySmall)
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -362,6 +375,7 @@ fun AddEditTileDialog(
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
                     item {
+                         // Default Option
                          Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -390,6 +404,7 @@ fun AddEditTileDialog(
             Button(
                 onClick = {
                     if (recipientMissing || lineMissing || callerIdMissing) {
+                        // Mark the empty fields instead of saving
                         showErrors = true
                     } else {
                         onSave(

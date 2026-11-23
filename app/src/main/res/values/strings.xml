@@ -50,8 +50,6 @@
     <string name="none">None</string>
     <string name="call_history">Call</string>
     <string name="sms_history">SMS</string>
-    <string name="from_history">From:</string>
-    <string name="to_history">To:</string>
     <string name="currency_format">%.2f CZK</string>
     <string name="czech_currency_symbol">CZK</string>
     <string name="english_currency_symbol">CZK</string>
@@ -105,7 +103,7 @@
     <string name="a11y_dark_mode">Dark mode</string>
     <string name="a11y_language">App language</string>
     <string name="a11y_line_card">Line: %s</string>
-    <string name="a11y_odorik_logo">Odorik logo</string>
+    <string name="a11y_app_logo">OdorikBuddy logo</string>
     <string name="a11y_widget_open_app">Open Odorik Buddy</string>
     <string name="a11y_navigate_to_tab">Navigate to %1$s tab</string>
     <string name="a11y_has_rules">Has rules</string>
@@ -153,7 +151,6 @@
     <string name="backup_imported">Imported (%1$d tiles)</string>
     <string name="backup_imported_settings_only">Settings imported</string>
     <string name="backup_direct_calls_skipped">Turn on direct calls again in Settings, it needs the phone permission.</string>
-    <string name="backup_auto_update_skipped">Turn on update checking again in Settings, it needs the notification permission.</string>
     <string name="backup_error_not_a_backup">This file is not an OdorikBuddy backup.</string>
     <string name="backup_error_newer_version">This backup was made by a newer version. Update the app first.</string>
     <string name="backup_error_read_failed">The file could not be read.</string>
@@ -180,7 +177,7 @@
     <string name="section_app">Application</string>
     <string name="version_label">Version</string>
     <string name="auto_update_checking">Automatic Update Checking</string>
-    <string name="auto_update_checking_description">Check for app updates weekly and show notifications</string>
+    <string name="auto_update_checking_description">Check for a new version once a week</string>
     <string name="direct_calls">Direct Calls</string>
     <string name="direct_calls_description">Allow direct phone calls without opening the dialer</string>
     <string name="routing_description">Manage shared and own number routes</string>
@@ -217,6 +214,8 @@
     <string name="error_loading_dashboard">Error loading dashboard</string>
     <string name="retry">Retry</string>
     <string name="redirected_to">Redirected to:</string>
+    <string name="history_line_out">from line %1$s</string>
+    <string name="history_line_in">to line %1$s</string>
     <string name="use_line_number_as_caller_id">Use line number as caller ID</string>
     <string name="filter_history">Filter History</string>
     <string name="event_type_filter">Event Type</string>
@@ -252,9 +251,12 @@
     <string name="shared_numbers">Shared Numbers</string>
     <string name="own_numbers">Own Numbers</string>
     <string name="own_numbers_description">Numbers that are owned by you</string>
-    <string name="weekly_average">Average: %.2f CZK</string>
+    <string name="weekly_average">Average per day: %1$s</string>
+    <string name="dashboard_error_using_saved_data">%1$s (showing saved data)</string>
+    <string name="dashboard_error_no_saved_data">%1$s (no saved data available)</string>
     <string name="chart_spending">Spending</string>
     <string name="chart_average">Average</string>
+    <string name="chart_average_week">Weekly average</string>
     <string name="select_date_range">Select Date Range</string>
     <string name="quick_select">Quick Select</string>
     <string name="start_date">Start Date: %s</string>
@@ -302,6 +304,13 @@
     <string name="new_version_available">New version %s is available</string>
     <string name="update_notifications">Update Notifications</string>
     <string name="update_notifications_description">Notifications for app updates</string>
+    <string name="update_notifications_off_hint">Notifications are off, new versions show on the Dashboard only. Tap to turn them on.</string>
+    <string name="update_prompt_title">Tell you about new versions?</string>
+    <string name="update_prompt_message">The app isn\'t on Google Play, so there is no other way to hear about a new version. Once a week it checks GitHub for a newer version. Nothing else is sent. You can change this in Settings.</string>
+    <string name="update_prompt_yes">Yes, tell me</string>
+    <string name="update_prompt_no">No, thanks</string>
+    <string name="update_banner_title">Version %1$s is available</string>
+    <string name="update_banner_dismiss">Hide the new version notice</string>
     <!-- Network Error Messages -->
     <string name="error_network_unreachable">No internet connection. Please check your network and try again.</string>
     <string name="error_host_unresolvable">Cannot connect to Odorik servers. Please check your internet connection and try again.</string>
@@ -355,11 +364,15 @@
     <string name="widget_config_normal">Normal</string>
     <string name="widget_config_large">Large</string>
     <string name="widget_config_extra_large">Extra Large</string>
+    <string name="widget_config_logo">Logo</string>
+    <string name="widget_config_logo_show">Show</string>
+    <string name="widget_config_logo_hide">Hide</string>
+    <string name="widget_config_logo_hint">Without the logo, tapping the widget only refreshes the balance.</string>
     <string name="widget_preview">Preview</string>
 
     <string name="permission_required_title">Permission required</string>
     <string name="call_permission_denied_message">Direct calling needs the phone permission. It was denied permanently — allow it in the system settings.</string>
-    <string name="notification_permission_denied_message">Update notifications need the notification permission. It was denied permanently — allow it in the system settings.</string>
+    <string name="notification_permission_denied_message">The notification permission was denied permanently. New versions will show on the Dashboard only. To get notifications, allow them in the system settings.</string>
     <string name="open_settings">Open settings</string>
 
     <!-- Additional common UI strings -->
@@ -397,11 +410,113 @@
     <string name="app_theme_material_you_subtitle">Colors from your wallpaper</string>
     <string name="app_theme_odorik">Odorik</string>
     <string name="app_theme_odorik_subtitle">Red theme inspired by odorik.cz</string>
+    <string name="settings_nav_icon_style">Icon style</string>
+    <string name="nav_icon_style_classic">Classic</string>
+    <string name="nav_icon_style_rounded">Rounded</string>
+    <string name="nav_icon_style_two_tone">Two-tone</string>
     <string name="no_spending_in_period">No spending in this period</string>
     <string name="edit_tiles">Edit tiles</string>
     <string name="done">Done</string>
     <string name="odorik_website">Odorik website</string>
     <string name="widget_style_odorik">Odorik red</string>
     <string name="widget_tap_to_retry">Tap to retry</string>
+
+    <!-- Odorik API error codes (1.6.0 endpoints) -->
+    <string name="error_odorik_unauthorized">You\'re not allowed to do this with this login.</string>
+    <string name="error_odorik_low_balance">Not enough credit.</string>
+    <string name="error_speed_dial_invalid_number">Odorik doesn\'t accept this number.</string>
+    <string name="error_speed_dial_invalid_shortcut">Invalid shortcut.</string>
+    <string name="error_speed_dial_name_too_long">The name is too long (max. 150 characters).</string>
+    <string name="error_speed_dial_shortcut_used">This shortcut is already used.</string>
+    <string name="error_speed_dial_full">No more speed dials can be added.</string>
+    <string name="error_sim_change_in_progress">A change is in progress, try again later.</string>
+    <string name="error_sim_mobile_data_disabled">Mobile data is turned off.</string>
+
+    <!-- Live calls -->
+    <plurals name="live_calls_title">
+        <item quantity="one">%d call in progress</item>
+        <item quantity="other">%d calls in progress</item>
+    </plurals>
+    <string name="live_calls_show">Show</string>
+    <string name="live_calls_screen_title">Calls in progress</string>
+    <string name="live_calls_auto_refresh">Refreshes automatically every 5 s</string>
+    <string name="live_calls_empty_title">No calls in progress</string>
+    <string name="live_calls_empty_text">When someone calls or you order a callback, it shows up here.</string>
+    <string name="live_call_from">from %1$s</string>
+    <string name="live_call_to">to %1$s</string>
+    <string name="live_call_line">line %1$s</string>
+    <string name="live_call_ringing">Ringing…</string>
+    <string name="live_call_hang_up">Hang up</string>
+    <string name="live_call_hang_up_title">Hang up the call?</string>
+    <string name="live_call_hang_up_text">The call with \"%1$s\" will end immediately for both sides.</string>
+    <string name="live_call_ended">Call ended.</string>
+    <string name="live_call_hang_up_failed">Couldn\'t hang up the call.</string>
+
+    <!-- Speed dials -->
+    <string name="section_calling">Calling</string>
+    <string name="speed_dials_title">Speed dials</string>
+    <string name="speed_dials_description">Shortcuts for dialling from your phone</string>
+    <string name="speed_dials_info">Speed dials work for the whole account. Dial the shortcut from any phone connected to Odorik, including desk and IP phones.</string>
+    <string name="speed_dials_read_only">Changes need the account API password. You\'re logged in with a line, so speed dials can only be viewed.</string>
+    <string name="speed_dials_empty_title">No speed dials yet</string>
+    <string name="speed_dials_empty_text">Add a shortcut, e.g. 1 for your daughter.</string>
+    <string name="speed_dial_add">Add</string>
+    <string name="speed_dial_add_title">New speed dial</string>
+    <string name="speed_dial_edit_title">Edit speed dial</string>
+    <string name="speed_dial_shortcut">Shortcut</string>
+    <string name="speed_dial_name">Name</string>
+    <string name="speed_dial_number">Number</string>
+    <string name="speed_dial_pick_contact">Pick from contacts</string>
+    <string name="speed_dials_all_lines">Applies to all lines: %1$s</string>
+    <string name="speed_dials_line_only">Line %1$s only</string>
+    <string name="speed_dials_line_only_note">These shortcuts can only be changed on the Odorik website.</string>
+    <string name="speed_dial_overrides">Replaces the account shortcut</string>
+    <string name="speed_dial_delete_title">Delete speed dial?</string>
+    <string name="speed_dial_delete_text">Shortcut %1$d (%2$s) will stop working.</string>
+    <string name="speed_dial_saved">Speed dial saved</string>
+    <string name="speed_dial_deleted">Speed dial deleted</string>
+
+    <!-- SIM card -->
+    <string name="sim_section_title">SIM card</string>
+    <string name="sim_item_description">Data, state and settings</string>
+    <string name="sim_screen_title">SIM card</string>
+    <string name="sim_state_active">Active</string>
+    <string name="sim_state_suspended">Suspended</string>
+    <string name="sim_data_title">Data this month</string>
+    <string name="sim_data_of_limit">of %1$s</string>
+    <string name="sim_data_unknown">Data usage is not available right now.</string>
+    <string name="sim_data_daily">Usage per day, last 10 days</string>
+    <string name="sim_mobile_data">Mobile data</string>
+    <string name="sim_lte">LTE (4G)</string>
+    <string name="sim_missed_calls_sms">Missed-call SMS</string>
+    <string name="sim_missed_calls_sms_hint">When your phone is off</string>
+    <string name="sim_roaming">Roaming</string>
+    <string name="sim_data_package">Data package</string>
+    <string name="sim_voice_package">Voice package</string>
+    <string name="sim_next_month">from next month: %1$s</string>
+    <string name="sim_change_in_progress">A change is in progress at Odorik. Settings will be available again once it\'s done.</string>
+    <string name="sim_change_saved">Setting changed</string>
+    <string name="sim_fup_reset">Restore data speed (FUP) · paid</string>
+    <string name="sim_fup_title">Restore data speed?</string>
+    <string name="sim_fup_text">Odorik will restore full data speed (FUP reset). This is charged according to the price list and taken from your credit.</string>
+    <string name="sim_fup_confirm">Restore</string>
+    <string name="sim_fup_done">Data speed restored</string>
+    <string name="sim_suspend">Suspend SIM (e.g. lost phone)</string>
+    <string name="sim_suspend_title">Suspend the SIM?</string>
+    <string name="sim_suspend_text">The SIM will stop making calls and using data until you reactivate it. Useful when your phone is lost or stolen.</string>
+    <string name="sim_suspend_confirm">Suspend</string>
+    <string name="sim_suspended_done">SIM suspended</string>
+    <string name="sim_reactivate">Reactivate SIM</string>
+    <string name="sim_reactivate_title">Reactivate the SIM?</string>
+    <string name="sim_reactivate_text">The SIM will be able to make calls and use data again.</string>
+    <string name="sim_reactivated_done">SIM reactivated</string>
+
+    <!-- Callback live status -->
+    <string name="callback_status_title">Callback in progress</string>
+    <string name="callback_status_ended">The call has ended</string>
+    <string name="callback_step_ordered">Ordered</string>
+    <string name="callback_step_ringing">Odorik is calling</string>
+    <string name="callback_step_connected">Connected</string>
+    <string name="callback_hang_up">End call</string>
 
 </resources>

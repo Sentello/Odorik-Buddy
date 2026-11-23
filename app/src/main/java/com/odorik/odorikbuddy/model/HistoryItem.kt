@@ -5,6 +5,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
+// Represents a single item in the call or SMS history.
+// Modernized with camelCase properties + explicit @SerializedName for Gson
+// and @ColumnInfo to keep Room schema stable.
 @Entity(tableName = "history")
 data class HistoryItem(
     @PrimaryKey
@@ -30,7 +33,7 @@ data class HistoryItem(
 
     @SerializedName("length")
     @ColumnInfo(name = "length")
-    val length: Int? = null,
+    val length: Int? = null, // Nullable because SMS records do not have a length
 
     @SerializedName("ringing_length")
     @ColumnInfo(name = "ringing_length")
@@ -82,4 +85,39 @@ data class HistoryItem(
 
     val isOutgoing: Boolean
         get() = direction == "out" || direction == "redirected"
+
+    /**
+     * The leg that just rings the account's own line (`*760490`) for an incoming call. Not a
+     * real forwarding: same length as the parent, free, and it made every incoming call show
+     * up twice (seen 2026-11-22: parent "in" → public number, child "redirected" → `*760490`).
+     */
+    val isInternalLineLeg: Boolean
+        get() = redirectionParentId != null && destinationNumber.startsWith("*")
+}
+
+/** A call between the account's own lines: both numbers are internal (`*760490`). */
+private val HistoryItem.isLineToLine: Boolean
+    get() = isCall && sourceNumber.startsWith("*") && destinationNumber.startsWith("*")
+
+/**
+ * Removes the duplicates Odorik writes for one call, so each call shows once:
+ * - [HistoryItem.isInternalLineLeg]: the leg that rings the own line under an incoming call;
+ * - the "in" mirror of a call between own lines: Odorik logs `*A → *B` as "out" and again as
+ *   "in" (same numbers, ~1 s apart, seen 2026-11-22). The "out" record (which carries the
+ *   price) stays.
+ * Real forwardings to other numbers are kept.
+ */
+fun List<HistoryItem>.withoutInternalLineLegs(): List<HistoryItem> {
+    val outgoingLineCalls = filter { it.isLineToLine && it.direction == "out" }
+    fun isMirror(item: HistoryItem): Boolean {
+        if (!item.isLineToLine || item.direction != "in") return false
+        val at = com.odorik.odorikbuddy.util.ApiDates.parse(item.date) ?: return false
+        return outgoingLineCalls.any { out ->
+            out.sourceNumber == item.sourceNumber &&
+                out.destinationNumber == item.destinationNumber &&
+                com.odorik.odorikbuddy.util.ApiDates.parse(out.date)
+                    ?.let { kotlin.math.abs(it.epochSecond - at.epochSecond) <= 3 } == true
+        }
+    }
+    return filterNot { it.isInternalLineLeg || isMirror(it) }
 }

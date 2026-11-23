@@ -31,6 +31,14 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verifyBlocking
 import java.io.IOException
 
+/**
+ * Covers the split between [SmsViewModel.sendError] and [SmsViewModel.sendersError].
+ *
+ * These used to share one `_error` flow. Because a non-null error starts an automatic retry of
+ * the allowed-senders fetch, and that fetch clears the error it is retrying, a failed SMS send
+ * had its error message wiped out roughly five seconds later — the user was left with no idea
+ * whether their message went out. The two flows are now independent; these tests pin that.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SmsViewModelErrorStateTest {
 
@@ -77,6 +85,8 @@ class SmsViewModelErrorStateTest {
         }
         val vm = viewModel(repository)
 
+        // runCurrent() settles the fetch without advancing past the retry's 5s delay —
+        // advanceUntilIdle() here would run the whole retry schedule before we could look.
         vm.fetchAllowedSenders()
         runCurrent()
         assertNotNull("the first senders fetch should have failed", vm.sendersError.value)
@@ -87,6 +97,8 @@ class SmsViewModelErrorStateTest {
         val sendError = vm.sendError.value
         assertNotNull("the send failure must be reported", sendError)
 
+        // Run the full backoff schedule. Every retry attempt starts by clearing the senders
+        // error — the exact line that used to take the send error down with it.
         advanceUntilIdle()
 
         verifyBlocking(repository, atLeast(2)) { getAllowedSenders() }

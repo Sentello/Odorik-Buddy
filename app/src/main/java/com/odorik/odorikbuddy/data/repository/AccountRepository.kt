@@ -8,12 +8,17 @@ import javax.inject.Singleton
 
 class AuthenticationException(message: String) : Exception(message)
 
+/** Account-level endpoints: balance and lines. */
 @Singleton
 class AccountRepository @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
 
+    /**
+     * Fetches the account balance. Odorik returns HTTP 200 with plain-text
+     * bodies like "error authentication_failed" — mapped to failures here.
+     */
     suspend fun getCredit(): Result<Double> {
         var responseString = ""
         return try {

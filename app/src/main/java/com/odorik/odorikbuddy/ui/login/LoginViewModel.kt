@@ -41,6 +41,7 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                // Authenticate with in-memory credentials first — never persist before success.
                 userRepository.setSessionCredentials(userId, password)
 
                 val result = getCreditUseCase.execute()
@@ -49,10 +50,12 @@ class LoginViewModel @Inject constructor(
                     if (remember) {
                         userRepository.persistCredentials(userId, password)
                     } else {
+                        // Session-only: no encrypted password on disk after process death.
                         userRepository.clearPersistedCredentials()
                     }
                     _loginUiState.value = LoginUiState.Success
                 }.onFailure { e ->
+                    // Do not leave session (or bad) credentials after a failed login.
                     userRepository.clearCredentials()
                     _loginUiState.value = when (e) {
                         is AuthenticationException ->

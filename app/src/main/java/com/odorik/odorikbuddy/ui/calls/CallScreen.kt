@@ -24,6 +24,7 @@ import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.PhoneCallLauncher
 
+// Shared helper functions
 fun mapApiArgumentToStringId(apiArgument: String): Int {
     return when (apiArgument) {
         "caller" -> R.string.argument_caller
@@ -43,13 +44,16 @@ fun CallScreen(
     val context = LocalContext.current
     val directCallsEnabled = viewModel.directCallsEnabled
 
+    // Pick up values saved elsewhere (e.g. a settings import) when the screen is shown again.
     LaunchedEffect(Unit) {
         viewModel.reloadSavedFields()
     }
 
+    // Clean one-shot dialer launch using dedicated event from ViewModel
     LaunchedEffect(Unit) {
         viewModel.dialerLaunchRequest.collect { phoneNumber ->
             try {
+                // Small delay to let user see success feedback in UI
                 kotlinx.coroutines.delay(1200L)
 
                 PhoneCallLauncher.launch(
@@ -101,8 +105,10 @@ fun CallScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Gradient Header
             GradientHeader(title = stringResource(R.string.calls), iconVector = Icons.Default.Call, accent = ScreenAccents.Calls)
             
+            // Draggable Tabs
             DraggableTabs(
                 tabItems = tabItems,
                 selectedTabTitle = selectedTab,

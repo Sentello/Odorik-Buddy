@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.calls
 
+// Imports for Contact Picker and other functionalities
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -61,14 +62,19 @@ fun TileItem(
     onMoveDown: () -> Unit,
     isEditMode: Boolean = false,
     isCalling: Boolean = false,
+    /** Settings > Tile size. The larger sizes grow with their text instead of a fixed height. */
     size: TileSize = TileSize.NORMAL,
+    /** The grid has one column, so reordering really is up/down (otherwise earlier/later). */
     singleColumn: Boolean = false
 ) {
     val isSystemDark = com.odorik.odorikbuddy.ui.theme.LocalIsAppDark.current
     val containerColor = TileColorHelper.resolveColor(tile.color, isSystemDark) ?: MaterialTheme.colorScheme.surfaceContainerLow
     
     val isCustomColor = tile.color != null
+    // Explicit text colour, swapped for black/white if it can't be read on this background
     val explicitText = TileColorHelper.readableTextColor(tile.textColor, containerColor)
+    // Text Color Logic: Use explicit textColor if set. 
+    // Otherwise fallback to existing logic: White if Dark Mode & Custom Color; Black if Light Mode & Custom Color; else Surface
     val titleColor = if (explicitText != null) {
         explicitText
     } else if (isCustomColor) {
@@ -110,6 +116,9 @@ fun TileItem(
     }
 
     val monogram = remember(contactName, tile.label) {
+        // Initials are built from letters only, so numeric labels and phone-number
+        // recipients ("60", "+420…") fall through to the call-type icon instead of
+        // rendering as counter-like digits.
         val source = contactName.ifBlank { tile.label }
         val initials = source.trim().split(Regex("\\s+"))
             .mapNotNull { word -> word.firstOrNull { it.isLetter() }?.uppercaseChar() }
@@ -120,6 +129,7 @@ fun TileItem(
         }
     }
 
+    // Text styles and sizes per tile size
     val titleStyle = when (size) {
         TileSize.NORMAL -> MaterialTheme.typography.titleMedium
         TileSize.LARGE -> MaterialTheme.typography.titleLarge
@@ -148,16 +158,20 @@ fun TileItem(
         TileSize.EXTRA_LARGE -> 48.dp
     }
 
+    // The building blocks, arranged differently per size further down
     val badge = @Composable {
          Box(
             modifier = Modifier
                 .size(badgeSize)
                 .clip(CircleShape)
                 .background(iconBgColor)
+                // Decorative identity badge; keep it out of TalkBack's
+                // merged card announcement.
                 .clearAndSetSemantics {},
             contentAlignment = Alignment.Center
         ) {
             if (isCalling) {
+                // The call request for this tile is running
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp,
@@ -200,6 +214,7 @@ fun TileItem(
         }
     }
 
+    // Label, call type, name and number; placed inside a Column
     val texts = @Composable {
         val callTypeText = if (tile.callType == TileCallType.CALLBACK) stringResource(R.string.call_type_callback) else stringResource(R.string.call_type_oneshot)
 
@@ -260,6 +275,7 @@ fun TileItem(
             .fillMaxWidth()
             .then(
                 when (size) {
+                    // Classic tiles have a fixed height; the larger ones grow with their text
                     TileSize.NORMAL -> Modifier.height(160.dp)
                     TileSize.LARGE -> Modifier.heightIn(min = 88.dp)
                     TileSize.EXTRA_LARGE -> Modifier.heightIn(min = 128.dp)
@@ -283,6 +299,7 @@ fun TileItem(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             if (size == TileSize.LARGE) {
+                // LARGE: a low tile - badge on the left, text beside it
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -293,6 +310,7 @@ fun TileItem(
                     if (isEditMode) editButtons()
                 }
             } else {
+                // NORMAL and EXTRA_LARGE: badge on top, text below
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -313,6 +331,8 @@ fun TileItem(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
+                    // In one column the tile really moves up/down. In a grid it moves one
+                    // place earlier/later in reading order, so the arrows point left/right.
                     IconButton(onClick = onMoveUp) {
                         Icon(
                             imageVector = if (singleColumn) Icons.Default.KeyboardArrowUp else Icons.AutoMirrored.Filled.KeyboardArrowLeft,

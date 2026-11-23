@@ -26,17 +26,29 @@
 # Gson 2.10.1 ships no consumer rules, so its needs are declared here.
 # Generic signatures resolve parameterized fields (e.g. List<ConnectedDevice>).
 -keepattributes Signature, *Annotation*
+# R8 full mode drops Signature unless a -keep rule matches the class. TypeToken
+# reads that signature reflectively (`object : TypeToken<List<ActiveCall>>() {}`).
+# Without these rules the release build crashes on launch once that class loads:
+# "TypeToken must be created with a type argument".
+-if class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation class * extends com.google.gson.reflect.TypeToken
 # Serialization is driven by @SerializedName; classes may still be renamed.
 -keepclassmembers class * {
     @com.google.gson.annotations.SerializedName <fields>;
 }
-# Keep no-arg constructors so Gson instantiates models normally (with field
-# defaults) instead of falling back to Unsafe allocation.
+# Keep model constructors. Only Gson creates these objects, so without a kept
+# constructor R8 full mode decides the class is never instantiated: it deletes its
+# fields and constructors and turns every cast to it into a throw. Release-only
+# symptoms from 1.6.0: ClassCastException in LiveCallsViewModel as soon as a call
+# is in progress, "Vyskytla se neznámá chyba" on Speed dials. Models give every
+# field a default (Kotlin then generates the no-arg constructor Gson prefers) and a
+# @SerializedName; <init>(...) also covers a model that forgets the defaults.
 -keepclassmembers class com.odorik.odorikbuddy.model.** {
-    <init>();
+    <init>(...);
 }
 -keepclassmembers class com.odorik.odorikbuddy.data.model.** {
-    <init>();
+    <init>(...);
 }
 
 #----------------- MPAndroidChart -----------------

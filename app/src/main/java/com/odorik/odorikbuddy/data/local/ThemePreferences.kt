@@ -11,3 +11,10 @@ enum class AppTheme {
     MATERIAL_YOU,
     ODORIK
 }
+
+/** Icon set of the bottom navigation bar. CLASSIC is the default. */
+enum class NavIconStyle {
+    CLASSIC,
+    ROUNDED,
+    TWO_TONE
+}

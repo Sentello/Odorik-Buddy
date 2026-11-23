@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.model.ActiveCall
 import com.odorik.odorikbuddy.data.model.Line
+import com.odorik.odorikbuddy.data.repository.ActiveCallsRepository
 import com.odorik.odorikbuddy.data.repository.TileRepository
 import com.odorik.odorikbuddy.domain.usecase.CallUseCase
 import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
@@ -23,6 +25,8 @@ import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -45,7 +50,8 @@ class CallViewModel @Inject constructor(
     private val tileRepository: TileRepository,
     private val localeManager: LocaleManager,
     @ApplicationContext private val context: Context,
-    private val appPreferences: AppPreferences
+    private val appPreferences: AppPreferences,
+    private val activeCallsRepository: ActiveCallsRepository
 ) : ViewModel() {
 
     private val _callResult = MutableStateFlow<String>("")
@@ -54,9 +60,14 @@ class CallViewModel @Inject constructor(
     private val _lines = MutableStateFlow<List<Line>>(emptyList())
     val lines: StateFlow<List<Line>> = _lines
 
+    /**
+     * Failures of the lines/connection fetch. This is the only error that drives the
+     * automatic retry loop, so retries can never wipe a user-facing action error.
+     */
     private val _linesError = MutableStateFlow<String?>(null)
     val linesError: StateFlow<String?> = _linesError
 
+    /** Failures of the user-initiated callback. Cleared only by the next callback attempt. */
     private val _callbackError = MutableStateFlow<String?>(null)
     val callbackError: StateFlow<String?> = _callbackError
 
@@ -80,6 +91,7 @@ class CallViewModel @Inject constructor(
     val directCallsEnabled: Boolean
         get() = appPreferences.directCallsEnabled
 
+    // --- Contacts Logic ---
     val callerContactName: StateFlow<String?> = combine(_callerId, contactNameResolver.contactsMap) { number, _ ->
         if (number.isBlank()) null else contactNameResolver.getContactName(number).takeIf { it != number }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -98,6 +110,7 @@ class CallViewModel @Inject constructor(
     private val _oneShotCallResult = MutableStateFlow<String>("")
     val oneShotCallResult: StateFlow<String> = _oneShotCallResult
 
+    // One-shot event for launching the dialer (better than watching result in UI)
     private val _dialerLaunchRequest = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val dialerLaunchRequest = _dialerLaunchRequest.asSharedFlow()
 
@@ -119,14 +132,17 @@ class CallViewModel @Inject constructor(
 
     private fun getSelectedTab(): String {
         val savedString = appPreferences.getString("calls_selected_tab", null)
-        val defaultTitle = "callback_title"
+        val defaultTitle = "callback_title" // Fallback to first tab
         val tabOrder = getTabOrder()
         return if (savedString?.toIntOrNull() != null) {
+            // Migrate legacy index to title
             val oldIndex = savedString.toInt()
             val migratedTitle = if (oldIndex in tabOrder.indices) tabOrder[oldIndex] else defaultTitle
+            // Save the migrated title for future use
             appPreferences.saveString("calls_selected_tab", migratedTitle)
             migratedTitle
         } else {
+            // Already a title, validate it exists in order
             savedString?.takeIf { it in tabOrder } ?: defaultTitle
         }
     }
@@ -141,6 +157,7 @@ class CallViewModel @Inject constructor(
         if (savedOrder == null) return defaultOrder
         
         val currentList = savedOrder.split(",").filter { it.isNotBlank() }.toMutableList()
+        // Ensure new tabs are added if missing (for existing users)
         if (!currentList.contains("tiles_title")) {
             currentList.add("tiles_title")
         }
@@ -176,6 +193,7 @@ class CallViewModel @Inject constructor(
     }
 
     init {
+        // Automatically manage error retry when error state changes
         viewModelScope.launch {
             linesError.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -187,10 +205,17 @@ class CallViewModel @Inject constructor(
         }
 
         reloadSavedFields()
+        // _selectedTab is already initialized with getSelectedTab() in the property declaration
 
+        // Perform initial data load
         getLines()
     }
 
+    /**
+     * Re-reads the fields that are saved in preferences. Called on init and each time the
+     * Calls screen is shown, so values written elsewhere (settings import) appear without a
+     * restart. Every setter below saves immediately, so nothing typed is lost.
+     */
     fun reloadSavedFields() {
         _callerId.value = appPreferences.getString("caller_id", "") ?: ""
         _callbackRecipient.value = appPreferences.getString("recipient", "") ?: ""
@@ -263,6 +288,8 @@ class CallViewModel @Inject constructor(
         val result = getLinesUseCase.execute()
         result.onSuccess {
             _lines.value = it
+            // Clear only this operation's error — a background refresh must not
+            // erase the result or error of a billable action the user just triggered.
             _linesError.value = null
             if (_selectedLine.value == null && it.isNotEmpty()) {
                 _selectedLine.value = it.first().id
@@ -276,13 +303,82 @@ class CallViewModel @Inject constructor(
     fun makeCall(callerId: String, recipient: String, line: String) {
         if (_isCallbackLoading.value) return
         _isCallbackLoading.value = true
-        viewModelScope.launch { makeCallInternal(callerId, recipient, line) }
+        viewModelScope.launch {
+            makeCallInternal(callerId, recipient, line)
+            val result = _callResult.value
+            if (result.startsWith("callback_ordered") || result.startsWith("successfully_enqueued")) {
+                watchCallback(callerId, recipient)
+            }
+        }
     }
 
+    /** Live status of the last callback ordered from the Callback tab (null = no card). */
+    sealed interface CallbackStatus {
+        object Waiting : CallbackStatus
+        data class Ringing(val call: ActiveCall) : CallbackStatus
+        data class Connected(val call: ActiveCall) : CallbackStatus
+        object Ended : CallbackStatus
+    }
+
+    private val _callbackStatus = MutableStateFlow<CallbackStatus?>(null)
+    val callbackStatus: StateFlow<CallbackStatus?> = _callbackStatus
+    private var callbackWatchJob: Job? = null
+
+    /**
+     * Watches /active_calls.json every 3 s for a call involving [caller] or [recipient].
+     * Gives up quietly after ~60 s without a match; after a match, runs until the call is gone.
+     * Iteration counts (not wall time) bound the loop so virtual-time tests can't spin forever.
+     */
+    private fun watchCallback(caller: String, recipient: String) {
+        callbackWatchJob?.cancel()
+        val keys = listOf(caller, recipient).map(::matchKey).filter { it.length >= 6 }
+        if (keys.isEmpty()) return
+        callbackWatchJob = viewModelScope.launch {
+            _callbackStatus.value = CallbackStatus.Waiting
+            var seen = false
+            var waitingRounds = 0
+            var totalRounds = 0
+            while (isActive && totalRounds < MAX_WATCH_ROUNDS) {
+                totalRounds++
+                val calls = runCatching { activeCallsRepository.getActiveCalls().getOrNull() }.getOrNull().orEmpty()
+                val match = calls.firstOrNull { c ->
+                    listOfNotNull(c.sourceNumber, c.destinationNumber).any { matchKey(it) in keys }
+                }
+                if (match != null) {
+                    seen = true
+                    _callbackStatus.value =
+                        if (match.isAnswered) CallbackStatus.Connected(match) else CallbackStatus.Ringing(match)
+                } else if (seen) {
+                    _callbackStatus.value = CallbackStatus.Ended
+                    delay(5_000)
+                    break
+                } else if (++waitingRounds >= MAX_WAITING_ROUNDS) {
+                    break
+                }
+                delay(WATCH_INTERVAL_MS)
+            }
+            _callbackStatus.value = null
+        }
+    }
+
+    /** Ends the watched callback call; the watch loop then notices it is gone. */
+    fun hangUpCallback() {
+        val call = when (val s = _callbackStatus.value) {
+            is CallbackStatus.Ringing -> s.call
+            is CallbackStatus.Connected -> s.call
+            else -> return
+        }
+        viewModelScope.launch { activeCallsRepository.hangUp(call.id) }
+    }
+
+    /** Last 9 digits: matches 00420…, +420… and 9-digit national forms. */
+    private fun matchKey(n: String) = n.filter(Char::isDigit).takeLast(9)
+
+    /** Caller must have set [_isCallbackLoading] to true first — that flag is the double-submit guard. */
     private suspend fun makeCallInternal(callerId: String, recipient: String, line: String) {
         try {
-            _callbackError.value = null
-            _callResult.value = ""
+            _callbackError.value = null // Clear previous errors
+            _callResult.value = "" // Clear previous results
             val result = callUseCase.execute(callerId, recipient, line)
             result.onSuccess {
                 _callResult.value = it
@@ -295,6 +391,11 @@ class CallViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Reads phone numbers for a picked contact off the main thread. A ContentResolver query
+     * against the contacts provider is disk I/O and visibly janks the picker on large
+     * address books.
+     */
     suspend fun getPhoneNumbersFromContact(
         contentResolver: ContentResolver,
         contactUri: Uri
@@ -302,6 +403,14 @@ class CallViewModel @Inject constructor(
         getPhoneNumbersForContactUseCase(contentResolver, contactUri)
     }
 
+    /**
+     * Initiates a one-shot call.
+     *
+     * @param targetRecipient The number to call.
+     * @param useLineAsCallerId Whether to use the selected line's caller ID.
+     * @param selectedLineId Optional specific line ID (used by widgets that have per-tile line configuration).
+     *                       If null, falls back to the globally selected line.
+     */
     fun makeOneShotCall(
         targetRecipient: String,
         useLineAsCallerId: Boolean,
@@ -310,10 +419,11 @@ class CallViewModel @Inject constructor(
         if (_isOneShotCallLoading.value) return
         viewModelScope.launch {
             _oneShotCallError.value = null
-            _oneShotCallResult.value = ""
+            _oneShotCallResult.value = ""  // Clear previous result
             _isOneShotCallLoading.value = true
 
             try {
+                // Use provided line ID (for widgets) or fall back to global selection
                 val lineIdToUse = selectedLineId ?: _selectedLine.value
 
                 val result = oneShotCallCoordinatorUseCase.execute(
@@ -324,7 +434,7 @@ class CallViewModel @Inject constructor(
 
                 result.onSuccess { lastSharedNumber ->
                     _oneShotCallResult.value = lastSharedNumber
-                    _dialerLaunchRequest.tryEmit(lastSharedNumber)
+                    _dialerLaunchRequest.tryEmit(lastSharedNumber) // Notify UI to launch dialer
                 }.onFailure { e ->
                     val localizedContext = localeManager.createLocaleContext(context)
                     _oneShotCallError.value = when (e) {
@@ -343,12 +453,22 @@ class CallViewModel @Inject constructor(
         }
     }
     
+    // --- Widget-launched tile actions ---
 
     private var widgetDispatchClaimed = false
 
     private val _widgetCallbackSucceeded = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    /** Emits the recipient once a widget-launched callback has been placed successfully. */
     val widgetCallbackSucceeded = _widgetCallbackSucceeded.asSharedFlow()
 
+    /**
+     * Runs a widget tile's action at most once per ViewModel instance.
+     *
+     * The guard and the work both live here rather than in the launching Activity: the
+     * ViewModel survives Activity recreation (rotation, theme/locale change), so a recreation
+     * cannot place a second billable call, and [viewModelScope] keeps an in-flight request
+     * alive even if the Activity is destroyed mid-call.
+     */
     fun dispatchWidgetTileAction(tileId: Int) {
         if (widgetDispatchClaimed) return
         widgetDispatchClaimed = true
@@ -405,6 +525,11 @@ class CallViewModel @Inject constructor(
     }
 
     companion object {
+        /** Tab ids of the Calls screen, in the default order. Also validates imported orders. */
         val DEFAULT_TAB_ORDER = listOf("callback_title", "oneshot_call", "tiles_title")
+
+        private const val WATCH_INTERVAL_MS = 3_000L
+        private const val MAX_WAITING_ROUNDS = 20          // ~60 s without any matching call
+        private const val MAX_WATCH_ROUNDS = 2_400         // hard stop after ~2 h
     }
 }

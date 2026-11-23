@@ -24,8 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.odorik.odorikbuddy.R
-import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.local.AppPreferences
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.ui.calls.CallViewModel
 import com.odorik.odorikbuddy.ui.theme.OdorikBuddyTheme
@@ -33,9 +33,17 @@ import com.odorik.odorikbuddy.util.PhoneCallLauncher
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+/**
+ * Transparent overlay launched by a tile widget.
+ *
+ * Deliberately thin: the tile lookup, the credential resolution and the billable request all
+ * live in [CallViewModel.dispatchWidgetTileAction], which survives recreation of this Activity
+ * and guards against dispatching the same tile twice.
+ */
 @AndroidEntryPoint
 class WidgetCallActivity : ComponentActivity() {
 
+    // Follow the app's language, not the phone's (same as MainActivity).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
     }
@@ -65,6 +73,7 @@ class WidgetCallActivity : ComponentActivity() {
                 val oneShotError by callViewModel.oneShotCallError.collectAsStateWithLifecycle()
                 val callbackError by callViewModel.callbackError.collectAsStateWithLifecycle()
 
+                // One-shot call: dial the returned number.
                 LaunchedEffect(oneShotResult) {
                     if (oneShotResult.isNotEmpty()) {
                         PhoneCallLauncher.launch(
@@ -77,6 +86,7 @@ class WidgetCallActivity : ComponentActivity() {
                     }
                 }
 
+                // Callback placed: the network no longer has anything to return, just confirm.
                 LaunchedEffect(Unit) {
                     callViewModel.widgetCallbackSucceeded.collect { recipient ->
                         Toast.makeText(
@@ -92,6 +102,7 @@ class WidgetCallActivity : ComponentActivity() {
                     val message = oneShotError?.takeIf { it.isNotEmpty() }
                         ?: callbackError?.takeIf { it.isNotEmpty() }
                     if (message != null) {
+                        // Show first: resetting flips this effect's keys and cancels it.
                         showErrorAndFinish(message)
                         callViewModel.resetOneShotCallError()
                         callViewModel.resetCallbackError()
@@ -123,6 +134,7 @@ class WidgetCallActivity : ComponentActivity() {
             }
         }
 
+        // No-ops on recreation — the guard lives in the ViewModel, which outlives this Activity.
         callViewModel.dispatchWidgetTileAction(tileId)
     }
 

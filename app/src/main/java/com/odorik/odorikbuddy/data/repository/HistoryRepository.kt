@@ -7,15 +7,22 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
+/**
+ * Repository for fetching call and SMS history from the Odorik API.
+ */
 class HistoryRepository @Inject constructor(
     private val apiService: OdorikApi,
     private val historyDao: HistoryDao,
     private val userRepository: UserRepository
 ) {
 
+    /**
+     * Fetches both call and SMS history using centrally managed credentials.
+     */
     suspend fun getCombinedHistory(from: String, to: String): List<HistoryItem> = coroutineScope {
         val (user, pass) = userRepository.requireCredentials()
 
+        // Fetch calls and SMS in parallel
         val callsDeferred = async { apiService.getCallHistory(user, pass, from, to) }
         val smsDeferred = async { apiService.getSmsHistory(user, pass, from, to) }
         
@@ -29,19 +36,31 @@ class HistoryRepository @Inject constructor(
     }
 
     companion object {
+        /** Tags each item with its source endpoint and sorts newest first. */
         fun mergeAndTag(calls: List<HistoryItem>, sms: List<HistoryItem>): List<HistoryItem> =
             (calls.map { it.copy(eventTypeRaw = "call") } + sms.map { it.copy(eventTypeRaw = "sms") })
                 .sortedByDescending { it.date }
     }
 
+    /**
+     * Inserts history items into local database for offline caching.
+     */
     suspend fun insertHistory(items: List<HistoryItem>) {
         historyDao.insertHistory(items)
     }
 
+    /**
+     * Retrieves cached history from local database for offline use.
+     */
     suspend fun getCachedHistory(): List<HistoryItem> {
         return historyDao.getAllHistory()
     }
 
+    /**
+     * Deletes cached rows older than [minIsoDate]. The `date` column is a
+     * lexicographically ordered ISO-8601 string, so the cutoff is approximate
+     * across timezone offsets — good enough for cache retention.
+     */
     suspend fun pruneHistoryBefore(minIsoDate: String) {
         historyDao.deleteOlderThan(minIsoDate)
     }

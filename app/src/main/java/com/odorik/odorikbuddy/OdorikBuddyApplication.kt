@@ -23,11 +23,13 @@ class OdorikBuddyApplication : Application(), androidx.work.Configuration.Provid
             .build()
 
     override fun attachBaseContext(base: Context) {
+        // The main locale switching is handled via AppCompatDelegate; this covers first launch.
         super.attachBaseContext(LanguagePreferences.wrapContext(base))
     }
 
     override fun onCreate() {
         super.onCreate()
+        // Schedule update checking work if enabled
         updateWorkManager.scheduleUpdateCheck()
     }
 }

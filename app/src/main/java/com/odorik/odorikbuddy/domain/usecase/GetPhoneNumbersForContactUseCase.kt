@@ -5,6 +5,12 @@ import android.provider.ContactsContract
 import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import javax.inject.Inject
 
+/**
+ * Removes numbers that differ only in formatting (spaces, "+" vs "00", or a Czech
+ * number with vs without +420). Apps like WhatsApp add their own copy of a contact's
+ * number in a different spelling. The special prefix is part of the key, so
+ * "*087 777…" and "777…" stay separate. Keeps the first spelling seen.
+ */
 internal fun distinctPhoneNumbers(numbers: List<String>): List<String> =
     numbers.distinctBy { number ->
         val parsed = PhoneNumberUtils.parsePhoneNumber(number)
@@ -22,6 +28,7 @@ class GetPhoneNumbersForContactUseCase @Inject constructor() {
         val numbers = mutableListOf<String>()
         var displayName = ""
 
+        // Get display name
         contentResolver.query(
             ContactsContract.Contacts.CONTENT_URI,
             null,
@@ -35,6 +42,7 @@ class GetPhoneNumbersForContactUseCase @Inject constructor() {
             }
         }
 
+        // Get phone numbers for this contact
         contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
             null,

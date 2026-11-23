@@ -60,8 +60,17 @@ import java.time.temporal.TemporalAdjusters
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangePickerScreen(navController: NavController) {
-    var startDate by remember { mutableStateOf(LocalDate.now().minusDays(6)) }
-    var endDate by remember { mutableStateOf(LocalDate.now()) }
+    // Start on the range the dashboard shows (it puts it on its own back-stack entry first);
+    // fall back to the last 7 days.
+    val initial = remember {
+        val handle = navController.previousBackStackEntry?.savedStateHandle
+        val start = handle?.get<Long>(PICKER_INITIAL_START)?.let(LocalDate::ofEpochDay)
+        val end = handle?.get<Long>(PICKER_INITIAL_END)?.let(LocalDate::ofEpochDay)
+        if (start != null && end != null && !start.isAfter(end)) start to end
+        else LocalDate.now().minusDays(6) to LocalDate.now()
+    }
+    var startDate by remember { mutableStateOf(initial.first) }
+    var endDate by remember { mutableStateOf(initial.second) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -90,6 +99,7 @@ fun DateRangePickerScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+            // Predefined period buttons
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()

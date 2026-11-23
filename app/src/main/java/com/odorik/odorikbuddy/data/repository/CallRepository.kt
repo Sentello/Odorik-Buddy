@@ -6,12 +6,14 @@ import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Callback (call-through) endpoint. */
 @Singleton
 class CallRepository @Inject constructor(
     private val odorikApi: OdorikApi,
     private val userRepository: UserRepository
 ) {
 
+    /** Orders a callback. Plain-text "error…" bodies are failures. */
     suspend fun callback(callerId: String, recipient: String, line: String): Result<String> {
         return try {
             val (userId, password) = userRepository.requireCredentials()

@@ -11,8 +11,17 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.R
 
+/**
+ * Centralized helper for launching phone calls or the dialer.
+ *
+ * This reduces duplication between CallScreen (one-shot flow) and WidgetCallActivity.
+ */
 object PhoneCallLauncher {
 
+    /**
+     * Launches either ACTION_CALL (if direct calls enabled + permission granted)
+     * or falls back to ACTION_DIAL.
+     */
     fun launch(
         context: Context,
         phoneNumber: String,
@@ -23,6 +32,7 @@ object PhoneCallLauncher {
             Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
 
+        // Uri.fromParts encodes special characters (#, spaces) that break Uri.parse("tel:...")
         val uri = Uri.fromParts("tel", phoneNumber, null)
         val intent = if (directCallsEnabled && hasCallPermission) {
             Intent(Intent.ACTION_CALL, uri)

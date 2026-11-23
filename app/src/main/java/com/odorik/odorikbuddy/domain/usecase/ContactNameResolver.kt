@@ -11,6 +11,10 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Shared contact name resolution with O(1) exact match, cheap suffix fallback,
+ * and a per-number cache. Heavy contact loading always runs on [Dispatchers.IO].
+ */
 @Singleton
 class ContactNameResolver @Inject constructor(
     private val loadContactsUseCase: LoadContactsUseCase
@@ -23,8 +27,10 @@ class ContactNameResolver @Inject constructor(
     @Volatile
     private var lastLoadTimestampMs: Long = 0L
 
+    /** Skip full address-book re-read if we loaded recently (saves IO when switching tabs). */
     private val reloadThrottleMs = 60_000L
 
+    /** Where the address book is read. Tests swap it for their own dispatcher. */
     internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     suspend fun loadContacts(contentResolver: ContentResolver, force: Boolean = false) {
@@ -38,12 +44,19 @@ class ContactNameResolver @Inject constructor(
             loadContactsUseCase(contentResolver)
         }
         synchronized(contactNameCache) {
+            // Clear before publishing: collectors may run inline on the assignment below
+            // (Dispatchers.Main.immediate) and must not see entries computed against the old map.
             contactNameCache.clear()
             lastLoadTimestampMs = System.currentTimeMillis()
             _contactsMap.value = contacts
         }
     }
 
+    /**
+     * Resolves a phone number to a contact display name.
+     * Fast path: exact map key after normalize. Slow path: string suffix match only
+     * (no libphonenumber match loop). Results are cached per input string.
+     */
     fun getContactName(number: String): String {
         if (number.isBlank()) return number
 
@@ -53,9 +66,11 @@ class ContactNameResolver @Inject constructor(
 
         val contacts = _contactsMap.value
         val resolved = resolveContactName(number, contacts)
+        // "Contacts not loaded yet" is not an answer worth remembering.
         if (contacts.isEmpty()) return resolved
 
         synchronized(contactNameCache) {
+            // Skip if a newer map was published while we were resolving.
             if (_contactsMap.value === contacts) contactNameCache[number] = resolved
         }
         return resolved
@@ -66,6 +81,7 @@ class ContactNameResolver @Inject constructor(
 
         val parsedInput = PhoneNumberUtils.parsePhoneNumber(number)
 
+        // 1. FAST PATH: O(1) exact match on normalized storage key
         val exactName = contacts[parsedInput.normalizedNumber]
         if (exactName != null) {
             return if (parsedInput.specialPrefix.isNotEmpty()) {
@@ -75,6 +91,7 @@ class ContactNameResolver @Inject constructor(
             }
         }
 
+        // 2. SLOW PATH: cheap suffix match (string only — no areNumbersEqual / libphonenumber)
         val n1 = parsedInput.normalizedNumber.replace("+", "")
         if (n1.length <= 8) return number
 

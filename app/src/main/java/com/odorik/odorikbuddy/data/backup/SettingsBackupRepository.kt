@@ -4,13 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.BuildConfig
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.AppTheme
 import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.local.NavIconStyle
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.local.ThemeMode
 import com.odorik.odorikbuddy.data.local.TileDao
@@ -28,10 +28,12 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** What a backup file contains, for the import confirmation dialog. */
 data class BackupPreview(
     val tileCount: Int,
     val createdAt: String?,
     val backupUsername: String?,
+    /** The backup was made with a different Odorik account than the one logged in. */
     val differentAccount: Boolean
 )
 
@@ -46,12 +48,19 @@ sealed interface ReadResult {
 data class ImportOptions(val tiles: Boolean, val settings: Boolean)
 
 data class ImportReport(
+    /** Null when tiles were not part of the import. */
     val tilesImported: Int?,
+    /** Direct calls were on in the backup but this phone lacks the phone permission. */
     val directCallsSkipped: Boolean,
-    val autoUpdateSkipped: Boolean,
+    /** Language the UI must switch to (recreates the activity), or null if unchanged. */
     val languageToApply: String?
 )
 
+/**
+ * Export and import of the app setup (tiles + settings) as a JSON file.
+ * The password is never read or written here; see IMPLEMENTATION_PLAN_SETTINGS_BACKUP.md.
+ * Nothing from the backup is logged: it holds personal phone numbers.
+ */
 @Singleton
 class SettingsBackupRepository @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -76,7 +85,8 @@ class SettingsBackupRepository @Inject constructor(
                 themeMode = themeManager.themeMode.value.name,
                 appTheme = themeManager.appTheme.value.name,
                 language = localeManager.getPreferredLanguage(),
-                tileSize = TileSize.fromKey(appPreferences.getString(AppPreferences.KEY_TILE_SIZE)).name
+                tileSize = TileSize.fromKey(appPreferences.getString(AppPreferences.KEY_TILE_SIZE)).name,
+                navIconStyle = themeManager.navIconStyle.value.name
             ),
             appSettings = BackupAppSettings(
                 historyPeriodDays = appPreferences.historyPeriodDays,
@@ -96,10 +106,12 @@ class SettingsBackupRepository @Inject constructor(
         )
     }
 
+    /** Writes a backup to [uri] (from the system "Save as" picker). Returns the tile count. */
     suspend fun writeBackup(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val backup = createBackup()
             val json = BackupCodec.encode(backup)
+            // "wt" truncates: overwriting a longer old file must not leave its tail behind.
             val stream = context.contentResolver.openOutputStream(uri, "wt")
                 ?: return@withContext Result.failure(IOException("No output stream"))
             stream.use { it.write(json.toByteArray(Charsets.UTF_8)) }
@@ -113,10 +125,12 @@ class SettingsBackupRepository @Inject constructor(
         }
     }
 
+    /** Reads and validates a backup file picked by the user. Changes nothing. */
     suspend fun readBackup(uri: Uri): ReadResult = withContext(Dispatchers.IO) {
         val bytes = try {
             val stream = context.contentResolver.openInputStream(uri)
                 ?: return@withContext ReadResult.ReadFailed
+            // Read one byte past the limit to tell "exactly at the limit" from "too large".
             stream.use { it.readNBytesCompat(BackupCodec.MAX_BYTES + 1) }
         } catch (e: IOException) {
             Log.w(TAG, "Backup read failed", e)
@@ -147,6 +161,11 @@ class SettingsBackupRepository @Inject constructor(
         }
     }
 
+    /**
+     * Applies a validated backup. Invalid or missing values are skipped, never guessed.
+     * The language is not applied here: it recreates the activity, so the UI does it last
+     * from [ImportReport.languageToApply].
+     */
     suspend fun applyBackup(backup: SettingsBackup, options: ImportOptions): ImportReport {
         var tilesImported: Int? = null
         if (options.tiles) {
@@ -157,13 +176,14 @@ class SettingsBackupRepository @Inject constructor(
         }
 
         var directCallsSkipped = false
-        var autoUpdateSkipped = false
         var languageToApply: String? = null
         if (options.settings) {
             backup.display?.let { display ->
+                // ThemeManager exposes Compose state: write it on the main thread.
                 withContext(Dispatchers.Main) {
                     display.themeMode.toEnumOrNull<ThemeMode>()?.let(themeManager::setThemeMode)
                     display.appTheme.toEnumOrNull<AppTheme>()?.let(themeManager::setAppTheme)
+                    display.navIconStyle.toEnumOrNull<NavIconStyle>()?.let(themeManager::setNavIconStyle)
                 }
                 display.tileSize
                     ?.takeIf { key -> TileSize.values().any { it.name == key } }
@@ -176,16 +196,12 @@ class SettingsBackupRepository @Inject constructor(
                 app.historyPeriodDays
                     ?.takeIf { it in HISTORY_PERIODS }
                     ?.let { appPreferences.historyPeriodDays = it }
-                app.autoUpdateEnabled?.let { enabled ->
-                    if (enabled && !hasNotificationPermission()) {
-                        updateWorkManager.setAutoUpdateEnabled(false)
-                        autoUpdateSkipped = true
-                    } else {
-                        updateWorkManager.setAutoUpdateEnabled(enabled)
-                    }
-                }
+                // No permission check: without notifications a new version still shows on
+                // the Dashboard, and Settings points out that notifications are off.
+                app.autoUpdateEnabled?.let(updateWorkManager::setAutoUpdateEnabled)
                 app.directCallsEnabled?.let { enabled ->
                     if (enabled && !hasCallPermission()) {
+                        // Turning it on in Settings asks for the permission; import can't.
                         appPreferences.directCallsEnabled = false
                         directCallsSkipped = true
                     } else {
@@ -207,13 +223,8 @@ class SettingsBackupRepository @Inject constructor(
             }
         }
 
-        return ImportReport(tilesImported, directCallsSkipped, autoUpdateSkipped, languageToApply)
+        return ImportReport(tilesImported, directCallsSkipped, languageToApply)
     }
-
-    private fun hasNotificationPermission(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-            PackageManager.PERMISSION_GRANTED
 
     private fun hasCallPermission(): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) ==
@@ -222,6 +233,7 @@ class SettingsBackupRepository @Inject constructor(
     companion object {
         private const val TAG = "SettingsBackup"
 
+        // AppPreferences string keys (they have no constants there yet).
         private const val KEY_PHONE_NUMBER = "phone_number"
         private const val KEY_CALLER_ID = "caller_id"
         private const val KEY_RECIPIENT = "recipient"
@@ -232,8 +244,10 @@ class SettingsBackupRepository @Inject constructor(
 
         private val SUPPORTED_LANGUAGES = setOf("en", "cs")
 
+        /** The choices offered in Settings > History period. */
         private val HISTORY_PERIODS = setOf(7, 30, 90, 180, 365)
 
+        /** Every item must be a known Calls tab id; duplicates are refused. */
         internal fun isValidTabOrder(order: String): Boolean {
             val items = order.split(",").map { it.trim() }.filter { it.isNotEmpty() }
             return items.isNotEmpty() &&
@@ -244,6 +258,7 @@ class SettingsBackupRepository @Inject constructor(
         private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
             this?.let { name -> enumValues<T>().firstOrNull { it.name == name } }
 
+        /** InputStream.readNBytes is API 33+; minSdk is 24. */
         private fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
             val out = java.io.ByteArrayOutputStream()
             val buffer = ByteArray(8 * 1024)

@@ -21,6 +21,7 @@ class TilesViewModel @Inject constructor(
     val directCallsEnabled: Boolean
         get() = appPreferences.directCallsEnabled
 
+    /** Settings > Tile size. Read on each composition, so a change shows on return. */
     val tileSize: TileSize
         get() = TileSize.fromKey(appPreferences.getString(AppPreferences.KEY_TILE_SIZE))
 

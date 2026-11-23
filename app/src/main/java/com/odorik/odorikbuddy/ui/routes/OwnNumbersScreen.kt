@@ -201,6 +201,7 @@ fun OwnNumbersScreen(
                     )
                 }
                 is BaseNumbersViewModel.UiState.Success -> {
+                    // Hoist responsive calculations out of the LazyColumn for performance
                     val baseSpacing = LocalAppDimens.current.spacing
                     val cardPadding = LocalAppDimens.current.cardPadding
 
@@ -297,6 +298,8 @@ fun OwnNumbersScreen(
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
+                        // Text keyboard on purpose: a routing target can be a SIP name or a
+                        // "!" fallback (odorik.cz/w/specialni_cisla), which the dial pad lacks.
                         trailingIcon = {
                             PhoneFieldTrailingIcons(
                                 value = dialogRingingNumber,
@@ -380,6 +383,7 @@ fun OwnNumbersScreen(
     }
 
     LaunchedEffect(error) {
+        // Only show snackbar if NOT in full-screen error state
         if (uiState !is BaseNumbersViewModel.UiState.Error && error != null) {
             snackbarHostState.showSnackbar(error!!)
             viewModel.clearError()
@@ -401,6 +405,8 @@ fun OwnNumberItem(
     baseSpacing: androidx.compose.ui.unit.Dp,
     onAddRule: () -> Unit
 ) {
+    // Deleting a routing rule changes how the number behaves on Odorik's side and cannot be
+    // undone, so it is confirmed — matching the tile deletion flow.
     var routeIdToDelete by remember { mutableStateOf<Long?>(null) }
 
     ElevatedCard(
@@ -465,6 +471,7 @@ fun OwnNumberItem(
                                 color = ScreenAccents.Settings.main()
                             )
                         } else {
+                            // Extract to avoid nested LazyColumn performance problems
                             Column(modifier = Modifier.heightIn(max = 300.dp)) {
                                 routesForThisNumber.forEach { route ->
                                     val sourceName = viewModel.getContactName(route.sourceNumber)

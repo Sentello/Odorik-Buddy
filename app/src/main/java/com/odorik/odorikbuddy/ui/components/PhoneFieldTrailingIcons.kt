@@ -13,6 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.odorik.odorikbuddy.R
 
+/**
+ * Trailing icons for a phone number field: a clear button (only while the field has text)
+ * followed by the contact picker button.
+ */
 @Composable
 fun PhoneFieldTrailingIcons(
     value: String,

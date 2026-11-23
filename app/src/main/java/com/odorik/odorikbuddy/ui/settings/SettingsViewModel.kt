@@ -14,6 +14,7 @@ import com.odorik.odorikbuddy.data.backup.SettingsBackupRepository
 import com.odorik.odorikbuddy.data.local.AppPreferences
 import com.odorik.odorikbuddy.data.local.AppTheme
 import com.odorik.odorikbuddy.data.local.LocaleManager
+import com.odorik.odorikbuddy.data.local.NavIconStyle
 import com.odorik.odorikbuddy.data.local.ThemeManager
 import com.odorik.odorikbuddy.data.local.ThemeMode
 import com.odorik.odorikbuddy.data.model.Line
@@ -38,9 +39,11 @@ class SettingsViewModel @Inject constructor(
     private val localeManager: LocaleManager,
     private val appPreferences: AppPreferences,
     private val updateWorkManager: UpdateWorkManager,
-    private val settingsBackupRepository: SettingsBackupRepository
+    private val settingsBackupRepository: SettingsBackupRepository,
+    private val simRepository: com.odorik.odorikbuddy.data.repository.SimRepository
 ) : ViewModel() {
 
+    /** One-shot results of export / import, shown as a snackbar or toast. */
     sealed interface BackupUiEvent {
         data class Exported(val uri: Uri, val tileCount: Int) : BackupUiEvent
         data object ExportFailed : BackupUiEvent
@@ -50,6 +53,7 @@ class SettingsViewModel @Inject constructor(
 
     val themeMode: State<ThemeMode> = themeManager.themeMode
     val appTheme: State<AppTheme> = themeManager.appTheme
+    val navIconStyle: State<NavIconStyle> = themeManager.navIconStyle
 
     private val _language = MutableStateFlow(localeManager.getPreferredLanguage())
     val language: StateFlow<String> = _language.asStateFlow()
@@ -80,8 +84,31 @@ class SettingsViewModel @Inject constructor(
     )
     val tileSize: StateFlow<TileSize> = _tileSize.asStateFlow()
 
+    /**
+     * Phone numbers of the account's Odorik SIM cards. Empty = no SIM section at all (agreed
+     * with the user: no "you have no SIM" message, nothing to hide). Cached so the section
+     * doesn't flicker; refreshed on every Settings visit; an error keeps the cached value.
+     */
+    private val _simNumbers = MutableStateFlow(readCachedSimNumbers())
+    val simNumbers: StateFlow<List<String>> = _simNumbers.asStateFlow()
+
     init {
         getLines()
+        refreshSims()
+    }
+
+    private fun readCachedSimNumbers(): List<String> =
+        appPreferences.getString(AppPreferences.KEY_SIM_NUMBERS).orEmpty()
+            .split(',').map { it.trim() }.filter { it.isNotEmpty() }
+
+    fun refreshSims() {
+        viewModelScope.launch {
+            simRepository.getSimCards().onSuccess { sims ->
+                val numbers = sims.mapNotNull { it.phoneNumber?.takeIf(String::isNotBlank) }
+                appPreferences.saveString(AppPreferences.KEY_SIM_NUMBERS, numbers.joinToString(","))
+                _simNumbers.value = numbers
+            }
+        }
     }
 
     private fun getHistoryPeriod(): Int = appPreferences.historyPeriodDays
@@ -96,6 +123,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setAppTheme(theme: AppTheme) {
         themeManager.setAppTheme(theme)
+    }
+
+    fun setNavIconStyle(style: NavIconStyle) {
+        themeManager.setNavIconStyle(style)
     }
 
     fun setLanguage(lang: String) {
@@ -154,10 +185,12 @@ class SettingsViewModel @Inject constructor(
         _selectedLine.value = null
     }
 
+    // --- Settings backup ---
 
     private val _backupEvents = Channel<BackupUiEvent>(Channel.BUFFERED)
     val backupEvents = _backupEvents.receiveAsFlow()
 
+    /** A read and validated backup waiting for the user's confirmation. */
     private val _pendingImport = MutableStateFlow<ReadResult.Ok?>(null)
     val pendingImport: StateFlow<ReadResult.Ok?> = _pendingImport.asStateFlow()
 
@@ -208,6 +241,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /** Re-reads every value this screen caches, after an import changed them underneath. */
     private fun refreshFromPreferences() {
         _historyPeriod.value = getHistoryPeriod()
         _phoneNumber.value = getPhoneNumber()
@@ -218,6 +252,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun logout() {
+        appPreferences.clearString(AppPreferences.KEY_SIM_NUMBERS)
         userRepository.clearCredentials()
         viewModelScope.launch { _logoutEvent.send(Unit) }
     }

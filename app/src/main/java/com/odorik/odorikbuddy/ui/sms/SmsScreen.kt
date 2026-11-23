@@ -19,6 +19,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -91,6 +92,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -104,7 +106,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.window.core.layout.WindowHeightSizeClass
 import com.odorik.odorikbuddy.R
-import com.odorik.odorikbuddy.ui.components.AppFab
 import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.components.PhoneFieldTrailingIcons
 import com.odorik.odorikbuddy.ui.components.constrainedContentWidth
@@ -316,6 +317,7 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     var contentVisible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
@@ -375,17 +377,6 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
     }
     
     Scaffold(
-        floatingActionButton = {
-            AppFab(
-                icon = Icons.AutoMirrored.Filled.Send,
-                contentDescription = stringResource(R.string.send_sms),
-                onClick = { if (!isSending) viewModel.sendSms(recipient, message, selectedSender) },
-                containerColor = ScreenAccents.Sms.main(),
-                contentColor = Color.White,
-                modifier = Modifier.imePadding(),
-                loading = isSending
-            )
-        },
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Column(
@@ -553,14 +544,52 @@ fun SmsScreen(viewModel: SmsViewModel = hiltViewModel()) {
                                 }
                                 CircularCharacterCounter(charCount = charCount, segments = segments, onClick = { showMultipartInfo = true })
                             }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Full-width send button under the message, the same as "Order call" on Calls.
+                            Button(
+                                onClick = {
+                                    // Close the keyboard so the result below stays visible
+                                    focusManager.clearFocus()
+                                    viewModel.sendSms(recipient, message, selectedSender)
+                                },
+                                enabled = !isSending,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = ScreenAccents.Sms.main(),
+                                    contentColor = Color.White,
+                                    disabledContainerColor = ScreenAccents.Sms.main().copy(alpha = 0.6f),
+                                    disabledContentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(vertical = 14.dp)
+                            ) {
+                                if (isSending) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Send,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(text = stringResource(R.string.send_sms), fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
+                    // A send failure wins over a background allowed-senders failure.
                     val activeError = sendError ?: sendersError
                     if (activeError != null) ApiMessage(response = activeError, isError = true, visible = true)
                     if (sendResult != null) ApiMessage(response = sendResult!!, isError = false, visible = true)
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }

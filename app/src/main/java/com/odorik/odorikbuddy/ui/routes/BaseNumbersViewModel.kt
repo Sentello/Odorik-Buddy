@@ -20,6 +20,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * Shared logic for the two "numbers + routing rules" screens
+ * (shared public numbers vs own public numbers). Subclasses provide the
+ * number source; everything else — routes map, dialog state, retry,
+ * create/delete — is identical and lives here.
+ */
 abstract class BaseNumbersViewModel<T : Any>(
     val publicNumbersDelegate: PublicNumbersDelegate,
     private val getRoutesForNumberUseCase: GetRoutesForNumberUseCase,
@@ -35,10 +41,13 @@ abstract class BaseNumbersViewModel<T : Any>(
         data class Error(val message: String) : UiState<Nothing>()
     }
 
+    /** Fetches the screen's number list (with the delegate's retry applied by the caller). */
     protected abstract suspend fun fetchNumbers(): Result<List<T>>
 
+    /** The routable public number of one list item. */
     protected abstract fun publicNumberOf(item: T): String
 
+    /** Routes screen exposes a replace-by-source checkbox; Own numbers does not. */
     protected open fun dialogReplaceBySourceValue(): Boolean = false
 
     private val _uiState = MutableStateFlow<UiState<List<T>>>(UiState.Loading)
@@ -185,6 +194,11 @@ abstract class BaseNumbersViewModel<T : Any>(
         }
     }
 
+    /**
+     * Reads phone numbers for a picked contact off the main thread. A ContentResolver query
+     * against the contacts provider is disk I/O and visibly janks the picker on large
+     * address books.
+     */
     suspend fun getPhoneNumbersFromContact(
         contentResolver: ContentResolver,
         contactUri: Uri

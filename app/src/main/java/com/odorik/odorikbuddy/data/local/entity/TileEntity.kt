@@ -10,11 +10,14 @@ data class TileEntity(
     val position: Int,
     val label: String,
     val recipient: String,
-    val callType: TileCallType,
-    val lineId: String?,
-    val callerId: String?,
-    val useLineAsCallerId: Boolean = false,
-    val color: Long? = null,
-    val textColor: Long? = null,
+    val callType: TileCallType, // stored as "CALLBACK" or "ONESHOT"
+    val lineId: String?, // For callback
+    val callerId: String?, // For callback
+    val useLineAsCallerId: Boolean = false, // For oneshot
+    val color: Long? = null, // Color as Long (ARGB) - Background
+    val textColor: Long? = null, // Text Color as Long (ARGB)
+    // Unused. The widget keeps its own style per widget (see TileWidgetStyle). The field
+    // stays only because the database column exists; removing it would need a migration
+    // that rebuilds the tiles table.
     val widgetStyle: String = "SQUARE"
 )

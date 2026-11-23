@@ -24,6 +24,11 @@ class PublicNumbersDelegate @Inject constructor(
         contactNameResolver.loadContacts(contentResolver)
     }
 
+    /**
+     * Routes screens display "Name (formatted number)"; unmatched numbers are
+     * returned unchanged. Name lookup and caching are shared with the rest of
+     * the app via [ContactNameResolver].
+     */
     fun getContactName(number: String): String {
         val resolved = contactNameResolver.getContactName(number)
         if (resolved == number) return number

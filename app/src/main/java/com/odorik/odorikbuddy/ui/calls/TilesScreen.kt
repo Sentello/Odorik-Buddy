@@ -1,5 +1,6 @@
 package com.odorik.odorikbuddy.ui.calls
 
+// Imports for Contact Picker and other functionalities
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,7 +75,7 @@ import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 @Composable
 fun TilesScreen(
     viewModel: TilesViewModel = hiltViewModel(),
-    callViewModel: CallViewModel,
+    callViewModel: CallViewModel, // Injected from CallScreen
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -82,6 +83,7 @@ fun TilesScreen(
     val lines by callViewModel.lines.collectAsState()
     val contactsMap by viewModel.contactsMap.collectAsState()
     
+    // Call Status States from CallViewModel
     val callResult by callViewModel.callResult.collectAsState()
     val callbackError by callViewModel.callbackError.collectAsState()
     val linesError by callViewModel.linesError.collectAsState()
@@ -90,20 +92,25 @@ fun TilesScreen(
     val isOneShotCallLoading by callViewModel.isOneShotCallLoading.collectAsState()
     val isCallbackLoading by callViewModel.isCallbackLoading.collectAsState()
     
+    // rememberSaveable (and the tile's id, not the tile): an open add/edit dialog
+    // survives a rotation instead of closing and losing what was typed.
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
     var tileToEditId by rememberSaveable { mutableStateOf<Int?>(null) }
     val tileToEdit = tiles.find { it.id == tileToEditId }
     var tileToDelete by remember { mutableStateOf<TileEntity?>(null) }
     var isEditMode by rememberSaveable { mutableStateOf(false) }
 
+    // The tile whose call is being placed; it shows a spinner while the request runs.
     var callingTileId by remember { mutableStateOf<Int?>(null) }
     
+    // Explicitly destructure state values to use in Composable context safely
     val currentCallResult = callResult
     val currentCallbackError = callbackError
     val currentLinesError = linesError
     val currentOneShotCallResult = oneShotCallResult
     val currentOneShotCallError = oneShotCallError
 
+    // Animation state
     var contentVisible by remember { mutableStateOf(false) }
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -151,7 +158,10 @@ fun TilesScreen(
                             },
                             size = tileSize
                         )
+                        // Feedback messages. Pinned above the grid (not inside it), so the result of a
+                        // call is visible even when the tapped tile is far down the list.
                         val activeError = when {
+                            // Action errors win over the background lines-fetch error.
                             !currentOneShotCallError.isNullOrEmpty() -> currentOneShotCallError
                             !currentCallbackError.isNullOrEmpty() -> currentCallbackError
                             else -> currentLinesError
@@ -174,6 +184,7 @@ fun TilesScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
 
+                                     // OneShot Call response messages
                                     if (currentOneShotCallResult.isNotEmpty()) {
                                          AnimatedVisibility(
                                             visible = true,
@@ -236,6 +247,9 @@ fun TilesScreen(
                                 items(tiles, key = { it.id }) { tile ->
                                     TileItem(
                                         tile = tile,
+                                        // Keyed on contactsMap: when the contacts finish loading,
+                                        // the names update in place and the grid keeps its scroll
+                                        // position (it used to be rebuilt from scratch).
                                         contactName = remember(contactsMap, tile.recipient) {
                                             viewModel.getContactName(tile.recipient)
                                         },
@@ -246,11 +260,13 @@ fun TilesScreen(
                                             (isCallbackLoading || isOneShotCallLoading),
                                         onClick = {
                                             if (isEditMode) {
+                                                // While editing, a tap edits the tile. It must never
+                                                // place a (paid) call by accident.
                                                 tileToEditId = tile.id
                                             } else if (tile.callType == TileCallType.CALLBACK) {
                                                 callingTileId = tile.id
                                                 callViewModel.makeCall(
-                                                    callerId = tile.callerId ?: "",
+                                                    callerId = tile.callerId ?: "", // Pass empty if not set
                                                     recipient = tile.recipient,
                                                     line = tile.lineId ?: ""
                                                 )
@@ -272,6 +288,7 @@ fun TilesScreen(
                                     )
                                 }
                             
+                                // Spacer for FAB
                                 item {
                                     Spacer(modifier = Modifier.height(FabListBottomSpacing))
                                 }
@@ -306,6 +323,7 @@ fun TilesScreen(
             }
         }
         
+        // Auto-dismiss Call result after delay
         LaunchedEffect(currentCallResult) {
             if (currentCallResult.isNotEmpty() && !currentCallResult.startsWith("error")) {
                 kotlinx.coroutines.delay(5000L)
@@ -388,7 +406,7 @@ fun EmptyTilesState(onAddClick: () -> Unit) {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.no_tiles_yet),
+            text = stringResource(R.string.no_tiles_yet), // Needs to be added to strings.xml or use generic text
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold

@@ -3,6 +3,7 @@ package com.odorik.odorikbuddy.data.backup
 import com.odorik.odorikbuddy.data.local.entity.TileCallType
 import com.odorik.odorikbuddy.data.local.entity.TileEntity
 
+/** Converts tiles between the database and the backup file. Pure, unit-tested. */
 object BackupTileMapper {
 
     fun toBackup(tile: TileEntity) = BackupTile(
@@ -16,8 +17,15 @@ object BackupTileMapper {
         useLineAsCallerId = tile.useLineAsCallerId,
         color = tile.color,
         textColor = tile.textColor
+        // widgetStyle is an unused column (see TileEntity) and is not exported.
     )
 
+    /**
+     * Backup tiles to database rows. Original ids are kept so tile widgets on the same phone
+     * keep working; a missing, invalid or repeated id becomes 0 and Room assigns a new one.
+     * Positions are renumbered 0..n-1 in the backup's order.
+     * Expects tiles already validated by [BackupCodec.decode] (label and recipient present).
+     */
     fun toEntities(tiles: List<BackupTile>): List<TileEntity> {
         val usedIds = mutableSetOf<Int>()
         return tiles

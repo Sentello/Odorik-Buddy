@@ -12,6 +12,7 @@ import com.odorik.odorikbuddy.data.repository.HistoryRepository
 import com.odorik.odorikbuddy.domain.usecase.ContactNameResolver
 import com.odorik.odorikbuddy.domain.usecase.GetLinesUseCase
 import com.odorik.odorikbuddy.model.HistoryItem
+import com.odorik.odorikbuddy.model.withoutInternalLineLegs
 import com.odorik.odorikbuddy.util.ApiDates
 import com.odorik.odorikbuddy.util.ErrorMessageUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -64,10 +65,10 @@ class HistoryViewModel @Inject constructor(
     private val _filterNumber = MutableStateFlow("")
     val filterNumber: StateFlow<String> = _filterNumber
 
-    private val _eventTypeFilter = MutableStateFlow("all")
+    private val _eventTypeFilter = MutableStateFlow("all") // "all", "call", "sms"
     val eventTypeFilter: StateFlow<String> = _eventTypeFilter
 
-    private val _eventDirectionFilter = MutableStateFlow("all")
+    private val _eventDirectionFilter = MutableStateFlow("all") // "all", "incoming", "outgoing"
     val eventDirectionFilter: StateFlow<String> = _eventDirectionFilter
 
     private val STALE_THRESHOLD = 5 * 60 * 1000L
@@ -76,14 +77,16 @@ class HistoryViewModel @Inject constructor(
     val contactsMap: StateFlow<Map<String, String>> = contactNameResolver.contactsMap
 
     init {
+        // Single load path: show Room cache quickly, then refresh from network if needed.
         viewModelScope.launch {
             fetchLinesInternal()
             fetchHistoryInternal(isRefresh = false)
         }
 
+        // When contacts finish loading later, re-attach names without re-fetching the API
         viewModelScope.launch {
             contactNameResolver.contactsMap
-                .drop(1)
+                .drop(1) // skip initial empty map
                 .collect {
                     reapplyContactNames()
                 }
@@ -114,12 +117,14 @@ class HistoryViewModel @Inject constructor(
                     _history.value = cachedDisplay
                     applyFilters()
                     _error.value = null
+                    // Fresh enough — skip network (in-process re-open within threshold)
                     if (lastUpdateTimestamp != 0L &&
                         System.currentTimeMillis() - lastUpdateTimestamp <= STALE_THRESHOLD
                     ) {
                         _isRefreshing.value = false
                         return
                     }
+                    // Otherwise fall through to network while cache is already visible
                 }
             }
 
@@ -131,6 +136,7 @@ class HistoryViewModel @Inject constructor(
 
                 val items = repository.getCombinedHistory(from, to)
                 repository.insertHistory(items)
+                // Keep the offline cache bounded to the selected history period
                 repository.pruneHistoryBefore(from)
                 items
             }
@@ -261,7 +267,9 @@ class HistoryViewModel @Inject constructor(
         return contactNameResolver.getContactName(number)
     }
 
-    private fun buildDisplayItems(result: List<HistoryItem>): List<HistoryDisplayItem> {
+    private fun buildDisplayItems(all: List<HistoryItem>): List<HistoryDisplayItem> {
+        // An incoming call ringing your own line is not a forwarding; show it once.
+        val result = all.withoutInternalLineLegs()
         val grouped = result.groupBy { it.redirectionParentId }
         val parents = grouped[null] ?: emptyList()
         val displayItems = mutableListOf<HistoryDisplayItem>()
@@ -289,6 +297,7 @@ class HistoryViewModel @Inject constructor(
             }
         }
 
+        // Children whose parent is missing from the fetched window
         val orphanChildren = result.filter { item ->
             val parentId = item.redirectionParentId
             parentId != null && parentId !in parentIds

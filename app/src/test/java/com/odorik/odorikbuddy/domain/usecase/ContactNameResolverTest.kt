@@ -29,6 +29,11 @@ class ContactNameResolverTest {
         return ContactNameResolver(useCase).apply { ioDispatcher = dispatcher }
     }
 
+    /**
+     * Cold start: the number is known before the contacts are loaded (same as CallViewModel).
+     * The unconfined dispatcher runs collectors inline on a StateFlow assignment, like
+     * Dispatchers.Main.immediate does on the main thread.
+     */
     @Test
     fun nameAppearsWhenContactsLoadAfterTheFieldIsObserved() = runTest(UnconfinedTestDispatcher()) {
         val resolver = resolverWith(mapOf(key to "Babička"), coroutineContext[CoroutineDispatcher]!!)

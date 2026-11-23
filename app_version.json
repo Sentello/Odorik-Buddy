@@ -1,5 +1,7 @@
 {
-  "version": "1.5.5",
-  "download_url": "https://forum.odorik.cz/viewtopic.php?p=48083#p48083",
-  "message": "K dispozici je aktualizace s novými funkcemi a opravami chyb."
+  "version": "1.6.0",
+  "download_url": "https://forum.odorik.cz/viewtopic.php?p=48088#p48088",
+  "message": "Nová verze 1.6.0: probíhající hovory, rychlé volby, SIM karta a nový vzhled.",
+  "message_cs": "Nová verze 1.6.0: probíhající hovory, rychlé volby, SIM karta a nový vzhled.",
+  "message_en": "New version 1.6.0: calls in progress, speed dials, SIM card and a new look."
 }

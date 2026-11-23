@@ -17,8 +17,8 @@ android {
         applicationId = "com.odorik.odorikbuddy"
         minSdk = 24
         targetSdk = 36
-        versionCode = 24
-        versionName = "1.5.5"
+        versionCode = 26
+        versionName = "1.6.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

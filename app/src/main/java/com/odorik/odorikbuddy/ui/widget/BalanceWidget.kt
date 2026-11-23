@@ -62,10 +62,14 @@ class BalanceWidget : GlanceAppWidget() {
         val isLoadingKey = booleanPreferencesKey("is_loading")
         val errorKey = stringPreferencesKey("error")
         
+        // Configuration Keys
         val backgroundKey = stringPreferencesKey("bg_style")
         val textColorKey = stringPreferencesKey("text_color")
         val textSizeKey = stringPreferencesKey("text_size")
+        /** Missing means "show", so widgets from before 1.5.6 keep their logo. */
+        val showLogoKey = booleanPreferencesKey("show_logo")
 
+        /** Error reds for dark and light backgrounds (Material 3 error tones 80 and 40). */
         private val LIGHT_RED = Color(0xFFFFB4AB)
         private val DARK_RED = Color(0xFFB3261E)
     }
@@ -90,6 +94,7 @@ class BalanceWidget : GlanceAppWidget() {
                 val bgStyle = prefs[backgroundKey] ?: "SYSTEM"
                 val textColorStyle = prefs[textColorKey] ?: "AUTO"
                 val textSizeStyle = prefs[textSizeKey] ?: "NORMAL"
+                val showLogo = prefs[showLogoKey] ?: true
 
                 WidgetContent(
                     balance = balance,
@@ -99,12 +104,17 @@ class BalanceWidget : GlanceAppWidget() {
                     bgStyle = bgStyle,
                     textColorStyle = textColorStyle,
                     textSizeStyle = textSizeStyle,
+                    showLogo = showLogo,
                     context = localizedContext
                 )
             }
         }
     }
 
+    /**
+     * The launcher's own intent, so the widget behaves like the app icon: a running app comes
+     * back where it was instead of opening a second copy.
+     */
     private fun openAppIntent(context: Context): Intent =
         (context.packageManager.getLaunchIntentForPackage(context.packageName)
             ?: Intent(context, com.odorik.odorikbuddy.MainActivity::class.java)
@@ -121,12 +131,15 @@ class BalanceWidget : GlanceAppWidget() {
         bgStyle: String,
         textColorStyle: String,
         textSizeStyle: String,
+        showLogo: Boolean,
         context: Context
     ) {
         val currencyFormatter = CurrencyFormatter(context)
         val language = context.resources.configuration.locales[0].language
 
+        // --- Style Resolution ---
         
+        // Background Color
         val bgColorProvider = when (bgStyle) {
             "SYSTEM" -> GlanceTheme.colors.surfaceVariant
             "TRANSPARENT" -> ColorProvider(Color.Transparent)
@@ -137,6 +150,7 @@ class BalanceWidget : GlanceAppWidget() {
             else -> GlanceTheme.colors.surface
         }
 
+        // Text Color — TRANSLUCENT defaults to black for readability on light wallpapers
         val mainTextColor = when (textColorStyle) {
             "WHITE" -> ColorProvider(Color.White)
             "BLACK" -> ColorProvider(Color.Black)
@@ -159,8 +173,10 @@ class BalanceWidget : GlanceAppWidget() {
              else -> GlanceTheme.colors.onSurfaceVariant
         }
 
+        // Error / stale colour. GlanceTheme's error colour follows the system theme, not the
+        // chosen background, so pick a red that is readable on the actual background.
         val errorTextColor = when {
-            bgStyle == "ODORIK" -> mainTextColor
+            bgStyle == "ODORIK" -> mainTextColor // red on red would be unreadable
             textColorStyle == "WHITE" -> ColorProvider(LIGHT_RED)
             textColorStyle == "BLACK" -> ColorProvider(DARK_RED)
             bgStyle == "DARK" -> ColorProvider(LIGHT_RED)
@@ -168,8 +184,10 @@ class BalanceWidget : GlanceAppWidget() {
             else -> GlanceTheme.colors.error
         }
 
+        // The last refresh failed but we still know a balance: show it, mark the time as stale.
         val isStale = !isLoading && error != null && balance != null
 
+        // Text Sizes
         val balanceFontSize = when (textSizeStyle) {
             "NORMAL" -> 22.sp
             "LARGE" -> 28.sp
@@ -191,20 +209,27 @@ class BalanceWidget : GlanceAppWidget() {
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    provider = ImageProvider(R.drawable.ic_odorik_logo),
-                    contentDescription = context.getString(R.string.a11y_widget_open_app),
-                    modifier = GlanceModifier
-                        .size(48.dp)
-                        .clickable(actionStartActivity(openAppIntent(context)))
-                )
+                // Logo: opens the app like its launcher icon. Its own click overrides the
+                // widget's refresh action, so the rest of the widget still refreshes.
+                // Without the logo the whole widget refreshes.
+                if (showLogo) {
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_buddy_symbol),
+                        contentDescription = context.getString(R.string.a11y_widget_open_app),
+                        modifier = GlanceModifier
+                            .size(48.dp)
+                            .clickable(actionStartActivity(openAppIntent(context)))
+                    )
 
-                Spacer(modifier = GlanceModifier.width(16.dp))
+                    Spacer(modifier = GlanceModifier.width(16.dp))
+                }
 
+                // Content Column
                 Column(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = GlanceModifier.fillMaxSize()
                 ) {
+                     // Balance / Loading / Error
                     if (isLoading) {
                         Text(
                             text = if (balance != null) {
@@ -219,6 +244,7 @@ class BalanceWidget : GlanceAppWidget() {
                             )
                         )
                     } else if (error != null && balance == null) {
+                        // Nothing to show yet; tapping the widget retries the fetch.
                         Text(
                             text = context.getString(R.string.widget_tap_to_retry),
                             style = TextStyle(
@@ -247,10 +273,12 @@ class BalanceWidget : GlanceAppWidget() {
                         )
                     }
                     
+                    // Timestamp (Small)
                     if (!isLoading && lastUpdated != null) {
                         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
                         val time = sdf.format(Date(lastUpdated))
                         Text(
+                            // The ⚠ keeps "may be outdated" visible without relying on colour.
                             text = if (isStale) "⚠ $time" else time,
                             style = TextStyle(
                                 color = if (isStale) errorTextColor else secondaryTextColor,

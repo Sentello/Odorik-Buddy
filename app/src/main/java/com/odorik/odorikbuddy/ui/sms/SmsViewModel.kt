@@ -48,9 +48,14 @@ class SmsViewModel @Inject constructor(
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending
 
+    /**
+     * Failures of the allowed-senders fetch. This is the only error that drives the
+     * automatic retry loop, so a retry can never wipe the result of a sent SMS.
+     */
     private val _sendersError = MutableStateFlow<String?>(null)
     val sendersError: StateFlow<String?> = _sendersError
 
+    /** Failures of the user-initiated send. Cleared only by the next send attempt. */
     private val _sendError = MutableStateFlow<String?>(null)
     val sendError: StateFlow<String?> = _sendError
 
@@ -65,6 +70,7 @@ class SmsViewModel @Inject constructor(
 
     private val retryBackoff = BackoffPolicy()
 
+    // --- State for inputs to support Contact Resolution ---
     private val _recipient = MutableStateFlow("")
     val recipient: StateFlow<String> = _recipient
 
@@ -73,6 +79,7 @@ class SmsViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
+        // Auto-manage error retry when error changes
         viewModelScope.launch {
             sendersError.collect { currentError ->
                 if (!currentError.isNullOrEmpty()) {
@@ -119,6 +126,7 @@ class SmsViewModel @Inject constructor(
     }
 
     private suspend fun fetchAllowedSendersInternal() {
+        // Clears only this operation's error — never the feedback of a send the user paid for.
         _sendersError.value = null
         val result = smsRepository.getAllowedSenders()
         result.onSuccess {
@@ -135,8 +143,8 @@ class SmsViewModel @Inject constructor(
         _isSending.value = true
         viewModelScope.launch {
             try {
-                _sendResult.value = null
-                _sendError.value = null
+                _sendResult.value = null // Clear previous result
+                _sendError.value = null  // Clear previous error
 
                 val result = smsRepository.sendSms(
                     recipient = recipient,
@@ -158,6 +166,9 @@ class SmsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Reads phone numbers for a picked contact off the main thread.
+     */
     suspend fun getPhoneNumbersFromContact(
         contentResolver: ContentResolver,
         contactUri: Uri
@@ -178,10 +189,12 @@ class SmsViewModel @Inject constructor(
             return
         }
 
+        // Try parse as minutes (positive integer)
         try {
             val minutes = delayed.toInt()
             _delayedError.value = if (minutes > 0) null else R.string.sms_error_invalid_delay_format_client
         } catch (e: NumberFormatException) {
+            // Try parse as datetime
             try {
                 val scheduled = Instant.parse(delayed)
                 val now = Instant.now()

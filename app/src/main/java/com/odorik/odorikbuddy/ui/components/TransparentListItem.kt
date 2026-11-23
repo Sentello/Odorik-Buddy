@@ -6,6 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
+/**
+ * ListItem that inherits its parent's background instead of painting `surface`,
+ * so rows inside tonal cards (surfaceContainer*) don't render as darker blocks.
+ */
 @Composable
 fun TransparentListItem(
     headlineContent: @Composable () -> Unit,

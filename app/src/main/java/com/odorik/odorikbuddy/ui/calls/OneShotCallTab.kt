@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -82,12 +83,14 @@ import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.PhoneNumberUtils
 import kotlinx.coroutines.launch
 
+// Shared helper functions
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OneShotCallTab(
     callViewModel: CallViewModel
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val lines by callViewModel.lines.collectAsState()
     val recipient by callViewModel.oneShotRecipient.collectAsState()
     val recipientContactName by callViewModel.oneShotRecipientContactName.collectAsState()
@@ -158,6 +161,7 @@ fun OneShotCallTab(
     }
 
     
+    // Button animation
     val buttonInteractionSource = remember { MutableInteractionSource() }
     val isPressed by buttonInteractionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
@@ -185,6 +189,7 @@ fun OneShotCallTab(
                     )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                // Main Form Card
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -199,6 +204,7 @@ fun OneShotCallTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing)
                     ) {
+                        // Recipient input
                         OutlinedTextField(
                             value = recipient,
                             onValueChange = { callViewModel.updateOneShotRecipient(PhoneNumberUtils.sanitizeDialInput(it)) },
@@ -234,6 +240,7 @@ fun OneShotCallTab(
                             }
                         )
                         
+                        // Line selection
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded },
@@ -281,6 +288,7 @@ fun OneShotCallTab(
                             }
                         }
                         
+                        // Use line number as caller ID checkbox
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -304,8 +312,11 @@ fun OneShotCallTab(
                         
                         Spacer(modifier = Modifier.height(4.dp))
                         
+                        // Call button
                         Button(
                             onClick = {
+                                // Close the keyboard so the result below stays visible
+                                focusManager.clearFocus()
                                 callViewModel.makeOneShotCall(recipient, useCallerIdPrefix)
                             },
                             modifier = Modifier
@@ -346,6 +357,7 @@ fun OneShotCallTab(
                     }
                 }
                 
+                // OneShot Call response messages
                 if (oneShotCallResult.isNotEmpty() && !isOneShotCallLoading) {
                     Spacer(modifier = Modifier.height(12.dp))
                     AnimatedVisibility(
@@ -391,6 +403,7 @@ fun OneShotCallTab(
                     }
                 }
                 
+                // Consolidated Error Message
                 val activeError = if (!oneShotCallError.isNullOrEmpty()) {
                     oneShotCallError
                 } else {
@@ -405,6 +418,7 @@ fun OneShotCallTab(
         }
     }
 
+    // Phone number selection dialog
     if (showPhoneNumberDialog) {
         AlertDialog(
             onDismissRequest = { showPhoneNumberDialog = false },

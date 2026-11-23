@@ -27,6 +27,7 @@ class HistoryRepositoryTest {
 
     @Test
     fun `endpoint tag wins over length inference`() {
+        // A call record with no length would previously be misclassified as SMS
         val merged = HistoryRepository.mergeAndTag(
             calls = listOf(item("c1", "2026-07-15T10:00:00+02:00", length = null)),
             sms = emptyList()

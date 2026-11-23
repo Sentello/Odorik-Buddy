@@ -43,6 +43,9 @@ import com.odorik.odorikbuddy.ui.components.GradientHeader
 import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +89,7 @@ internal fun FilterBottomSheet(
                 .fillMaxWidth()
                 .padding(bottom = LocalAppDimens.current.spacing * 2)
         ) {
+            // Gradient header
             GradientHeader(
                 title = stringResource(R.string.filter_history),
                 iconVector = Icons.Default.FilterList,
@@ -105,6 +109,7 @@ internal fun FilterBottomSheet(
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.spacing)
             ) {
+                // Line filter
                 ExposedDropdownMenuBox(
                     expanded = lineExpanded,
                     onExpandedChange = { lineExpanded = !lineExpanded }
@@ -145,6 +150,7 @@ internal fun FilterBottomSheet(
                     }
                 }
                 
+                // Number filter
                 OutlinedTextField(
                     value = tempFilterNumber,
                     onValueChange = { tempFilterNumber = it },
@@ -157,6 +163,7 @@ internal fun FilterBottomSheet(
                     )
                 )
                 
+                // Event type filter
                 ExposedDropdownMenuBox(
                     expanded = eventTypeExpanded,
                     onExpandedChange = { eventTypeExpanded = !eventTypeExpanded }
@@ -194,6 +201,7 @@ internal fun FilterBottomSheet(
                     }
                 }
                 
+                // Event direction filter
                 ExposedDropdownMenuBox(
                     expanded = eventDirectionExpanded,
                     onExpandedChange = { eventDirectionExpanded = !eventDirectionExpanded }
@@ -233,6 +241,7 @@ internal fun FilterBottomSheet(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
+                // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -297,4 +306,7 @@ internal fun FilterBottomSheet(
     }
 }
 
+// ============================================================================
+// HISTORY LIST ITEM
+// ============================================================================
 

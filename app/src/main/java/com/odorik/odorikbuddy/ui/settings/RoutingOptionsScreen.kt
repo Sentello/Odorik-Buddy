@@ -74,6 +74,7 @@ fun RoutingOptionsScreen(
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
                     Column {
+                        // Shared Numbers Item
                         TransparentListItem(
                             headlineContent = {
                                 Text(
@@ -111,6 +112,7 @@ fun RoutingOptionsScreen(
                              color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
 
+                        // Own Numbers Item
                         TransparentListItem(
                             headlineContent = {
                                 Text(

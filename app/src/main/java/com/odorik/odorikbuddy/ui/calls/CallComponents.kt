@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.odorik.odorikbuddy.R
 
+// Shared helper functions
 @Composable
 fun CallApiMessage(response: String, visible: Boolean) {
     val isError = response.startsWith("error")

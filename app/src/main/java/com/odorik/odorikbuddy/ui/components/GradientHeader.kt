@@ -62,7 +62,7 @@ fun GradientHeader(
         title = title,
         iconVector = iconVector,
         backgroundBrush = Brush.verticalGradient(
-            colors = listOf(main.copy(alpha = 0.35f), Color.Transparent)
+            colors = listOf(accent.wash().copy(alpha = 0.35f), Color.Transparent)
         ),
         iconGradientBrush = Brush.linearGradient(colors = listOf(main, secondary)),
         onBackClick = onBackClick,

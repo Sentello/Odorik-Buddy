@@ -5,6 +5,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Backups already in users' hands must keep importing.
+ *
+ * `src/test/resources/backup/backup-v1.json` is a frozen format-1 backup (same structure as
+ * a real 1.5.5 export, made-up data). NEVER edit it to make this test pass: if it fails,
+ * a field was renamed or removed and old backups would silently lose that value.
+ * When the format changes, add backup-v2.json and a new test next to this one.
+ */
 class BackupCompatibilityTest {
 
     private fun loadFixture(name: String): String =
@@ -77,6 +85,7 @@ class BackupCompatibilityTest {
         assertEquals(4294967295L, grandpa.textColor)
     }
 
+    /** Every key a 1.5.5 export writes must still be read. Catches a rename the other tests miss. */
     @Test
     fun everyFormatOneKeyIsStillKnown() {
         val reencoded = BackupCodec.encode(decodeV1())

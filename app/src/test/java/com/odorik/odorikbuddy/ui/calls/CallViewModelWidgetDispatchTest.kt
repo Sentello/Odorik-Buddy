@@ -35,6 +35,16 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyBlocking
 
+/**
+ * Covers [CallViewModel.dispatchWidgetTileAction] — the widget tile path.
+ *
+ * Two things are worth pinning here, both of which fail silently and cost real money:
+ *
+ * 1. **Caller-ID / line resolution.** A tile may override the globally selected caller ID and
+ *    line, or fall back to it. Getting that chain backwards places calls from the wrong number.
+ * 2. **The dispatch guard.** The Activity that launches this is recreated on rotation. The guard
+ *    lives in the ViewModel precisely so a recreation cannot place a second billable callback.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CallViewModelWidgetDispatchTest {
 
@@ -62,6 +72,7 @@ class CallViewModelWidgetDispatchTest {
         Dispatchers.resetMain()
     }
 
+    /** Preferences stub driven by a plain map; unlisted keys fall through to the caller's default. */
     private fun preferences(values: Map<String, String?>): AppPreferences = mock {
         on { getString(any(), anyOrNull()) } doAnswer { invocation ->
             val key = invocation.getArgument<String>(0)
@@ -101,7 +112,8 @@ class CallViewModelWidgetDispatchTest {
             tileRepository = tileRepository,
             localeManager = localeManager,
             context = context,
-            appPreferences = appPreferences
+            appPreferences = appPreferences,
+            activeCallsRepository = mock()
         )
     }
 
@@ -185,6 +197,7 @@ class CallViewModelWidgetDispatchTest {
         }
         val vm = viewModel(tiles, calls, preferences(emptyMap()))
 
+        // Simulates the Activity being recreated (rotation, theme change) while the ViewModel survives.
         vm.dispatchWidgetTileAction(1)
         vm.dispatchWidgetTileAction(1)
         advanceUntilIdle()

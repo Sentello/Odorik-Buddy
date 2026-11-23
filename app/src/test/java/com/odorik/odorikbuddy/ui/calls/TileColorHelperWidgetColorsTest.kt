@@ -10,6 +10,7 @@ import org.junit.Test
 
 class TileColorHelperWidgetColorsTest {
 
+    // Red as stored by the tile dialog (taken from the palette, incl. its historical extra "FF")
     private val red = TileColorHelper.allBaseColors.first { Color(it).toArgb() == 0xFFFFEBEE.toInt() }
 
     @Test
@@ -33,6 +34,7 @@ class TileColorHelperWidgetColorsTest {
     fun `readable explicit text colour is kept`() {
         val blue = 0xFF0D47A1
         assertEquals(Color(blue), TileColorHelper.widgetColors(red, blue, isDark = false).text)
+        // black text on the dark-mode amber background is still easy to read
         val amber = 0xFFFFF8E1
         assertEquals(Color.Black, TileColorHelper.widgetColors(amber, 0xFF000000, isDark = true).text)
     }
@@ -40,7 +42,7 @@ class TileColorHelperWidgetColorsTest {
     @Test
     fun `explicit text colour equal to the dark background is replaced`() {
         val blueTile = 0xFFE3F2FD
-        val blueText = 0xFF0D47A1
+        val blueText = 0xFF0D47A1 // same as the blue tile's dark-mode background
         assertEquals(Color(blueText), TileColorHelper.widgetColors(blueTile, blueText, isDark = false).text)
         assertEquals(Color.White, TileColorHelper.widgetColors(blueTile, blueText, isDark = true).text)
     }

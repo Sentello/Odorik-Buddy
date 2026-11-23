@@ -1,21 +1,21 @@
 package com.odorik.odorikbuddy.ui.widget
 
-import android.content.Context
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -53,7 +54,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.lifecycleScope
 import com.odorik.odorikbuddy.R
 import com.odorik.odorikbuddy.data.local.LanguagePreferences
@@ -63,9 +66,20 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Saved settings of one balance widget, used to prefill the screen when reconfiguring. */
+private data class BalanceWidgetConfig(
+    val background: String,
+    val textColor: String,
+    val textSize: String,
+    val showLogo: Boolean,
+    /** The widget already shows a balance (reconfigure, not a first add). */
+    val hasBalance: Boolean
+)
+
 @AndroidEntryPoint
 class BalanceWidgetConfigurationActivity : ComponentActivity() {
 
+    // Follow the app's language, not the phone's (same as MainActivity).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
     }
@@ -77,6 +91,9 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
     lateinit var balanceWidgetRefresher: BalanceWidgetRefresher
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+
+    // Loaded from the widget's saved state; null until loaded. A new widget gets the defaults.
+    private var initialConfig by mutableStateOf<BalanceWidgetConfig?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,25 +116,56 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_CANCELED, resultValue)
 
+        // Prefill from saved state so reconfiguring an existing widget keeps its settings.
+        lifecycleScope.launch {
+            initialConfig = try {
+                val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
+                val prefs = getAppWidgetState(applicationContext, PreferencesGlanceStateDefinition, glanceId)
+                BalanceWidgetConfig(
+                    background = prefs[BalanceWidget.backgroundKey] ?: DEFAULT_CONFIG.background,
+                    textColor = prefs[BalanceWidget.textColorKey] ?: DEFAULT_CONFIG.textColor,
+                    textSize = prefs[BalanceWidget.textSizeKey] ?: DEFAULT_CONFIG.textSize,
+                    showLogo = prefs[BalanceWidget.showLogoKey] ?: DEFAULT_CONFIG.showLogo,
+                    hasBalance = prefs[BalanceWidget.balanceKey] != null
+                )
+            } catch (e: Exception) {
+                android.util.Log.w("BalanceWidgetConfig", "Could not read widget state, using defaults", e)
+                DEFAULT_CONFIG
+            }
+        }
+
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
-                ConfigurationScreen(
-                    onSave = { background, textColor, textSize ->
-                        saveWidgetState(background, textColor, textSize)
+                val initial = initialConfig
+                if (initial == null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
-                )
+                } else {
+                    ConfigurationScreen(
+                        initial = initial,
+                        onSave = { background, textColor, textSize, showLogo ->
+                            saveWidgetState(background, textColor, textSize, showLogo, initial.hasBalance)
+                        }
+                    )
+                }
             }
         }
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun ConfigurationScreen(
-        onSave: (String, String, String) -> Unit
+    private fun ConfigurationScreen(
+        initial: BalanceWidgetConfig,
+        onSave: (String, String, String, Boolean) -> Unit
     ) {
-        var selectedBackground by remember { mutableStateOf("SYSTEM") }
-        var selectedTextColor by remember { mutableStateOf("AUTO") }
-        var selectedTextSize by remember { mutableStateOf("NORMAL") }
+        var selectedBackground by remember { mutableStateOf(initial.background) }
+        var selectedTextColor by remember { mutableStateOf(initial.textColor) }
+        var selectedTextSize by remember { mutableStateOf(initial.textSize) }
+        var showLogo by remember { mutableStateOf(initial.showLogo) }
 
         Scaffold(
             contentWindowInsets = WindowInsets(0.dp),
@@ -137,6 +185,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+                // Preview Section
                 item {
                     Text(
                         text = stringResource(R.string.widget_preview),
@@ -145,6 +194,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     
+                    // Simulated Widget Preview
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -168,16 +218,20 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                             ),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Dummy Widget Content
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Image(
-                                painter = painterResource(R.drawable.ic_odorik_logo),
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.size(16.dp))
+                            // Same logo and size as the real widget (BalanceWidget).
+                            if (showLogo) {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_buddy_symbol),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.size(16.dp))
+                            }
                             Column {
                                 Text(
                                     text = "1 250,00 Kč",
@@ -210,6 +264,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Background Settings
                 item {
                     ConfigSection(title = stringResource(R.string.widget_config_background)) {
                         val backgrounds = listOf(
@@ -235,6 +290,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Text Color Settings
                 item {
                     ConfigSection(title = stringResource(R.string.text_color)) {
                          val colors = listOf(
@@ -257,6 +313,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Text Size Settings
                 item {
                      ConfigSection(title = stringResource(R.string.widget_config_text_size)) {
                          val sizes = listOf(
@@ -279,9 +336,40 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
                     }
                 }
 
+                // Logo Settings
+                item {
+                    ConfigSection(title = stringResource(R.string.widget_config_logo)) {
+                        val logoOptions = listOf(
+                            true to stringResource(R.string.widget_config_logo_show),
+                            false to stringResource(R.string.widget_config_logo_hide)
+                        )
+                        FlowRowCompat {
+                            logoOptions.forEach { (key, label) ->
+                                FilterChip(
+                                    selected = showLogo == key,
+                                    onClick = { showLogo = key },
+                                    label = { Text(label) },
+                                    leadingIcon = if (showLogo == key) {
+                                        { Icon(Icons.Default.Check, null) }
+                                    } else null
+                                )
+                            }
+                        }
+                        if (!showLogo) {
+                            Text(
+                                text = stringResource(R.string.widget_config_logo_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Save Button (respects navigation bar insets)
                 item {
                     Button(
-                        onClick = { onSave(selectedBackground, selectedTextColor, selectedTextSize) },
+                        onClick = { onSave(selectedBackground, selectedTextColor, selectedTextSize, showLogo) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp, bottom = 16.dp)
@@ -309,6 +397,7 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
         }
     }
     
+    /** Option chips that wrap onto the next line, so every choice is visible without scrolling. */
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     fun FlowRowCompat(content: @Composable () -> Unit) {
@@ -320,21 +409,45 @@ class BalanceWidgetConfigurationActivity : ComponentActivity() {
         }
     }
 
-    private fun saveWidgetState(background: String, textColor: String, textSize: String) {
+    private fun saveWidgetState(
+        background: String,
+        textColor: String,
+        textSize: String,
+        showLogo: Boolean,
+        hasBalance: Boolean
+    ) {
         lifecycleScope.launch {
             val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIdBy(appWidgetId)
             
+            // 1. Save config
             updateAppWidgetState(applicationContext, glanceId) { prefs ->
                 prefs[BalanceWidget.backgroundKey] = background
                 prefs[BalanceWidget.textColorKey] = textColor
                 prefs[BalanceWidget.textSizeKey] = textSize
+                prefs[BalanceWidget.showLogoKey] = showLogo
             }
 
-            balanceWidgetRefresher.refresh(glanceId, showProgress = true)
+            if (hasBalance) {
+                // 2a. Reconfigure: keep the balance, only redraw (no network, works offline)
+                BalanceWidget().update(applicationContext, glanceId)
+            } else {
+                // 2b. New widget: fetch the balance right away (shows "…" while loading)
+                balanceWidgetRefresher.refresh(glanceId, showProgress = true)
+            }
 
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             setResult(Activity.RESULT_OK, resultValue)
             finish()
         }
+    }
+
+    private companion object {
+        val DEFAULT_CONFIG = BalanceWidgetConfig(
+            background = "SYSTEM",
+            textColor = "AUTO",
+            textSize = "NORMAL",
+            showLogo = true,
+            hasBalance = false
+        )
     }
 }

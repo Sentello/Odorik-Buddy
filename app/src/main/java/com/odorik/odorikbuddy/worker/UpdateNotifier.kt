@@ -7,18 +7,25 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.odorik.odorikbuddy.MainActivity
 import com.odorik.odorikbuddy.R
+import com.odorik.odorikbuddy.data.local.LanguagePreferences
 import com.odorik.odorikbuddy.model.AppUpdateInfo
 import com.odorik.odorikbuddy.util.VersionUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Single owner of the "update available" notification: version comparison,
+ * once-per-version deduplication, channel creation, and posting.
+ * Used by both [UpdateCheckWorker] (periodic) and [UpdateWorkManager] (immediate check).
+ */
 @Singleton
 class UpdateNotifier @Inject constructor(
     @ApplicationContext private val context: Context
@@ -32,6 +39,11 @@ class UpdateNotifier @Inject constructor(
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    /**
+     * Shows the update notification at most once per remote version.
+     * No-op when the version is not newer than the installed app, when the user
+     * was already notified about it, or when notifications are not permitted.
+     */
     fun notifyIfNeeded(updateInfo: AppUpdateInfo) {
         if (!VersionUtils.isNewUpdateAvailable(updateInfo.version)) return
         if (prefs.getString(KEY_LAST_NOTIFICATION_VERSION, null) == updateInfo.version) return
@@ -39,26 +51,34 @@ class UpdateNotifier @Inject constructor(
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
+            // Do not mark as notified — retry once the user grants the permission.
             return
         }
 
         createNotificationChannel()
 
-        val intent = Intent(context, MainActivity::class.java).apply {
+        // Tapping goes straight to the download page; without a safe link, open the app.
+        val url = updateInfo.safeDownloadUrl()
+        val intent = if (url != null) {
+            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        } else {
+            Intent(context, MainActivity::class.java)
+        }.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
             0,
             intent,
-            PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val language = LanguagePreferences.getPreferredLanguage(context)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_buddy)
             .setContentTitle(context.getString(R.string.app_update_available))
             .setContentText(context.getString(R.string.new_version_available, updateInfo.version))
-            .setStyle(NotificationCompat.BigTextStyle().bigText(updateInfo.message))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(updateInfo.localizedMessage(language)))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -68,6 +88,7 @@ class UpdateNotifier @Inject constructor(
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
             prefs.edit().putString(KEY_LAST_NOTIFICATION_VERSION, updateInfo.version).apply()
         } catch (e: SecurityException) {
+            // Notifications revoked between the check and the post — try again next run.
         }
     }
 

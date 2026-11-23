@@ -14,6 +14,7 @@ val FigtreeFamily = FontFamily(
     Font(R.font.figtree_bold, FontWeight.Bold)
 )
 
+/** Merge with any style for tabular (fixed-width) figures — money, durations. */
 val TabularNumbers = TextStyle(fontFeatureSettings = "tnum")
 
 val Typography = Typography(

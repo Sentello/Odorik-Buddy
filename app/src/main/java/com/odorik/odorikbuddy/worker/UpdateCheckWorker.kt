@@ -24,6 +24,7 @@ class UpdateCheckWorker @AssistedInject constructor(
             result.onSuccess { updateInfo ->
                 updateNotifier.notifyIfNeeded(updateInfo)
             }
+            // Transient network failure: let WorkManager retry with backoff
             if (result.isSuccess) Result.success() else Result.retry()
         } catch (e: Exception) {
             Result.retry()

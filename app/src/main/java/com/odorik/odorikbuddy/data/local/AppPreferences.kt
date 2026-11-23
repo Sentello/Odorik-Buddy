@@ -62,6 +62,12 @@ private val Context.dataStore by preferencesDataStore(
     }
 )
 
+/**
+ * App preferences backed by DataStore with an in-memory cache.
+ *
+ * Critical: never call [runBlocking] on the Main dispatcher with DataStore —
+ * that deadlocks. Synchronous getters read the cache (warmed once on [Dispatchers.IO]).
+ */
 @Singleton
 class AppPreferences @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -79,6 +85,8 @@ class AppPreferences @Inject constructor(
     @Volatile private var stringValues: Map<String, String> = emptyMap()
 
     init {
+        // Keep cache in sync with disk for the lifetime of the process.
+        // Use suspend load (no runBlocking) so we never nest runBlocking on the IO pool.
         scope.launch {
             ensureLoadedSuspend()
             dataStore.data.collect { prefs ->
@@ -96,6 +104,11 @@ class AppPreferences @Inject constructor(
             .toMap()
     }
 
+    /**
+     * One-time warm of the in-memory cache on IO. Safe to call from any thread.
+     * Uses [Dispatchers.IO] inside runBlocking so Main never deadlocks with DataStore.
+     * Can only trigger during the first moments of process life if a getter races the startup warm.
+     */
     private fun ensureLoaded() {
         if (loaded) return
         runBlocking(Dispatchers.IO) {
@@ -142,12 +155,18 @@ class AppPreferences @Inject constructor(
             }
         }
 
+    /**
+     * Synchronous cached read of a string preference. Safe from any thread:
+     * the cache is warmed on IO at process start; the runBlocking fallback in
+     * [ensureLoaded] can only trigger during the first moments of process life.
+     */
     fun getString(key: String, defaultValue: String? = null): String? {
         ensureLoaded()
         return stringValues[key] ?: defaultValue
     }
 
     fun saveString(key: String, value: String) {
+        // Read-your-write: update the cache immediately, persist async.
         stringValues = stringValues + (key to value)
         scope.launch {
             dataStore.edit { it[stringPreferencesKey(key)] = value }
@@ -161,6 +180,7 @@ class AppPreferences @Inject constructor(
         }
     }
 
+    /** Prefer this from coroutines already on a background dispatcher. */
     suspend fun getHistoryPeriodDaysSuspend(): Int {
         ensureLoadedSuspend()
         return _historyPeriodDays
@@ -176,6 +196,12 @@ class AppPreferences @Inject constructor(
         }
     }
 
+    /**
+     * One-time move of non-secret keys that historically lived in
+     * EncryptedSharedPreferences. Order matters for crash safety:
+     * write new store → delete old values → set done-flag. A crash mid-way
+     * re-runs the migration idempotently on next start.
+     */
     private suspend fun migrateFromSecurePreferencesIfNeeded() {
         val migratedFlag = booleanPreferencesKey(KEY_SECURE_PREFS_MIGRATED)
         if (dataStore.data.first()[migratedFlag] == true) return
@@ -185,6 +211,7 @@ class AppPreferences @Inject constructor(
         }
         dataStore.edit { prefs ->
             values.forEach { (key, value) ->
+                // Do not overwrite anything already written to DataStore
                 if (prefs[stringPreferencesKey(key)] == null) {
                     prefs[stringPreferencesKey(key)] = value
                 }
@@ -198,9 +225,13 @@ class AppPreferences @Inject constructor(
         const val KEY_DIRECT_CALLS_ENABLED = "direct_calls_enabled"
         const val KEY_HISTORY_PERIOD_DAYS = "history_period_days"
         const val KEY_AUTO_UPDATE_ENABLED = "auto_update_enabled"
+        /** Calls screen tile size; holds a TileSize name. */
         const val KEY_TILE_SIZE = "tile_size"
+        /** Comma-separated SIM phone numbers of the account; empty = no SIM. Not backed up. */
+        const val KEY_SIM_NUMBERS = "sim_numbers"
         const val KEY_SECURE_PREFS_MIGRATED = "secure_prefs_migrated"
 
+        /** Non-secret keys that historically lived in SecurePreferences. */
         val MIGRATED_KEYS = listOf(
             "phone_number", "caller_id", "recipient", "oneshot_recipient",
             "selected_line", "use_caller_id_prefix", "calls_selected_tab",

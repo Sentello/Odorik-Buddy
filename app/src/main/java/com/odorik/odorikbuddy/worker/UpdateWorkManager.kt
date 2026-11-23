@@ -31,6 +31,12 @@ class UpdateWorkManager @Inject constructor(
         private const val UPDATE_CHECK_WORK_NAME = "update_check_work"
     }
 
+    /**
+     * Called from [android.app.Application.onCreate], so it must not touch disk on the main
+     * thread: [isAutoUpdateEnabled] reads DataStore, which falls back to a blocking load if the
+     * cache has not been warmed yet. Scheduling one week of work an instant later costs nothing,
+     * so the whole body runs on IO.
+     */
     fun scheduleUpdateCheck() {
         scope.launch {
             if (!isAutoUpdateEnabled()) return@launch
@@ -41,15 +47,18 @@ class UpdateWorkManager @Inject constructor(
                 .build()
 
             val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-                7, TimeUnit.DAYS
+                7, TimeUnit.DAYS // Weekly: releases are rare
             )
                 .setConstraints(constraints)
-                .setInitialDelay(1, TimeUnit.HOURS)
+                .setInitialDelay(1, TimeUnit.HOURS) // Start after 1 hour
                 .build()
 
+            // UPDATE (not KEEP) so installs scheduled by an older version pick up a changed
+            // interval or constraints. It keeps the original enqueue time, so starting the
+            // app does not keep pushing the next check back.
             workManager.enqueueUniquePeriodicWork(
                 UPDATE_CHECK_WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 updateWorkRequest
             )
         }
@@ -80,6 +89,7 @@ class UpdateWorkManager @Inject constructor(
                     updateNotifier.notifyIfNeeded(updateInfo)
                 }
             } catch (e: Exception) {
+                // Best-effort immediate check — never bother the user with failures
             }
         }
     }

@@ -17,14 +17,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
+/** Inset from the screen edges. Matches the Scaffold FAB slot so manually
+ *  placed FABs line up with the ones in the Scaffold slot. */
 val FabEdgePadding = 16.dp
 
+/** Gap between two FABs sitting side by side. */
 val FabSpacing = 12.dp
 
+/** Space a scrolling list should reserve so its last item clears the FAB. */
 val FabListBottomSpacing = 88.dp
 
 private val FabIconSize = 24.dp
 
+/**
+ * The app's single floating action button style: circular, 56.dp (Material
+ * default), with a press-scale animation. Used on every screen so the buttons
+ * look and behave the same wherever they appear.
+ */
 @Composable
 fun AppFab(
     icon: ImageVector,

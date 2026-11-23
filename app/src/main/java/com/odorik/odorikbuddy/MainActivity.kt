@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        // Locale configuration is now handled in attachBaseContext
 
         setContent {
             OdorikBuddyTheme(themeManager = themeManager) {
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
+        // The main locale switching is handled via AppCompatDelegate; this covers first launch.
         super.attachBaseContext(LanguagePreferences.wrapContext(newBase))
     }
 

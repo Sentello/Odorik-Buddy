@@ -17,7 +17,7 @@ class BackupCodecTest {
         lineId = "12345",
         callerId = "601000000",
         useLineAsCallerId = false,
-        color = 0xFF4CAF50,
+        color = 0xFF4CAF50, // above Int.MAX_VALUE
         textColor = null
     )
 
@@ -27,7 +27,7 @@ class BackupCodecTest {
         createdAt = "2026-11-21T21:45:00Z",
         appVersion = "1.5.6",
         account = BackupAccount(username = "123456"),
-        display = BackupDisplay(themeMode = "DARK", appTheme = "ODORIK", language = "cs", tileSize = "LARGE"),
+        display = BackupDisplay(themeMode = "DARK", appTheme = "ODORIK", language = "cs", tileSize = "LARGE", navIconStyle = "TWO_TONE"),
         appSettings = BackupAppSettings(historyPeriodDays = 30, autoUpdateEnabled = true, directCallsEnabled = false),
         calls = BackupCalls(
             personalPhoneNumber = "+420777123456",

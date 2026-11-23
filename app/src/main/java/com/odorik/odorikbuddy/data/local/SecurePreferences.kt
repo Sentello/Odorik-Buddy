@@ -17,8 +17,15 @@ class SecurePreferences @Inject constructor(@ApplicationContext private val cont
         private const val TAG = "SecurePreferences"
     }
 
+    // Lazy: Keystore work happens on first use, not at injection time.
     private val sharedPreferences: SharedPreferences by lazy { createPreferences() }
 
+    /**
+     * EncryptedSharedPreferences can become permanently unreadable (keyset
+     * corruption, or a backup restored onto a device whose Keystore lacks the
+     * master key). Reset the file and recreate instead of crash-looping —
+     * the user re-enters credentials once.
+     */
     private fun createPreferences(): SharedPreferences {
         return try {
             create()
@@ -64,6 +71,9 @@ class SecurePreferences @Inject constructor(@ApplicationContext private val cont
         sharedPreferences.edit().remove("password").apply()
     }
 
+    // Generic accessors are retained ONLY for AppPreferences' one-time
+    // migration of legacy non-secret keys. Secrets use the typed methods
+    // above; never store new non-secret data here.
 
     fun getString(key: String, defaultValue: String? = null): String? {
         return sharedPreferences.getString(key, defaultValue)

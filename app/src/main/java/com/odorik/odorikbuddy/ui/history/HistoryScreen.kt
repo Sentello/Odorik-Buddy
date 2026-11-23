@@ -57,42 +57,24 @@ import com.odorik.odorikbuddy.ui.theme.LocalAppDimens
 import com.odorik.odorikbuddy.ui.theme.ScreenAccents
 import com.odorik.odorikbuddy.util.ApiDates
 import com.odorik.odorikbuddy.util.CurrencyFormatter
-import java.text.SimpleDateFormat
-import java.util.Locale
 
-
-internal fun getFormatters(): Pair<SimpleDateFormat, SimpleDateFormat> {
-    val currentLocale = Locale.getDefault()
-    val timeFormat = SimpleDateFormat("HH:mm:ss", currentLocale)
-    val fullFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", currentLocale)
-    return Pair(timeFormat, fullFormat)
-}
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
 
 internal fun parseApiDate(isoDate: String): java.util.Date? {
     return ApiDates.parse(isoDate)?.let { java.util.Date.from(it) }
 }
 
-internal fun formatRelativeTime(isoDate: String, context: android.content.Context): String {
-    val date = parseApiDate(isoDate) ?: return isoDate
-    
-    val (timeFormat, fullFormat) = getFormatters()
-    
-    val calendar = java.util.Calendar.getInstance()
-    val todayStart = calendar.apply {
-        set(java.util.Calendar.HOUR_OF_DAY, 0)
-        set(java.util.Calendar.MINUTE, 0)
-        set(java.util.Calendar.SECOND, 0)
-        set(java.util.Calendar.MILLISECOND, 0)
-    }.timeInMillis
-    
-    calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
-    val yesterdayStart = calendar.timeInMillis
-    
-    return when {
-        date.time >= todayStart -> context.getString(R.string.today) + " " + timeFormat.format(date)
-        date.time >= yesterdayStart -> context.getString(R.string.yesterday) + " " + timeFormat.format(date)
-        else -> fullFormat.format(date)
-    }
+/**
+ * True when [leg] is a redirected leg drawn right under its own call (or under a sibling leg
+ * of the same call). Then it is shown as an indented "Redirected to: …" line, otherwise as a
+ * full row, e.g. when a number filter matches the leg but not its call.
+ */
+internal fun isLegUnder(leg: HistoryDisplayItem, above: HistoryDisplayItem?): Boolean {
+    val parentId = leg.item.redirectionParentId ?: return false
+    if (!leg.isChild || above == null) return false
+    return above.item.id == parentId || above.item.redirectionParentId == parentId
 }
 
 internal fun formatDuration(seconds: Int): String {
@@ -108,14 +90,17 @@ internal fun formatDuration(seconds: Int): String {
 internal fun getNetworkColor(destinationName: String?): androidx.compose.ui.graphics.Color? {
     return when {
         destinationName == null -> null
-        destinationName.contains("mobil", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF2196F3)
-        destinationName.contains("pevná", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
-        destinationName.contains("SMS", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF9C27B0)
-        destinationName.contains("800", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF009688)
-        else -> androidx.compose.ui.graphics.Color(0xFF757575)
+        destinationName.contains("mobil", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF2196F3) // Blue for mobile
+        destinationName.contains("pevná", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF4CAF50) // Green for landline
+        destinationName.contains("SMS", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF9C27B0) // Purple for SMS
+        destinationName.contains("800", ignoreCase = true) -> androidx.compose.ui.graphics.Color(0xFF009688) // Teal for toll-free
+        else -> androidx.compose.ui.graphics.Color(0xFF757575) // Gray for others
     }
 }
 
+// ============================================================================
+// MAIN SCREEN
+// ============================================================================
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -143,6 +128,7 @@ fun HistoryScreen(
     var filtersApplied by remember { mutableStateOf(false) }
     var wasRefreshing by remember { mutableStateOf(false) }
 
+    // Auto-scroll to top when refreshing completes
     LaunchedEffect(isRefreshing) {
         if (wasRefreshing && !isRefreshing && historyItems.isNotEmpty()) {
             listState.animateScrollToItem(0)
@@ -150,6 +136,7 @@ fun HistoryScreen(
         wasRefreshing = isRefreshing
     }
     
+    // Permission handling
     val readContactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -178,6 +165,7 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Gradient Header
             GradientHeader(
                 title = stringResource(R.string.history_title),
                 iconVector = Icons.Default.History,
@@ -206,6 +194,7 @@ fun HistoryScreen(
                     }
                 }
 
+                // Content based on state
                 HistoryContent(
                     historyItems = historyItems,
                     isRefreshing = isRefreshing,
@@ -213,6 +202,7 @@ fun HistoryScreen(
                     viewModel = viewModel,
                     language = currentLanguage,
                     currencyFormatter = currencyFormatter,
+                    lines = lines,
                     listState = listState
                 )
                 
@@ -224,6 +214,7 @@ fun HistoryScreen(
             }
         }
         
+        // Filter Bottom Sheet
         if (showFilterSheet) {
             FilterBottomSheet(
                 lines = lines,
@@ -238,6 +229,9 @@ fun HistoryScreen(
     }
 }
 
+// ============================================================================
+// HISTORY CONTENT
+// ============================================================================
 
 @Composable
 private fun HistoryContent(
@@ -247,6 +241,7 @@ private fun HistoryContent(
     viewModel: HistoryViewModel,
     language: String,
     currencyFormatter: CurrencyFormatter,
+    lines: List<com.odorik.odorikbuddy.data.model.Line>,
     listState: androidx.compose.foundation.lazy.LazyListState
 ) {
     val hasError = error != null
@@ -262,6 +257,7 @@ private fun HistoryContent(
             }
         }
         hasError -> {
+            // Error state
             ErrorState(
                 error = error!!,
                 onRetry = { viewModel.fetchHistory(isRefresh = true) },
@@ -269,11 +265,14 @@ private fun HistoryContent(
             )
         }
         historyItems.isEmpty() -> {
+            // Empty state
             EmptyState(onRetry = { viewModel.fetchHistory(isRefresh = true) })
         }
         else -> {
+            // History list
             val horizontalPadding = LocalAppDimens.current.cardPadding
             val bottomPadding = LocalAppDimens.current.spacing
+            // Group by calendar day without changing ViewModel structure
             val dayGroups = remember(historyItems) {
                 val groups = linkedMapOf<String, MutableList<HistoryDisplayItem>>()
                 for (displayItem in historyItems) {
@@ -288,6 +287,7 @@ private fun HistoryContent(
                 }
                 groups.values.toList()
             }
+            val lineNames = remember(lines) { lines.associate { it.id to it.name } }
             val todayLabel = stringResource(R.string.today)
             val yesterdayLabel = stringResource(R.string.yesterday)
             LazyColumn(
@@ -336,10 +336,17 @@ private fun HistoryContent(
                             displayItem.item.id + if (displayItem.isChild) "_child" else ""
                         }
                     ) { idx ->
+                        // No divider between a call and its redirected leg drawn under it.
+                        val next = group.getOrNull(idx + 1)
                         HistoryListItem(
                             displayItem = group[idx],
                             language = language,
-                            currencyFormatter = currencyFormatter
+                            currencyFormatter = currencyFormatter,
+                            lineNames = lineNames,
+                            isFirst = idx == 0,
+                            isLast = idx == group.lastIndex,
+                            showDivider = next != null && !isLegUnder(next, group[idx]),
+                            asLeg = isLegUnder(group[idx], group.getOrNull(idx - 1))
                         )
                     }
                 }
@@ -348,6 +355,9 @@ private fun HistoryContent(
     }
 }
 
+// ============================================================================
+// ERROR STATE
+// ============================================================================
 
 @Composable
 private fun ErrorState(
@@ -416,6 +426,9 @@ private fun ErrorState(
     }
 }
 
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
 
 @Composable
 private fun EmptyState(onRetry: () -> Unit) {
@@ -455,4 +468,7 @@ private fun EmptyState(onRetry: () -> Unit) {
     }
 }
 
+// ============================================================================
+// FILTER BOTTOM SHEET
+// ============================================================================
 
