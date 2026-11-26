@@ -1,7 +1,7 @@
 {
-  "version": "1.6.0",
-  "download_url": "https://forum.odorik.cz/viewtopic.php?p=48088#p48088",
-  "message": "Nová verze 1.6.0: probíhající hovory, rychlé volby, SIM karta a nový vzhled.",
-  "message_cs": "Nová verze 1.6.0: probíhající hovory, rychlé volby, SIM karta a nový vzhled.",
-  "message_en": "New version 1.6.0: calls in progress, speed dials, SIM card and a new look."
+  "version": "1.6.1",
+  "download_url": "https://forum.odorik.cz/viewtopic.php?p=48095#p48095",
+  "message": "Nová verze 1.6.1: probíhající hovory, rychlé volby, SIM karta a nový vzhled.",
+  "message_cs": "Nová verze 1.6.1: SIM karta jde obnovit přejetím dolů, vysvětlivka u LTE.",
+  "message_en": "New version 1.6.1: pull down to refresh the SIM card screen, LTE explained."
 }

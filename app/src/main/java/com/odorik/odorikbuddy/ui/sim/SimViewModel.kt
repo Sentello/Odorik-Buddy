@@ -39,7 +39,9 @@ data class SimUiState(
     /** Last 10 days, oldest first. */
     val daily: List<Long> = emptyList(),
     /** API key of the switch being changed, or "fup"/"state" while those run. */
-    val busy: String? = null
+    val busy: String? = null,
+    /** Pull to refresh in progress (the card stays on screen). */
+    val isRefreshing: Boolean = false
 )
 
 /**
@@ -78,6 +80,26 @@ class SimViewModel @Inject constructor(
                     loadUsage()
                 }
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, loadError = message(e)) } }
+        }
+    }
+
+    /**
+     * Pull to refresh: re-reads the card and data usage. Odorik applies changes with a delay,
+     * so this lets the user check a change without leaving the screen.
+     */
+    fun refresh() {
+        if (_uiState.value.isRefreshing) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            repository.getSimCard(number)
+                .onSuccess { card ->
+                    _uiState.update {
+                        it.copy(card = card, limit = dataPackageLimitBytes(card.dataPackage), loadError = null)
+                    }
+                    loadUsage()
+                }
+                .onFailure { e -> _messages.send(message(e)) }
+            _uiState.update { it.copy(isRefreshing = false) }
         }
     }
 

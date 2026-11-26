@@ -495,11 +495,13 @@
     <string name="sim_data_daily">Spotřeba po dnech · posledních 10 dní</string>
     <string name="sim_mobile_data">Mobilní data</string>
     <string name="sim_lte">LTE (4G)</string>
+    <string name="sim_lte_hint">Vypnuto: data jen přes 2G (EDGE), pomalá</string>
     <string name="sim_missed_calls_sms">SMS o zmeškaných hovorech</string>
     <string name="sim_missed_calls_sms_hint">Když je telefon vypnutý</string>
     <string name="sim_roaming">Roaming</string>
     <string name="sim_data_package">Datový balíček</string>
     <string name="sim_voice_package">Hlasový balíček</string>
+    <string name="sim_package_none">Žádný</string>
     <string name="sim_next_month">od příštího měsíce: %1$s</string>
     <string name="sim_change_in_progress">U Odoriku probíhá změna. Nastavení bude znovu dostupné, až se dokončí.</string>
     <string name="sim_change_saved">Nastavení změněno</string>

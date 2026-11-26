@@ -488,11 +488,13 @@
     <string name="sim_data_daily">Usage per day, last 10 days</string>
     <string name="sim_mobile_data">Mobile data</string>
     <string name="sim_lte">LTE (4G)</string>
+    <string name="sim_lte_hint">Off: data over 2G (EDGE) only, slow</string>
     <string name="sim_missed_calls_sms">Missed-call SMS</string>
     <string name="sim_missed_calls_sms_hint">When your phone is off</string>
     <string name="sim_roaming">Roaming</string>
     <string name="sim_data_package">Data package</string>
     <string name="sim_voice_package">Voice package</string>
+    <string name="sim_package_none">None</string>
     <string name="sim_next_month">from next month: %1$s</string>
     <string name="sim_change_in_progress">A change is in progress at Odorik. Settings will be available again once it\'s done.</string>
     <string name="sim_change_saved">Setting changed</string>

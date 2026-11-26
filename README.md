@@ -12,7 +12,7 @@ Odorik Buddy is an Android app for the ODORIK.CZ API: see your balance and spend
 *   **History**: Calls and SMS grouped by day, filters (line, number, type, direction) and contact names. Each call is listed once, even when Odorik logs it as several legs; real forwards to other numbers are shown under their call.
 *   **Forwarding**: Routing rules for shared and own numbers.
 *   **Speed dials**: Add, edit and delete the account's speed dials (they apply to all lines). Speed dials set on the Odorik website for a single line are shown read-only.
-*   **SIM card** (only for accounts with an Odorik mobile SIM): data usage this month and per day, mobile data / LTE / missed-call SMS switches, data speed restore (FUP, paid) and suspend / reactivate — every paid or disruptive action is confirmed.
+*   **SIM card** (only for accounts with an Odorik mobile SIM): data usage this month and per day, mobile data / LTE / missed-call SMS switches, data speed restore (FUP, paid), suspend / reactivate, pull down to refresh — every paid or disruptive action is confirmed.
 *   **Widgets**: A balance widget that refreshes itself (logo can be hidden, settings can be changed later on Android 12+) and tile widgets for one-tap calls.
 *   **Settings**: Czech / English, light / dark / system mode, Odorik or Material You colours, bottom-bar icon style, tile size, export and import of tiles and settings (never the password), and optional new-version notices.
 

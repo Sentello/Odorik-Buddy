@@ -19,6 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Pause
@@ -73,6 +77,7 @@ import com.odorik.odorikbuddy.util.PhoneNumberUtils
 
 private enum class SimDialog { FUP, SUSPEND, REACTIVATE }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SimScreen(
     internalNavController: NavHostController,
@@ -81,6 +86,7 @@ fun SimScreen(
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var dialog by remember { mutableStateOf<SimDialog?>(null) }
+    val pullRefreshState = rememberPullRefreshState(state.isRefreshing, viewModel::refresh)
 
     LaunchedEffect(Unit) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
@@ -103,6 +109,7 @@ fun SimScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .pullRefresh(pullRefreshState, enabled = state.card != null)
         ) {
             val card = state.card
             when {
@@ -135,6 +142,13 @@ fun SimScreen(
                     onAskDialog = { dialog = it }
                 )
             }
+
+            PullRefreshIndicator(
+                refreshing = state.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                contentColor = ScreenAccents.Settings.main()
+            )
         }
     }
 
@@ -285,7 +299,7 @@ private fun SimContent(
             SimCardBox(padded = false) {
                 SwitchRow(stringResource(R.string.sim_mobile_data), null, card.mobileData, "mobile_data", state.busy, locked, onSwitch)
                 Divider()
-                SwitchRow(stringResource(R.string.sim_lte), null, card.lte, "lte", state.busy, locked, onSwitch)
+                SwitchRow(stringResource(R.string.sim_lte), stringResource(R.string.sim_lte_hint), card.lte, "lte", state.busy, locked, onSwitch)
                 Divider()
                 SwitchRow(
                     stringResource(R.string.sim_missed_calls_sms),
@@ -302,16 +316,16 @@ private fun SimContent(
             SimCardBox(padded = false) {
                 InfoRow(
                     stringResource(R.string.sim_data_package),
-                    card.dataPackage,
+                    packageLabel(card.dataPackage),
                     card.dataPackageNextMonth?.takeIf { it != card.dataPackage }
-                        ?.let { stringResource(R.string.sim_next_month, it) }
+                        ?.let { stringResource(R.string.sim_next_month, packageLabel(it).orEmpty()) }
                 )
                 Divider()
                 InfoRow(
                     stringResource(R.string.sim_voice_package),
-                    card.voicePackage,
+                    packageLabel(card.voicePackage),
                     card.voicePackageNextMonth?.takeIf { it != card.voicePackage }
-                        ?.let { stringResource(R.string.sim_next_month, it) }
+                        ?.let { stringResource(R.string.sim_next_month, packageLabel(it).orEmpty()) }
                 )
             }
         }
@@ -345,6 +359,11 @@ private fun SimContent(
         }
     }
 }
+
+/** Odorik's "none" → "None"/"Žádný"; other package names are shown as they come. */
+@Composable
+private fun packageLabel(name: String?): String? =
+    if (name.equals("none", ignoreCase = true)) stringResource(R.string.sim_package_none) else name
 
 @Composable
 private fun SimCardBox(padded: Boolean = true, content: @Composable () -> Unit) {
